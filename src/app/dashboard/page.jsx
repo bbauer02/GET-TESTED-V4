@@ -1,11 +1,9 @@
-import { CONFIG } from 'src/global-config';
+import { redirect } from 'next/navigation';
 
-import { BlankView } from 'src/sections/blank/view';
+import { paths } from 'src/routes/paths';
 
 // ----------------------------------------------------------------------
 
-export const metadata = { title: `Dashboard - ${CONFIG.appName}` };
-
 export default function Page() {
-  return <BlankView title="Page one" />;
+  redirect(paths.dashboard.profile);
 }

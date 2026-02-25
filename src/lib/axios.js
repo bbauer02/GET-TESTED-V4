@@ -43,6 +43,7 @@ export const endpoints = {
   user: {
     update: '/api/users/me/',
     list: '/api/users/',
+    changePassword: '/api/me/change-password',
   },
   chat: '/api/chat/',
   kanban: '/api/kanban/',
