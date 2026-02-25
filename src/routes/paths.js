@@ -55,5 +55,9 @@ export const paths = {
       root: `${ROOTS.DASHBOARD}/user`,
       list: `${ROOTS.DASHBOARD}/user/list`,
     },
+    institute: {
+      root: `${ROOTS.DASHBOARD}/institute`,
+      list: `${ROOTS.DASHBOARD}/institute/list`,
+    },
   },
 };

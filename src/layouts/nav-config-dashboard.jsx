@@ -75,6 +75,15 @@ export const navData = [
         ],
       },
       {
+        title: 'Instituts',
+        path: paths.dashboard.institute.root,
+        icon: ICONS.job,
+        allowedRoles: ['admin'],
+        children: [
+          { title: 'Liste', path: paths.dashboard.institute.list },
+        ],
+      },
+      {
         title: 'Group',
         path: paths.dashboard.group.root,
         icon: ICONS.folder,

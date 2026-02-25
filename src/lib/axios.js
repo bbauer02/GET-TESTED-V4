@@ -68,4 +68,8 @@ export const endpoints = {
     details: '/api/product/details/',
     search: '/api/product/search/',
   },
+  institute: {
+    list: '/api/institutes',
+    details: '/api/institutes',
+  },
 };
