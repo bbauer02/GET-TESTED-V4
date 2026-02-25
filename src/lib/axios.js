@@ -40,6 +40,10 @@ export const fetcher = async (args) => {
 // ----------------------------------------------------------------------
 
 export const endpoints = {
+  user: {
+    update: '/api/users/me/',
+    list: '/api/users/',
+  },
   chat: '/api/chat/',
   kanban: '/api/kanban/',
   calendar: '/api/calendar/',
