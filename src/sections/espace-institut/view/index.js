@@ -1,0 +1,14 @@
+export { InstituteFicheView } from './institute-fiche-view';
+export { InstituteMembresView } from './institute-membres-view';
+export { InstituteSessionsView } from './institute-sessions-view';
+export { InstituteAssessmentsView } from './institute-assessments-view';
+export { InstituteAssessmentCreateView } from './institute-assessment-create-view';
+export { InstituteAssessmentDetailsView } from './institute-assessment-details-view';
+export { InstituteAssessmentEditView } from './institute-assessment-edit-view';
+export { InstituteExamListView } from './institute-exam-list-view';
+export { InstituteExamCreateView } from './institute-exam-create-view';
+export { InstituteExamEditView } from './institute-exam-edit-view';
+export { InstituteSessionDetailsView } from './institute-session-details-view';
+export { InstituteSessionCreateView } from './institute-session-create-view';
+export { InstituteSessionEditView } from './institute-session-edit-view';
+export { InstituteStripeView } from './institute-stripe-view';

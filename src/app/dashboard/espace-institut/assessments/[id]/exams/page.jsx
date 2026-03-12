@@ -1,0 +1,7 @@
+import { InstituteExamListView } from 'src/sections/espace-institut/view';
+
+export const metadata = { title: 'Espace Institut: Exams' };
+
+export default function Page() {
+  return <InstituteExamListView />;
+}
