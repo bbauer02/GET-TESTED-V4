@@ -11,6 +11,9 @@ import Checkbox from '@mui/material/Checkbox';
 import TableCell from '@mui/material/TableCell';
 import IconButton from '@mui/material/IconButton';
 
+import { paths } from 'src/routes/paths';
+import { RouterLink } from 'src/routes/components';
+
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/custom-dialog';
@@ -30,6 +33,24 @@ export function InstituteTableRow({ row, selected, onSelectRow, onDeleteRow }) {
       slotProps={{ arrow: { placement: 'right-top' } }}
     >
       <MenuList>
+        <MenuItem
+          component={RouterLink}
+          href={paths.dashboard.institute.profile(row.id)}
+          onClick={menuActions.onClose}
+        >
+          <Iconify icon="solar:eye-bold" />
+          Voir
+        </MenuItem>
+
+        <MenuItem
+          component={RouterLink}
+          href={paths.dashboard.institute.edit(row.id)}
+          onClick={menuActions.onClose}
+        >
+          <Iconify icon="solar:pen-bold" />
+          Modifier
+        </MenuItem>
+
         <MenuItem
           onClick={() => {
             confirmDialog.onTrue();
@@ -76,9 +97,15 @@ export function InstituteTableRow({ row, selected, onSelectRow, onDeleteRow }) {
 
         <TableCell>
           <Stack sx={{ typography: 'body2', flex: '1 1 auto', alignItems: 'flex-start' }}>
-            <Box component="span" sx={{ fontWeight: 'fontWeightSemiBold' }}>
+            <Link
+              component={RouterLink}
+              href={paths.dashboard.institute.profile(row.id)}
+              color="inherit"
+              underline="hover"
+              sx={{ fontWeight: 'fontWeightSemiBold' }}
+            >
               {row.label}
-            </Box>
+            </Link>
             {row.address?.address1 && (
               <Box component="span" sx={{ color: 'text.disabled' }}>
                 {row.address.address1}
@@ -117,12 +144,18 @@ export function InstituteTableRow({ row, selected, onSelectRow, onDeleteRow }) {
         <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.siret || '—'}</TableCell>
 
         <TableCell>
-          <Label
-            variant="soft"
-            color={row.stripeAccount?.isActivated ? 'success' : 'default'}
-          >
-            {row.stripeAccount?.isActivated ? 'Actif' : 'Inactif'}
-          </Label>
+          {row.stripeAccount ? (
+            <Label
+              variant="soft"
+              color={row.stripeAccount.chargesEnabled ? 'success' : 'warning'}
+            >
+              {row.stripeAccount.chargesEnabled ? 'Actif' : 'En attente'}
+            </Label>
+          ) : (
+            <Label variant="soft" color="default">
+              Non connecte
+            </Label>
+          )}
         </TableCell>
 
         <TableCell>

@@ -1,7 +1,7 @@
 import useSWR from 'swr';
 import { useMemo } from 'react';
 
-import { fetcher, endpoints } from 'src/lib/axios';
+import { fetcher, endpoints, extractMembers, extractTotalItems } from 'src/lib/axios';
 
 // ----------------------------------------------------------------------
 
@@ -18,15 +18,18 @@ export function useGetInstitutes() {
 
   const { data, isLoading, error, isValidating } = useSWR(url, fetcher, swrOptions);
 
+  const institutes = extractMembers(data);
+
   const memoizedValue = useMemo(
     () => ({
-      institutes: Array.isArray(data) ? data : [],
+      institutes,
       institutesLoading: isLoading,
       institutesError: error,
       institutesValidating: isValidating,
-      institutesEmpty: !isLoading && !isValidating && !(Array.isArray(data) && data.length),
-      institutesTotalCount: Array.isArray(data) ? data.length : 0,
+      institutesEmpty: !isLoading && !isValidating && !institutes.length,
+      institutesTotalCount: extractTotalItems(data),
     }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [data, error, isLoading, isValidating]
   );
 
@@ -47,6 +50,52 @@ export function useGetInstitute(instituteId) {
       instituteError: error,
       instituteValidating: isValidating,
     }),
+    [data, error, isLoading, isValidating]
+  );
+
+  return memoizedValue;
+}
+
+// ----------------------------------------------------------------------
+
+export function useGetInstituteMemberships(instituteId) {
+  const url = instituteId ? endpoints.institute.memberships(instituteId) : '';
+
+  const { data, isLoading, error, isValidating } = useSWR(url, fetcher, swrOptions);
+
+  const members = extractMembers(data);
+
+  const memoizedValue = useMemo(
+    () => ({
+      memberships: members,
+      membershipsLoading: isLoading,
+      membershipsError: error,
+      membershipsValidating: isValidating,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [data, error, isLoading, isValidating]
+  );
+
+  return memoizedValue;
+}
+
+// ----------------------------------------------------------------------
+
+export function useGetInstituteSessions(instituteId) {
+  const url = instituteId ? endpoints.institute.sessions(instituteId) : '';
+
+  const { data, isLoading, error, isValidating } = useSWR(url, fetcher, swrOptions);
+
+  const sessions = extractMembers(data);
+
+  const memoizedValue = useMemo(
+    () => ({
+      sessions,
+      sessionsLoading: isLoading,
+      sessionsError: error,
+      sessionsValidating: isValidating,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [data, error, isLoading, isValidating]
   );
 

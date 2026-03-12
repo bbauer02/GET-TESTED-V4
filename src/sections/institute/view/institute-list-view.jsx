@@ -12,6 +12,7 @@ import TableBody from '@mui/material/TableBody';
 import IconButton from '@mui/material/IconButton';
 
 import { paths } from 'src/routes/paths';
+import { RouterLink } from 'src/routes/components';
 
 import { DashboardContent } from 'src/layouts/dashboard';
 
@@ -137,6 +138,16 @@ export function InstituteListView() {
             { name: 'Instituts', href: paths.dashboard.institute.root },
             { name: 'Liste' },
           ]}
+          action={
+            <Button
+              component={RouterLink}
+              href={paths.dashboard.institute.new}
+              variant="contained"
+              startIcon={<Iconify icon="mingcute:add-line" />}
+            >
+              Nouvel institut
+            </Button>
+          }
           sx={{ mb: { xs: 3, md: 5 } }}
         />
 
