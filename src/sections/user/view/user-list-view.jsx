@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { varAlpha } from 'minimal-shared/utils';
 
 import Tab from '@mui/material/Tab';
@@ -15,27 +15,26 @@ import Typography from '@mui/material/Typography';
 import InputAdornment from '@mui/material/InputAdornment';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
-import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import { DataGrid } from '@mui/x-data-grid';
 
-import axios, { endpoints } from 'src/lib/axios';
+import { paths } from 'src/routes/paths';
+import { RouterLink } from 'src/routes/components';
+
+import { parsePhoneNumber } from 'react-phone-number-input';
+
+import { useGetUsers } from 'src/actions/user';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { FlagIcon } from 'src/components/flag-icon';
 import { DashboardContent } from 'src/layouts/dashboard';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+
+import { UserQuickEditForm } from '../user-quick-edit-form';
 
 // ----------------------------------------------------------------------
-
-const PHONE_CODE_TO_COUNTRY = {
-  '+33': 'FR', '+1': 'US', '+44': 'GB', '+49': 'DE', '+34': 'ES', '+39': 'IT',
-  '+81': 'JP', '+86': 'CN', '+82': 'KR', '+91': 'IN', '+55': 'BR', '+7': 'RU',
-  '+61': 'AU', '+31': 'NL', '+32': 'BE', '+41': 'CH', '+46': 'SE', '+47': 'NO',
-  '+45': 'DK', '+48': 'PL', '+43': 'AT', '+351': 'PT', '+30': 'GR', '+90': 'TR',
-  '+20': 'EG', '+212': 'MA', '+213': 'DZ', '+216': 'TN', '+966': 'SA', '+971': 'AE',
-  '+972': 'IL', '+852': 'HK', '+65': 'SG', '+60': 'MY', '+66': 'TH', '+84': 'VN',
-  '+62': 'ID', '+63': 'PH', '+52': 'MX', '+54': 'AR', '+56': 'CL', '+57': 'CO',
-  '+353': 'IE', '+358': 'FI', '+36': 'HU', '+40': 'RO', '+380': 'UA', '+375': 'BY',
-};
 
 const ROLE_COLOR_MAP = {
   admin: 'success',
@@ -50,137 +49,142 @@ const TAB_OPTIONS = [
   { value: 'active', label: 'Active' },
 ];
 
-const COLUMNS = [
-  {
-    field: 'name',
-    headerName: 'Name',
-    flex: 1,
-    minWidth: 200,
-    renderCell: (params) => (
-      <Stack direction="row" alignItems="center" spacing={2} sx={{ height: 1 }}>
-        <Stack
-          sx={{
-            width: 40,
-            height: 40,
-            flexShrink: 0,
-            borderRadius: '50%',
-            overflow: 'hidden',
-            bgcolor: 'background.neutral',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          {params.row.photoURL ? (
-            <img
-              src={params.row.photoURL}
-              alt={params.row.name}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
-          ) : (
-            <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
-              {params.row.firstname?.charAt(0)?.toUpperCase()}
-              {params.row.lastname?.charAt(0)?.toUpperCase()}
-            </Typography>
-          )}
-        </Stack>
-        <Stack sx={{ minWidth: 0 }}>
-          <Typography variant="subtitle2" noWrap>
-            {params.row.name}
-          </Typography>
-          <Typography variant="body2" sx={{ color: 'text.disabled' }} noWrap>
-            {params.row.email}
-          </Typography>
-        </Stack>
-      </Stack>
-    ),
-  },
-  {
-    field: 'email',
-    headerName: 'Email',
-    flex: 1,
-    minWidth: 200,
-  },
-  {
-    field: 'phone',
-    headerName: 'Phone',
-    width: 200,
-    renderCell: (params) => {
-      const countryCode = PHONE_CODE_TO_COUNTRY[params.row.phoneCountryCode] || '';
-      return (
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ height: 1 }}>
-          {countryCode && <FlagIcon code={countryCode} />}
-          <Typography variant="body2">{params.value}</Typography>
-        </Stack>
-      );
-    },
-  },
-  {
-    field: 'platformRole',
-    headerName: 'Role',
-    width: 160,
-    renderCell: (params) => (
-      <Label
-        variant="soft"
-        color={ROLE_COLOR_MAP[params.value?.toLowerCase()] || 'default'}
-      >
-        {params.value}
-      </Label>
-    ),
-  },
-  {
-    field: 'actions',
-    type: 'actions',
-    headerName: '',
-    width: 80,
-    getActions: (params) => [
-      <GridActionsCellItem
-        key="view"
-        icon={<Iconify icon="solar:eye-bold" />}
-        label="View"
-        onClick={() => console.log('View', params.id)}
-      />,
-      <GridActionsCellItem
-        key="edit"
-        icon={<Iconify icon="solar:pen-bold" />}
-        label="Edit"
-        onClick={() => console.log('Edit', params.id)}
-      />,
-    ],
-  },
-];
-
 // ----------------------------------------------------------------------
 
 export function UserListView() {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { users: rawUsers, usersLoading } = useGetUsers();
+
   const [currentTab, setCurrentTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
 
-  const fetchUsers = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await axios.get(endpoints.user.list);
-      const data = Array.isArray(res.data) ? res.data : res.data?.['hydra:member'] ?? [];
+  const [quickEditOpen, setQuickEditOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
-      const mapped = data.map((user) => ({
+  const users = useMemo(
+    () =>
+      rawUsers.map((user) => ({
         ...user,
         name: `${user.firstname ?? ''} ${user.lastname ?? ''}`.trim(),
-      }));
+      })),
+    [rawUsers]
+  );
 
-      setUsers(mapped);
-    } catch (error) {
-      console.error('Failed to fetch users:', error);
-    } finally {
-      setLoading(false);
-    }
+  const handleEditRow = useCallback((user) => {
+    setSelectedUser(user);
+    setQuickEditOpen(true);
   }, []);
 
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+  const handleCloseQuickEdit = useCallback(() => {
+    setQuickEditOpen(false);
+    setSelectedUser(null);
+  }, []);
+
+  const columns = useMemo(
+    () => [
+      {
+        field: 'name',
+        headerName: 'Name',
+        flex: 1,
+        minWidth: 200,
+        renderCell: (params) => (
+          <Stack direction="row" alignItems="center" spacing={2} sx={{ height: 1 }}>
+            <Stack
+              sx={{
+                width: 40,
+                height: 40,
+                flexShrink: 0,
+                borderRadius: '50%',
+                overflow: 'hidden',
+                bgcolor: 'background.neutral',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {params.row.avatar ? (
+                <img
+                  src={params.row.avatar}
+                  alt={params.row.name}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : (
+                <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
+                  {params.row.firstname?.charAt(0)?.toUpperCase()}
+                  {params.row.lastname?.charAt(0)?.toUpperCase()}
+                </Typography>
+              )}
+            </Stack>
+            <Stack sx={{ minWidth: 0 }}>
+              <Typography variant="subtitle2" noWrap>
+                {params.row.name}
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.disabled' }} noWrap>
+                {params.row.email}
+              </Typography>
+            </Stack>
+          </Stack>
+        ),
+      },
+      {
+        field: 'email',
+        headerName: 'Email',
+        flex: 1,
+        minWidth: 200,
+      },
+      {
+        field: 'phone',
+        headerName: 'Phone',
+        width: 200,
+        renderCell: (params) => {
+          const { phoneCountryCode, phone } = params.row;
+          let country = '';
+          if (phoneCountryCode) {
+            try {
+              const fullNumber = phone?.startsWith('+') ? phone : `${phoneCountryCode}${phone || ''}`;
+              const parsed = parsePhoneNumber(fullNumber);
+              country = parsed?.country || '';
+            } catch (e) { /* ignore parse errors */ }
+          }
+          return (
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ height: 1 }}>
+              {country && <FlagIcon code={country} />}
+              <Typography variant="body2">{params.value}</Typography>
+            </Stack>
+          );
+        },
+      },
+      {
+        field: 'platformRole',
+        headerName: 'Role',
+        width: 160,
+        renderCell: (params) => (
+          <Label
+            variant="soft"
+            color={ROLE_COLOR_MAP[params.value?.toLowerCase()] || 'default'}
+          >
+            {params.value}
+          </Label>
+        ),
+      },
+      {
+        field: 'actions',
+        headerName: '',
+        width: 80,
+        sortable: false,
+        filterable: false,
+        disableColumnMenu: true,
+        renderCell: (params) => (
+          <Tooltip title="Quick Edit">
+            <IconButton onClick={() => handleEditRow(params.row)}>
+              <Iconify icon="solar:pen-bold" />
+            </IconButton>
+          </Tooltip>
+        ),
+      },
+    ],
+    [handleEditRow]
+  );
 
   // Extract unique roles from user data
   const roleOptions = useMemo(
@@ -227,16 +231,26 @@ export function UserListView() {
 
   return (
     <DashboardContent maxWidth="xl">
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: { xs: 3, md: 5 } }}>
-        <Typography variant="h4">Users</Typography>
-        <Button
-          variant="contained"
-          color="inherit"
-          startIcon={<Iconify icon="mingcute:add-line" />}
-        >
-          New user
-        </Button>
-      </Stack>
+      <CustomBreadcrumbs
+        heading="Utilisateurs"
+        links={[
+          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Utilisateurs', href: paths.dashboard.user.root },
+          { name: 'Liste' },
+        ]}
+        action={
+          <Button
+            component={RouterLink}
+            href={paths.dashboard.user.new}
+            variant="contained"
+            color="inherit"
+            startIcon={<Iconify icon="mingcute:add-line" />}
+          >
+            New user
+          </Button>
+        }
+        sx={{ mb: { xs: 3, md: 5 } }}
+      />
 
       <Card>
         {/* ---- Tabs ---- */}
@@ -315,8 +329,8 @@ export function UserListView() {
         {/* ---- DataGrid ---- */}
         <DataGrid
           rows={filteredUsers}
-          columns={COLUMNS}
-          loading={loading}
+          columns={columns}
+          loading={usersLoading}
           showToolbar={false}
           pageSizeOptions={[5, 10, 25]}
           initialState={{
@@ -335,6 +349,12 @@ export function UserListView() {
           }}
         />
       </Card>
+
+      <UserQuickEditForm
+        currentUser={selectedUser}
+        open={quickEditOpen}
+        onClose={handleCloseQuickEdit}
+      />
     </DashboardContent>
   );
 }
