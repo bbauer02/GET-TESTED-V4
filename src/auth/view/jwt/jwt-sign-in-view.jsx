@@ -1,15 +1,20 @@
 'use client';
 
 import * as z from 'zod';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { useBoolean } from 'minimal-shared/hooks';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
+import Chip from '@mui/material/Chip';
 import Alert from '@mui/material/Alert';
+import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
+import Divider from '@mui/material/Divider';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 
@@ -37,6 +42,12 @@ export const SignInSchema = z.object({
 
 // ----------------------------------------------------------------------
 
+const QUICK_LOGINS = [
+  { label: 'Admin Plateforme', email: 'bbauer02@gmail.com', password: 'password123', color: 'error' },
+  { label: 'Admin Institut (Ayaka)', email: 'umebosi1014@yahoo.co.jp', password: 'password123', color: 'warning' },
+  { label: 'User (Christophe)', email: 'cLefebre@gmail.com', password: 'password123', color: 'info' },
+];
+
 export function JwtSignInView() {
   const router = useRouter();
 
@@ -47,8 +58,8 @@ export function JwtSignInView() {
   const [errorMessage, setErrorMessage] = useState(null);
 
   const defaultValues = {
-    email: 'bbauer02@gmail.com',
-    password: 'password123',
+    email: '',
+    password: '',
   };
 
   const methods = useForm({
@@ -58,6 +69,7 @@ export function JwtSignInView() {
 
   const {
     handleSubmit,
+    setValue,
     formState: { isSubmitting },
   } = methods;
 
@@ -73,6 +85,14 @@ export function JwtSignInView() {
       setErrorMessage(feedbackMessage);
     }
   });
+
+  const handleQuickLogin = useCallback(
+    (account) => {
+      setValue('email', account.email, { shouldValidate: true });
+      setValue('password', account.password, { shouldValidate: true });
+    },
+    [setValue]
+  );
 
   const renderForm = () => (
     <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
@@ -140,11 +160,23 @@ export function JwtSignInView() {
         sx={{ textAlign: { xs: 'center', md: 'left' } }}
       />
 
-      <Alert severity="info" sx={{ mb: 3 }}>
-        Use <strong>{defaultValues.email}</strong>
-        {' with password '}
-        <strong>{defaultValues.password}</strong>
-      </Alert>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1.5 }}>
+          Connexion rapide :
+        </Typography>
+        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+          {QUICK_LOGINS.map((account) => (
+            <Chip
+              key={account.email}
+              label={account.label}
+              color={account.color}
+              variant="soft"
+              onClick={() => handleQuickLogin(account)}
+              sx={{ cursor: 'pointer' }}
+            />
+          ))}
+        </Stack>
+      </Box>
 
       {!!errorMessage && (
         <Alert severity="error" sx={{ mb: 3 }}>

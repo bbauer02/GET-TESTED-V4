@@ -31,10 +31,21 @@ export function AuthProvider({ children }) {
 
         const userData = res.data;
 
+        const adminInstitutes = (userData.memberships || [])
+          .filter((m) => m.role === 'ADMIN')
+          .map((m) => ({ id: m.institute?.id, iri: m.institute?.['@id'], label: m.institute?.label }));
+
+        const roles = [userData.platformRole?.toLowerCase() ?? 'user'];
+        if (adminInstitutes.length > 0) roles.push('institute_admin');
+
         const user = {
           ...userData,
           displayName: `${userData.firstname} ${userData.lastname}`,
-          role: userData.platformRole?.toLowerCase() ?? 'user',
+          photoURL: userData.avatar || null,
+          role: roles[0],
+          roles,
+          institutes: adminInstitutes,
+          currentInstitute: adminInstitutes[0] || null,
           accessToken,
         };
 

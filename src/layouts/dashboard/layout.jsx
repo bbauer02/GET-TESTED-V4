@@ -52,7 +52,18 @@ export function DashboardLayout({ sx, cssVars, children, slotProps, layoutQuery 
   const isNavHorizontal = settings.state.navLayout === 'horizontal';
   const isNavVertical = isNavMini || settings.state.navLayout === 'vertical';
 
-  const canDisplayItemByRole = (allowedRoles) => !allowedRoles?.includes(user?.role);
+  const canDisplayItemByRole = (allowedRoles) => {
+    const userRoles = user?.roles || [user?.role].filter(Boolean);
+    return !allowedRoles?.some((r) => userRoles.includes(r));
+  };
+
+  const filteredNavData = navData.filter((group) =>
+    group.items.some((item) => {
+      if (!item.allowedRoles) return true;
+      const userRoles = user?.roles || [user?.role].filter(Boolean);
+      return item.allowedRoles.some((r) => userRoles.includes(r));
+    })
+  );
 
   const renderHeader = () => {
     const headerSlotProps = {
@@ -77,7 +88,7 @@ export function DashboardLayout({ sx, cssVars, children, slotProps, layoutQuery 
       ),
       bottomArea: isNavHorizontal ? (
         <NavHorizontal
-          data={navData}
+          data={filteredNavData}
           layoutQuery={layoutQuery}
           cssVars={navVars.section}
           checkPermissions={canDisplayItemByRole}
@@ -91,7 +102,7 @@ export function DashboardLayout({ sx, cssVars, children, slotProps, layoutQuery 
             sx={{ mr: 1, ml: -1, [theme.breakpoints.up(layoutQuery)]: { display: 'none' } }}
           />
           <NavMobile
-            data={navData}
+            data={filteredNavData}
             open={open}
             onClose={onClose}
             cssVars={navVars.section}
@@ -123,7 +134,7 @@ export function DashboardLayout({ sx, cssVars, children, slotProps, layoutQuery 
       rightArea: (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0, sm: 0.75 } }}>
           {/** @slot Searchbar */}
-          <Searchbar data={navData} />
+          <Searchbar data={filteredNavData} />
 
           {/** @slot Language popover */}
           <LanguagePopover
@@ -165,7 +176,7 @@ export function DashboardLayout({ sx, cssVars, children, slotProps, layoutQuery 
 
   const renderSidebar = () => (
     <NavVertical
-      data={navData}
+      data={filteredNavData}
       isNavMini={isNavMini}
       layoutQuery={layoutQuery}
       cssVars={navVars.section}

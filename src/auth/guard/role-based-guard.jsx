@@ -18,7 +18,9 @@ import { varBounce, MotionContainer } from 'src/components/animate';
  */
 
 export function RoleBasedGuard({ sx, children, hasContent, currentRole, allowedRoles }) {
-  if (currentRole && allowedRoles && !allowedRoles.includes(currentRole)) {
+  const rolesArray = Array.isArray(currentRole) ? currentRole : [currentRole].filter(Boolean);
+
+  if (rolesArray.length && allowedRoles && !allowedRoles.some((r) => rolesArray.includes(r))) {
     return hasContent ? (
       <Container
         component={MotionContainer}

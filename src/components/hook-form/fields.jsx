@@ -1,7 +1,10 @@
 import { RHFRating } from './rhf-rating';
 import { RHFSlider } from './rhf-slider';
+import { RHFUploadAvatar } from './rhf-upload';
 import { RHFTextField } from './rhf-text-field';
 import { RHFRadioGroup } from './rhf-radio-group';
+import { RHFPhoneInput } from './rhf-phone-input';
+import { RHFCountrySelect } from './rhf-country-select';
 import { RHFAutocomplete } from './rhf-autocomplete';
 import { RHFSwitch, RHFMultiSwitch } from './rhf-switch';
 import { RHFSelect, RHFMultiSelect } from './rhf-select';
@@ -16,12 +19,15 @@ export const Field = {
   Slider: RHFSlider,
   Rating: RHFRating,
   Text: RHFTextField,
+  Phone: RHFPhoneInput,
   Checkbox: RHFCheckbox,
   RadioGroup: RHFRadioGroup,
   MultiSelect: RHFMultiSelect,
   MultiSwitch: RHFMultiSwitch,
   Autocomplete: RHFAutocomplete,
+  CountrySelect: RHFCountrySelect,
   MultiCheckbox: RHFMultiCheckbox,
+  UploadAvatar: RHFUploadAvatar,
   // Pickers
   DatePicker: RHFDatePicker,
   TimePicker: RHFTimePicker,
