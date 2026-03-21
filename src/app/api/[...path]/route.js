@@ -16,7 +16,8 @@ const HOP_BY_HOP = new Set([
 async function proxyRequest(request, { params }) {
   const { path } = await params;
   const targetPath = `/api/${path.join('/')}`;
-  const url = `${API_SERVER_URL}${targetPath}`;
+  const { search } = new URL(request.url);
+  const url = `${API_SERVER_URL}${targetPath}${search}`;
 
   // Read the full body as a buffer (reliable for multipart/form-data)
   let bodyBuffer = null;

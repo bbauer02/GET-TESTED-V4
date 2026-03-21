@@ -31,9 +31,12 @@ export function AuthProvider({ children }) {
 
         const userData = res.data;
 
+        const isPlatformAdmin = userData.platformRole === 'ADMIN';
+
         const adminInstitutes = (userData.memberships || [])
-          .filter((m) => m.role === 'ADMIN')
-          .map((m) => ({ id: m.institute?.id, iri: m.institute?.['@id'], label: m.institute?.label }));
+          .filter((m) => m.role === 'ADMIN' || m.role === 'STAFF')
+          .map((m) => ({ id: m.institute?.id, iri: m.institute?.['@id'], label: m.institute?.label }))
+          .filter((inst, idx, arr) => arr.findIndex((i) => i.id === inst.id) === idx);
 
         const roles = [userData.platformRole?.toLowerCase() ?? 'user'];
         if (adminInstitutes.length > 0) roles.push('institute_admin');

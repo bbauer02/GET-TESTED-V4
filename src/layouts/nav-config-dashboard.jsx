@@ -2,7 +2,6 @@ import { paths } from 'src/routes/paths';
 
 import { CONFIG } from 'src/global-config';
 
-import { Label } from 'src/components/label';
 import { SvgColor } from 'src/components/svg-color';
 
 // ----------------------------------------------------------------------
@@ -49,6 +48,8 @@ export const navData = [
     subheader: 'Overview',
     items: [
       { title: 'Profile', path: paths.dashboard.profile, icon: ICONS.user },
+      { title: 'Trouver une session', path: paths.dashboard.sessionSearch.root, icon: ICONS.calendar },
+      { title: 'Mes inscriptions', path: paths.dashboard.mesInscriptions.root, icon: ICONS.booking },
     ],
   },
   /**
@@ -107,6 +108,22 @@ export const navData = [
           { title: 'Creer', path: paths.dashboard.skill.new },
         ],
       },
+      {
+        title: 'Factures',
+        path: paths.dashboard.invoice.root,
+        icon: ICONS.invoice,
+        allowedRoles: ['admin'],
+      },
+      {
+        title: 'Documents',
+        path: paths.dashboard.documentType.root,
+        icon: ICONS.file,
+        allowedRoles: ['admin'],
+        children: [
+          { title: 'Types de documents', path: paths.dashboard.documentType.list },
+          { title: 'Modèles maîtres', path: paths.dashboard.masterTemplate.list },
+        ],
+      },
     ],
   },
   /**
@@ -137,6 +154,18 @@ export const navData = [
         title: 'Assessments',
         path: paths.dashboard.espaceInstitut.assessments,
         icon: ICONS.course,
+        allowedRoles: ['institute_admin'],
+      },
+      {
+        title: 'Documents',
+        path: paths.dashboard.espaceInstitut.documents,
+        icon: ICONS.file,
+        allowedRoles: ['institute_admin'],
+      },
+      {
+        title: 'Factures',
+        path: paths.dashboard.espaceInstitut.invoices,
+        icon: ICONS.invoice,
         allowedRoles: ['institute_admin'],
       },
       {

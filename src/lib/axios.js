@@ -149,5 +149,28 @@ export const endpoints = {
     details: (id) => `/api/sessions/${id}`,
     enroll: (id) => `/api/sessions/${id}/enroll`,
     scheduledExams: (id) => `/api/sessions/${id}/scheduled-exams`,
+    documentPublications: (id) => `/api/sessions/${id}/document-publications`,
+  },
+  enrollment: {
+    myEnrollments: '/api/users/me/enrollments',
+    details: (id) => `/api/enrollment-sessions/${id}`,
+  },
+  invoice: {
+    list: '/api/invoices',
+    details: (id) => `/api/invoices/${id}`,
+    checkout: (id) => `/api/invoices/${id}/checkout`,
+    verifyPayment: (id) => `/api/invoices/${id}/verify-payment`,
+    instituteInvoices: (instituteId) => `/api/institutes/${instituteId}/invoices`,
+  },
+  documentTemplate: {
+    list: (instituteId) => `/api/institutes/${instituteId}/document-templates`,
+    details: '/api/document-templates',
+    create: (instituteId) => `/api/institutes/${instituteId}/document-templates`,
+    masterList: '/api/admin/document-templates',
+    masterCreate: '/api/admin/document-templates',
+  },
+  documentType: {
+    list: '/api/document-types',
+    details: '/api/document-types',
   },
 };

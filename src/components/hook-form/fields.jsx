@@ -1,5 +1,6 @@
 import { RHFRating } from './rhf-rating';
 import { RHFSlider } from './rhf-slider';
+import { RHFEditor } from './rhf-editor';
 import { RHFUploadAvatar } from './rhf-upload';
 import { RHFTextField } from './rhf-text-field';
 import { RHFRadioGroup } from './rhf-radio-group';
@@ -28,6 +29,7 @@ export const Field = {
   CountrySelect: RHFCountrySelect,
   MultiCheckbox: RHFMultiCheckbox,
   UploadAvatar: RHFUploadAvatar,
+  Editor: RHFEditor,
   // Pickers
   DatePicker: RHFDatePicker,
   TimePicker: RHFTimePicker,
