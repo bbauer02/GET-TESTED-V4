@@ -12,6 +12,8 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import { useCurrentInstitute } from 'src/auth/hooks';
+
 import { useGetAssessment } from 'src/actions/assessment';
 import { useGetExam } from 'src/actions/exam';
 
@@ -23,6 +25,7 @@ export function InstituteExamEditView() {
   const params = useParams();
   const assessmentId = params.id;
   const examId = params.examId;
+  const currentInstitute = useCurrentInstitute();
 
   const { assessment, assessmentLoading } = useGetAssessment(assessmentId);
   const { exam, examLoading } = useGetExam(examId);
@@ -69,7 +72,7 @@ export function InstituteExamEditView() {
         heading="Modifier l'exam"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Espace Institut' },
+          { name: currentInstitute?.label || 'Institut' },
           { name: 'Assessments', href: paths.dashboard.espaceInstitut.assessments },
           { name: assessment?.label || '', href: paths.dashboard.espaceInstitut.assessmentView(assessmentId) },
           { name: resolvedExam?.label || '' },

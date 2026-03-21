@@ -1,4 +1,5 @@
 export { InstituteFicheView } from './institute-fiche-view';
+export { InstituteFicheEditView } from './institute-fiche-edit-view';
 export { InstituteMembresView } from './institute-membres-view';
 export { InstituteSessionsView } from './institute-sessions-view';
 export { InstituteAssessmentsView } from './institute-assessments-view';
@@ -12,3 +13,4 @@ export { InstituteSessionDetailsView } from './institute-session-details-view';
 export { InstituteSessionCreateView } from './institute-session-create-view';
 export { InstituteSessionEditView } from './institute-session-edit-view';
 export { InstituteStripeView } from './institute-stripe-view';
+export { InstituteInvoicesView } from './institute-invoices-view';

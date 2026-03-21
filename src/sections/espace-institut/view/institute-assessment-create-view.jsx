@@ -26,7 +26,7 @@ export function InstituteAssessmentCreateView() {
         heading="Creer un assessment"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Espace Institut' },
+          { name: currentInstitute?.label || 'Institut' },
           { name: 'Assessments', href: paths.dashboard.espaceInstitut.assessments },
           { name: 'Nouveau' },
         ]}

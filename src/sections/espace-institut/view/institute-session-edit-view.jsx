@@ -30,7 +30,7 @@ export function InstituteSessionEditView() {
         heading="Modifier la session"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Espace Institut' },
+          { name: currentInstitute?.label || 'Institut' },
           { name: 'Sessions', href: paths.dashboard.espaceInstitut.sessions },
           { name: 'Modifier' },
         ]}

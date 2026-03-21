@@ -116,7 +116,7 @@ export function InstituteAssessmentsView() {
         heading="Assessments"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Espace Institut' },
+          { name: currentInstitute?.label || 'Institut' },
           { name: 'Assessments' },
         ]}
         action={

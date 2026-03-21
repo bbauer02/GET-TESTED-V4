@@ -1,160 +1,114 @@
 'use client';
 
-import { z } from 'zod';
-import { useMemo, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useState, useCallback } from 'react';
+import { toast } from 'sonner';
 
 import Box from '@mui/material/Box';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
+import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
-import LoadingButton from '@mui/lab/LoadingButton';
-import InputAdornment from '@mui/material/InputAdornment';
 
 import { paths } from 'src/routes/paths';
+import { RouterLink } from 'src/routes/components';
+import { usePathname, useSearchParams } from 'src/routes/hooks';
 
-import axios, { endpoints } from 'src/lib/axios';
+import axios from 'src/lib/axios';
 
 import { DashboardContent } from 'src/layouts/dashboard';
 
-import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
-import { FlagIcon } from 'src/components/flag-icon';
-import { Form, Field } from 'src/components/hook-form';
 import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { useCurrentInstitute } from 'src/auth/hooks';
 
-import { useGetInstituteFiche } from 'src/actions/espace-institut';
+import { useGetInstituteFiche, useGetInstituteMembres, useGetInstituteSessions } from 'src/actions/espace-institut';
 
-import { COUNTRIES } from 'src/sections/profile/utils/countries';
+import { InstituteProfileCover } from 'src/sections/institute/institute-profile-cover';
+import { InstituteFicheHome } from '../institute-fiche-home';
+import { InstituteFicheTeam } from '../institute-fiche-team';
 
 // ----------------------------------------------------------------------
 
-const InstituteSchema = z.object({
-  label: z.string().min(1, { error: 'Le nom est requis !' }),
-  email: z.string().email({ error: 'Email invalide !' }).or(z.literal('')),
-  siteweb: z.string(),
-  address: z.object({
-    address1: z.string(),
-    address2: z.string(),
-    zipcode: z.string(),
-    city: z.string(),
-    countryCode: z.string().nullable(),
-  }),
-  legalForm: z.string(),
-  shareCapital: z.string(),
-  siren: z.string().max(9, { error: '9 caracteres maximum !' }),
-  siret: z.string().max(14, { error: '14 caracteres maximum !' }),
-  vatNumber: z.string(),
-  rcsCity: z.string(),
-  socialNetworks: z.object({
-    facebook: z.string(),
-    twitter: z.string(),
-    instagram: z.string(),
-    linkedin: z.string(),
-  }),
-});
+const TAB_PARAM = 'tab';
+
+const NAV_ITEMS = [
+  {
+    value: '',
+    label: 'Profile',
+    icon: <Iconify width={24} icon="solar:user-id-bold" />,
+  },
+  {
+    value: 'team',
+    label: 'Equipe',
+    icon: <Iconify width={24} icon="solar:users-group-rounded-bold" />,
+  },
+];
 
 // ----------------------------------------------------------------------
 
 export function InstituteFicheView() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const selectedTab = searchParams.get(TAB_PARAM) ?? '';
+
   const currentInstitute = useCurrentInstitute();
-  const { institute, instituteLoading, instituteMutate } = useGetInstituteFiche(
-    currentInstitute?.id
-  );
+  const { institute, instituteLoading, instituteMutate } = useGetInstituteFiche(currentInstitute?.id);
+  const { membres, membresLoading } = useGetInstituteMembres(currentInstitute?.id);
+  const { sessions, sessionsLoading } = useGetInstituteSessions(currentInstitute?.id);
 
-  const defaultValues = useMemo(
-    () => ({
-      label: institute?.label || '',
-      email: institute?.email || '',
-      siteweb: institute?.siteweb || '',
-      address: {
-        address1: institute?.address?.address1 || '',
-        address2: institute?.address?.address2 || '',
-        zipcode: institute?.address?.zipcode || '',
-        city: institute?.address?.city || '',
-        countryCode: institute?.address?.countryCode || null,
-      },
-      legalForm: institute?.legalForm || '',
-      shareCapital: institute?.shareCapital || '',
-      siren: institute?.siren || '',
-      siret: institute?.siret || '',
-      vatNumber: institute?.vatNumber || '',
-      rcsCity: institute?.rcsCity || '',
-      socialNetworks: {
-        facebook: institute?.socialNetworks?.facebook || '',
-        twitter: institute?.socialNetworks?.twitter || '',
-        instagram: institute?.socialNetworks?.instagram || '',
-        linkedin: institute?.socialNetworks?.linkedin || '',
-      },
-    }),
-    [institute]
-  );
+  const [searchTeam, setSearchTeam] = useState('');
 
-  const methods = useForm({
-    mode: 'onSubmit',
-    resolver: zodResolver(InstituteSchema),
-    defaultValues,
-  });
+  const handleSearchTeam = useCallback((event) => {
+    setSearchTeam(event.target.value);
+  }, []);
 
-  const {
-    watch,
-    reset,
-    handleSubmit,
-    formState: { isSubmitting },
-  } = methods;
+  const createRedirectPath = (currentPath, query) => {
+    const queryString = new URLSearchParams({ [TAB_PARAM]: query }).toString();
+    return query ? `${currentPath}?${queryString}` : currentPath;
+  };
 
-  useEffect(() => {
-    if (institute) {
-      reset(defaultValues);
-    }
-  }, [institute, reset, defaultValues]);
-
-  const watchCountry = watch('address.countryCode');
-
-  const onSubmit = handleSubmit(async (data) => {
+  const handleUploadImage = useCallback(async (file, type) => {
     try {
-      const payload = {
-        label: data.label,
-        email: data.email || null,
-        siteweb: data.siteweb || null,
-        address: {
-          address1: data.address.address1 || null,
-          address2: data.address.address2 || null,
-          zipcode: data.address.zipcode || null,
-          city: data.address.city || null,
-          countryCode: data.address.countryCode || null,
-        },
-        legalForm: data.legalForm || null,
-        shareCapital: data.shareCapital || null,
-        siren: data.siren || null,
-        siret: data.siret || null,
-        vatNumber: data.vatNumber || null,
-        rcsCity: data.rcsCity || null,
-        socialNetworks: {
-          facebook: data.socialNetworks.facebook || null,
-          twitter: data.socialNetworks.twitter || null,
-          instagram: data.socialNetworks.instagram || null,
-          linkedin: data.socialNetworks.linkedin || null,
-        },
-      };
+      const formData = new FormData();
+      formData.append('file', file);
 
-      await axios.patch(`${endpoints.institute.details}/${currentInstitute.id}`, payload, {
-        headers: { 'Content-Type': 'application/merge-patch+json' },
+      const endpoint = type === 'logo'
+        ? `/api/institutes/${currentInstitute.id}/logo`
+        : `/api/institutes/${currentInstitute.id}/cover`;
+
+      await axios.post(endpoint, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      toast.success('Institut modifie avec succes !');
       instituteMutate();
+      toast.success(type === 'logo' ? 'Logo mis a jour !' : 'Couverture mise a jour !');
     } catch (error) {
       console.error(error);
-      toast.error(error?.message || "Erreur lors de la modification de l'institut");
+      toast.error('Erreur lors de l\'upload de l\'image.');
     }
-  });
+  }, [currentInstitute?.id, instituteMutate]);
 
-  if (instituteLoading) {
+  const handleChangeLogo = useCallback((file) => handleUploadImage(file, 'logo'), [handleUploadImage]);
+  const handleChangeCover = useCallback((file) => handleUploadImage(file, 'cover'), [handleUploadImage]);
+
+  const handleSaveCoverPosition = useCallback(async (positionY) => {
+    try {
+      await axios.patch(`/api/institutes/${currentInstitute.id}`, {
+        coverPositionY: positionY,
+      }, {
+        headers: { 'Content-Type': 'application/merge-patch+json' },
+      });
+      instituteMutate();
+      toast.success('Position sauvegardee !');
+    } catch (error) {
+      console.error(error);
+      toast.error('Erreur lors de la sauvegarde de la position.');
+    }
+  }, [currentInstitute?.id, instituteMutate]);
+
+  if (instituteLoading || membresLoading || sessionsLoading) {
     return (
       <DashboardContent>
         <LoadingScreen />
@@ -162,173 +116,9 @@ export function InstituteFicheView() {
     );
   }
 
-  const renderGeneralInfo = () => (
-    <>
-      <Typography variant="subtitle1" sx={{ mb: 2 }}>
-        Informations generales
-      </Typography>
+  if (!institute) return null;
 
-      <Box
-        sx={{
-          rowGap: 3,
-          columnGap: 2,
-          display: 'grid',
-          gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' },
-        }}
-      >
-        <Field.Text name="label" label="Nom de l'institut" />
-        <Field.Text name="email" label="Email de contact" />
-        <Field.Text name="siteweb" label="Site web" sx={{ gridColumn: '1 / -1' }} />
-      </Box>
-    </>
-  );
-
-  const renderAddress = () => (
-    <>
-      <Typography variant="subtitle1" sx={{ mb: 2, mt: 4 }}>
-        Adresse
-      </Typography>
-
-      <Box
-        sx={{
-          rowGap: 3,
-          columnGap: 2,
-          display: 'grid',
-          gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' },
-        }}
-      >
-        <Field.Text name="address.address1" label="Adresse" sx={{ gridColumn: '1 / -1' }} />
-        <Field.Text
-          name="address.address2"
-          label="Complement d'adresse"
-          sx={{ gridColumn: '1 / -1' }}
-        />
-        <Field.Text name="address.zipcode" label="Code postal" />
-        <Field.Text name="address.city" label="Ville" />
-
-        <Field.Autocomplete
-          name="address.countryCode"
-          label="Pays"
-          options={COUNTRIES.map((c) => c.code)}
-          getOptionLabel={(option) => COUNTRIES.find((c) => c.code === option)?.label ?? ''}
-          isOptionEqualToValue={(option, value) => option === value}
-          renderOption={({ key, ...props }, option) => (
-            <li key={key} {...props}>
-              <FlagIcon code={option} sx={{ mr: 1.5 }} />
-              {COUNTRIES.find((c) => c.code === option)?.label}
-            </li>
-          )}
-          slotProps={{
-            textField: {
-              slotProps: {
-                input: {
-                  startAdornment: watchCountry ? (
-                    <InputAdornment position="start">
-                      <FlagIcon code={watchCountry} />
-                    </InputAdornment>
-                  ) : null,
-                },
-              },
-            },
-          }}
-        />
-      </Box>
-    </>
-  );
-
-  const renderLegalInfo = () => (
-    <>
-      <Typography variant="subtitle1" sx={{ mb: 2, mt: 4 }}>
-        Informations legales
-      </Typography>
-
-      <Box
-        sx={{
-          rowGap: 3,
-          columnGap: 2,
-          display: 'grid',
-          gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' },
-        }}
-      >
-        <Field.Text name="legalForm" label="Forme juridique" />
-        <Field.Text name="shareCapital" label="Capital social" />
-        <Field.Text name="siren" label="SIREN" slotProps={{ htmlInput: { maxLength: 9 } }} />
-        <Field.Text name="siret" label="SIRET" slotProps={{ htmlInput: { maxLength: 14 } }} />
-        <Field.Text name="vatNumber" label="Numero de TVA" />
-        <Field.Text name="rcsCity" label="Ville RCS" />
-      </Box>
-    </>
-  );
-
-  const renderSocialNetworks = () => (
-    <>
-      <Typography variant="subtitle1" sx={{ mb: 2, mt: 4 }}>
-        Reseaux sociaux
-      </Typography>
-
-      <Box
-        sx={{
-          rowGap: 3,
-          columnGap: 2,
-          display: 'grid',
-          gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' },
-        }}
-      >
-        <Field.Text
-          name="socialNetworks.facebook"
-          label="Facebook"
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Iconify icon="mdi:facebook" width={22} />
-                </InputAdornment>
-              ),
-            },
-          }}
-        />
-        <Field.Text
-          name="socialNetworks.twitter"
-          label="Twitter / X"
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Iconify icon="mdi:twitter" width={22} />
-                </InputAdornment>
-              ),
-            },
-          }}
-        />
-        <Field.Text
-          name="socialNetworks.instagram"
-          label="Instagram"
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Iconify icon="mdi:instagram" width={22} />
-                </InputAdornment>
-              ),
-            },
-          }}
-        />
-        <Field.Text
-          name="socialNetworks.linkedin"
-          label="LinkedIn"
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Iconify icon="mdi:linkedin" width={22} />
-                </InputAdornment>
-              ),
-            },
-          }}
-        />
-      </Box>
-    </>
-  );
+  const city = institute.address?.city || '';
 
   return (
     <DashboardContent>
@@ -336,26 +126,78 @@ export function InstituteFicheView() {
         heading="Fiche institut"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Espace Institut' },
+          { name: institute.label },
           { name: 'Fiche' },
         ]}
+        action={
+          <Button
+            component={RouterLink}
+            href={paths.dashboard.espaceInstitut.ficheEdit}
+            variant="contained"
+            startIcon={<Iconify icon="solar:pen-bold" />}
+          >
+            Modifier
+          </Button>
+        }
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
-      <Form methods={methods} onSubmit={onSubmit}>
-        <Card sx={{ p: 3 }}>
-          {renderGeneralInfo()}
-          {renderAddress()}
-          {renderLegalInfo()}
-          {renderSocialNetworks()}
+      <Card sx={{ height: 290 }}>
+        <InstituteProfileCover
+          name={institute.label}
+          city={city}
+          logoUrl={institute.logo}
+          coverUrl={institute.coverImage}
+          coverPositionY={institute.coverPositionY ?? 50}
+          editable
+          onChangeLogo={handleChangeLogo}
+          onChangeCover={handleChangeCover}
+          onSaveCoverPosition={handleSaveCoverPosition}
+        />
 
-          <Stack alignItems="flex-end" sx={{ mt: 3 }}>
-            <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-              Enregistrer les modifications
-            </LoadingButton>
-          </Stack>
-        </Card>
-      </Form>
+        <Box
+          sx={{
+            width: 1,
+            bottom: 0,
+            zIndex: 9,
+            px: { md: 3 },
+            display: 'flex',
+            position: 'absolute',
+            bgcolor: 'background.paper',
+            justifyContent: { xs: 'center', md: 'flex-end' },
+          }}
+        >
+          <Tabs value={selectedTab}>
+            {NAV_ITEMS.map((tab) => (
+              <Tab
+                component={RouterLink}
+                key={tab.value}
+                value={tab.value}
+                icon={tab.icon}
+                label={tab.label}
+                href={createRedirectPath(pathname, tab.value)}
+              />
+            ))}
+          </Tabs>
+        </Box>
+      </Card>
+
+      {selectedTab === '' && (
+        <InstituteFicheHome
+          institute={institute}
+          memberships={membres}
+          sessions={sessions}
+          sx={{ mt: 3 }}
+        />
+      )}
+
+      {selectedTab === 'team' && (
+        <InstituteFicheTeam
+          memberships={membres}
+          searchQuery={searchTeam}
+          onSearch={handleSearchTeam}
+        />
+      )}
     </DashboardContent>
   );
 }

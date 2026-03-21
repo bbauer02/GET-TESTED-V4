@@ -25,6 +25,7 @@ import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableContainer from '@mui/material/TableContainer';
 import Avatar from '@mui/material/Avatar';
+import Tooltip from '@mui/material/Tooltip';
 
 import { fDateTime, fDate } from 'src/utils/format-time';
 
@@ -47,20 +48,23 @@ import { useGetAssessmentExams } from 'src/actions/exam';
 import { getErrorMessage } from 'src/auth/utils/error-message';
 
 import { SessionScheduledExams } from '../session-scheduled-exams';
+import { SessionDocumentPublications } from '../session-document-publications';
 
 // ----------------------------------------------------------------------
 
 const STATUS_COLORS = {
   DRAFT: 'default',
   OPEN: 'success',
-  CLOSE: 'warning',
+  LOCKED: 'warning',
+  VALIDATED: 'info',
   CANCELLED: 'error',
 };
 
 const STATUS_LABELS = {
   DRAFT: 'Brouillon',
   OPEN: 'Ouverte',
-  CLOSE: 'Fermée',
+  LOCKED: 'Verrouillée',
+  VALIDATED: 'Validée',
   CANCELLED: 'Annulée',
 };
 
@@ -70,6 +74,12 @@ const ENROLLMENT_EXAM_STATUS_COLORS = {
   FAILED: 'error',
 };
 
+const ENROLLMENT_EXAM_STATUS_LABELS = {
+  REGISTERED: 'Inscrit',
+  PASSED: 'Réussi',
+  FAILED: 'Échoué',
+};
+
 // Transitions possibles par statut actuel → statut cible
 const TRANSITIONS_MAP = {
   DRAFT: [
@@ -77,12 +87,15 @@ const TRANSITIONS_MAP = {
     { transition: 'cancel_from_draft', targetStatus: 'CANCELLED' },
   ],
   OPEN: [
-    { transition: 'close', targetStatus: 'CLOSE' },
+    { transition: 'lock', targetStatus: 'LOCKED' },
     { transition: 'cancel_from_open', targetStatus: 'CANCELLED' },
   ],
-  CLOSE: [
-    { transition: 'cancel_from_close', targetStatus: 'CANCELLED' },
+  LOCKED: [
+    { transition: 'validate', targetStatus: 'VALIDATED' },
+    { transition: 'reopen_from_locked', targetStatus: 'OPEN' },
+    { transition: 'cancel_from_locked', targetStatus: 'CANCELLED' },
   ],
+  VALIDATED: [],
   CANCELLED: [
     { transition: 'reopen', targetStatus: 'DRAFT' },
   ],
@@ -166,7 +179,7 @@ export function InstituteSessionDetailsView() {
         heading="Détail de la session"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Espace Institut' },
+          { name: currentInstitute?.label || 'Institut' },
           { name: 'Sessions', href: paths.dashboard.espaceInstitut.sessions },
           { name: session.assessment?.label || 'Session' },
         ]}
@@ -268,6 +281,11 @@ export function InstituteSessionDetailsView() {
               membres={membres}
               onMutate={sessionMutate}
             />
+
+            <SessionDocumentPublications
+              session={session}
+              onMutate={sessionMutate}
+            />
           </Stack>
         </Grid>
 
@@ -287,6 +305,7 @@ export function InstituteSessionDetailsView() {
                       <TableRow>
                         <TableCell>Candidat</TableCell>
                         <TableCell>Date inscription</TableCell>
+                        <TableCell align="center">Paiement</TableCell>
                         <TableCell>Résultats</TableCell>
                       </TableRow>
                     </TableHead>
@@ -321,19 +340,47 @@ export function InstituteSessionDetailsView() {
                               {enrollment.registrationDate ? fDate(enrollment.registrationDate) : '—'}
                             </TableCell>
 
+                            <TableCell align="center">
+                              <PaymentStatusIcon invoices={enrollment.invoices} />
+                            </TableCell>
+
                             <TableCell>
                               {enrollmentExams.length > 0 ? (
-                                <Stack direction="row" spacing={0.5} flexWrap="wrap">
-                                  {enrollmentExams.map((ee) => (
-                                    <Label
-                                      key={ee.id || ee['@id']}
-                                      color={ENROLLMENT_EXAM_STATUS_COLORS[ee.status] || 'default'}
-                                      variant="soft"
-                                    >
-                                      {ee.finalScore != null ? `${ee.finalScore}` : ee.status || '—'}
-                                    </Label>
-                                  ))}
-                                </Stack>
+                                (() => {
+                                  const hasAnyScore = enrollmentExams.some((ee) => ee.finalScore != null);
+                                  if (!hasAnyScore) {
+                                    return (
+                                      <Label color="default" variant="soft">
+                                        Non évalué
+                                      </Label>
+                                    );
+                                  }
+                                  return (
+                                    <Stack direction="row" spacing={0.5} flexWrap="wrap">
+                                      {enrollmentExams.map((ee) => {
+                                        const exam = ee.scheduledExam?.exam;
+                                        const examLabel = exam?.label || '';
+                                        const total = exam?.nbrQuestions;
+                                        const coeff = exam?.coeff;
+                                        const display = total ? `${ee.finalScore ?? '—'}/${total}` : `${ee.finalScore ?? '—'}`;
+                                        const tooltipText = [examLabel, coeff ? `coeff. ${coeff}` : ''].filter(Boolean).join(' — ');
+
+                                        return (
+                                          <Tooltip key={ee.id || ee['@id']} title={tooltipText} arrow>
+                                            <span>
+                                              <Label
+                                                color={ENROLLMENT_EXAM_STATUS_COLORS[ee.status] || 'default'}
+                                                variant="soft"
+                                              >
+                                                {display}
+                                              </Label>
+                                            </span>
+                                          </Tooltip>
+                                        );
+                                      })}
+                                    </Stack>
+                                  );
+                                })()
                               ) : (
                                 '—'
                               )}
@@ -354,6 +401,38 @@ export function InstituteSessionDetailsView() {
         </Grid>
       </Grid>
     </DashboardContent>
+  );
+}
+
+// ----------------------------------------------------------------------
+
+function PaymentStatusIcon({ invoices }) {
+  // Find the ENROLLMENT invoice (not commission)
+  const enrollmentInvoice = (invoices || []).find(
+    (inv) => inv.businessType !== 'PLATFORM_COMMISSION'
+  );
+
+  if (!enrollmentInvoice) {
+    return (
+      <Tooltip title="Aucune facture">
+        <Iconify icon="solar:bill-cross-bold" width={22} sx={{ color: 'text.disabled' }} />
+      </Tooltip>
+    );
+  }
+
+  const statusConfig = {
+    PAID: { icon: 'solar:check-circle-bold', color: 'success.main', label: 'Payée' },
+    ISSUED: { icon: 'solar:clock-circle-bold', color: 'warning.main', label: 'En attente de paiement' },
+    DRAFT: { icon: 'solar:file-text-bold', color: 'text.disabled', label: 'Brouillon' },
+    CANCELLED: { icon: 'solar:close-circle-bold', color: 'error.main', label: 'Annulée' },
+  };
+
+  const config = statusConfig[enrollmentInvoice.status] || statusConfig.DRAFT;
+
+  return (
+    <Tooltip title={config.label}>
+      <Iconify icon={config.icon} width={22} sx={{ color: config.color }} />
+    </Tooltip>
   );
 }
 

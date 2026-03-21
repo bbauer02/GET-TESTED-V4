@@ -30,6 +30,8 @@ import {
   TablePaginationCustom,
 } from 'src/components/table';
 
+import { useCurrentInstitute } from 'src/auth/hooks';
+
 import { useGetAssessment } from 'src/actions/assessment';
 import { useGetAssessmentExams, useGetLevels } from 'src/actions/exam';
 
@@ -58,6 +60,7 @@ function formatPrice(price) {
 export function InstituteExamListView() {
   const table = useTable();
   const { id: assessmentId } = useParams();
+  const currentInstitute = useCurrentInstitute();
 
   const { assessment, assessmentLoading } = useGetAssessment(assessmentId);
   const { exams, examsLoading, examsEmpty } = useGetAssessmentExams(assessmentId);
@@ -97,7 +100,7 @@ export function InstituteExamListView() {
         heading={`Exams — ${assessment?.label || ''}`}
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Espace Institut' },
+          { name: currentInstitute?.label || 'Institut' },
           { name: 'Assessments', href: paths.dashboard.espaceInstitut.assessments },
           { name: assessment?.label || '', href: paths.dashboard.espaceInstitut.assessmentView(assessmentId) },
           { name: 'Exams' },

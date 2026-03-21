@@ -42,7 +42,7 @@ export function InstituteStripeView() {
           heading="Stripe"
           links={[
             { name: 'Dashboard', href: paths.dashboard.root },
-            { name: 'Espace Institut', href: paths.dashboard.espaceInstitut.root },
+            { name: institute?.label || 'Institut', href: paths.dashboard.espaceInstitut.root },
             { name: 'Stripe' },
           ]}
           sx={{ mb: 3 }}
@@ -80,7 +80,7 @@ export function InstituteStripeView() {
         heading="Stripe"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Espace Institut', href: paths.dashboard.espaceInstitut.root },
+          { name: institute?.label || 'Institut', href: paths.dashboard.espaceInstitut.root },
           { name: 'Stripe' },
         ]}
         sx={{ mb: 3 }}

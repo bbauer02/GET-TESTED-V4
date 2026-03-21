@@ -58,22 +58,25 @@ const STATUS_OPTIONS = [
   { value: 'all', label: 'Toutes' },
   { value: 'DRAFT', label: 'Brouillon' },
   { value: 'OPEN', label: 'Ouverte' },
-  { value: 'CLOSE', label: 'Fermee' },
-  { value: 'CANCELLED', label: 'Annulee' },
+  { value: 'LOCKED', label: 'Verrouillée' },
+  { value: 'VALIDATED', label: 'Validée' },
+  { value: 'CANCELLED', label: 'Annulée' },
 ];
 
 const STATUS_COLORS = {
   DRAFT: 'default',
   OPEN: 'success',
-  CLOSE: 'warning',
+  LOCKED: 'warning',
+  VALIDATED: 'info',
   CANCELLED: 'error',
 };
 
 const STATUS_LABELS = {
   DRAFT: 'Brouillon',
   OPEN: 'Ouverte',
-  CLOSE: 'Fermee',
-  CANCELLED: 'Annulee',
+  LOCKED: 'Verrouillée',
+  VALIDATED: 'Validée',
+  CANCELLED: 'Annulée',
 };
 
 // ----------------------------------------------------------------------
@@ -104,7 +107,7 @@ export function InstituteSessionsView() {
 
   // Count per status
   const statusCounts = useMemo(() => {
-    const counts = { all: sessions.length, DRAFT: 0, OPEN: 0, CLOSE: 0, CANCELLED: 0 };
+    const counts = { all: sessions.length, DRAFT: 0, OPEN: 0, LOCKED: 0, VALIDATED: 0, CANCELLED: 0 };
     sessions.forEach((s) => {
       const st = s.status || 'DRAFT';
       if (counts[st] !== undefined) counts[st] += 1;
@@ -176,7 +179,7 @@ export function InstituteSessionsView() {
         heading="Sessions"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Espace Institut' },
+          { name: currentInstitute?.label || 'Institut' },
           { name: 'Sessions' },
         ]}
         action={

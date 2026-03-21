@@ -59,7 +59,7 @@ export function InstituteMembresView() {
         heading="Membres"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Espace Institut' },
+          { name: currentInstitute?.label || 'Institut' },
           { name: 'Membres' },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}

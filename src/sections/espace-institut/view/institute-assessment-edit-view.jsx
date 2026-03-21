@@ -86,7 +86,7 @@ export function InstituteAssessmentEditView() {
         heading="Modifier l'assessment"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Espace Institut' },
+          { name: currentInstitute?.label || 'Institut' },
           { name: 'Assessments', href: paths.dashboard.espaceInstitut.assessments },
           { name: resolvedAssessment?.label || '' },
         ]}

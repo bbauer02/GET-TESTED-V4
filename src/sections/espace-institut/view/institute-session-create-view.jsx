@@ -26,7 +26,7 @@ export function InstituteSessionCreateView() {
         heading="Creer une session"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Espace Institut' },
+          { name: currentInstitute?.label || 'Institut' },
           { name: 'Sessions', href: paths.dashboard.espaceInstitut.sessions },
           { name: 'Nouvelle' },
         ]}

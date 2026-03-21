@@ -520,7 +520,7 @@ export function InstituteAssessmentDetailsView() {
         heading={assessment.label}
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Espace Institut' },
+          { name: currentInstitute?.label || 'Institut' },
           { name: 'Assessments', href: paths.dashboard.espaceInstitut.assessments },
           { name: assessment.label },
         ]}

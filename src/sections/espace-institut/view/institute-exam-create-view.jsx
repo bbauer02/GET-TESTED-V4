@@ -8,6 +8,8 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import { useCurrentInstitute } from 'src/auth/hooks';
+
 import { useGetAssessment } from 'src/actions/assessment';
 
 import { ExamCreateEditForm } from 'src/sections/exam/exam-create-edit-form';
@@ -16,6 +18,7 @@ import { ExamCreateEditForm } from 'src/sections/exam/exam-create-edit-form';
 
 export function InstituteExamCreateView() {
   const { id: assessmentId } = useParams();
+  const currentInstitute = useCurrentInstitute();
   const { assessment, assessmentLoading } = useGetAssessment(assessmentId);
 
   if (assessmentLoading) {
@@ -30,7 +33,7 @@ export function InstituteExamCreateView() {
         heading="Creer un exam"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Espace Institut' },
+          { name: currentInstitute?.label || 'Institut' },
           { name: 'Assessments', href: paths.dashboard.espaceInstitut.assessments },
           { name: assessment?.label || '', href: paths.dashboard.espaceInstitut.assessmentView(assessmentId) },
           { name: 'Nouvel exam' },
