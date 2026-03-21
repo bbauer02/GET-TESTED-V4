@@ -14,8 +14,8 @@ import { RouterLink } from 'src/routes/components';
 
 import { fCurrency } from 'src/utils/format-number';
 
-import { Iconify } from 'src/components/iconify';
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
@@ -61,7 +61,7 @@ function getCity(session) {
 
 // ----------------------------------------------------------------------
 
-export function SessionCard({ session, sx, ...other }) {
+export function SessionCard({ session, basePath, sx, ...other }) {
   const institute = session?.institute || {};
   const assessment = session?.assessment || {};
   const level = session?.level;
@@ -199,11 +199,16 @@ export function SessionCard({ session, sx, ...other }) {
 
         <Button
           component={RouterLink}
-          href={paths.sessions.details(session.id || session['@id']?.split('/').pop())}
+          href={
+            basePath
+              ? `${basePath}/${session.id || session['@id']?.split('/').pop()}`
+              : paths.sessions.details(session.id || session['@id']?.split('/').pop())
+          }
           variant="contained"
           size="small"
+          disabled={placesLeft !== null && placesLeft <= 0}
         >
-          S&apos;inscrire
+          {placesLeft !== null && placesLeft <= 0 ? 'Complet' : "S\u0027inscrire"}
         </Button>
       </Stack>
     </Card>

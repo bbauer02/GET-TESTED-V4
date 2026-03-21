@@ -50,7 +50,7 @@ export function InstituteProfileView() {
       />
 
       <Card sx={{ height: 290 }}>
-        <InstituteProfileCover name={institute.label} city={city} />
+        <InstituteProfileCover name={institute.label} city={city} logoUrl={institute.logo} coverUrl={institute.coverImage} coverPositionY={institute.coverPositionY ?? 50} />
       </Card>
 
       <InstituteProfileHome

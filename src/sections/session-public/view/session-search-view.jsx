@@ -7,7 +7,11 @@ import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import Pagination from '@mui/material/Pagination';
 
-import { useGetPublicSessions, useGetAssessments, useGetLevels } from 'src/actions/session-public';
+import { paths } from 'src/routes/paths';
+
+import { useGetLevels, useGetAssessments, useGetPublicSessions } from 'src/actions/session-public';
+
+import { useAuthContext } from 'src/auth/hooks';
 
 import { SessionCard } from '../session-card';
 import { SessionFilters } from '../session-filters';
@@ -17,6 +21,9 @@ import { SessionFilters } from '../session-filters';
 const ITEMS_PER_PAGE = 12;
 
 export function SessionSearchView() {
+  const { authenticated } = useAuthContext();
+  const basePath = authenticated ? paths.dashboard.sessionSearch.root : null;
+
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({ assessment: '', level: '' });
 
@@ -109,7 +116,7 @@ export function SessionSearchView() {
             }}
           >
             {paginatedSessions.map((session) => (
-              <SessionCard key={session.id || session['@id']} session={session} />
+              <SessionCard key={session.id || session['@id']} session={session} basePath={basePath} />
             ))}
           </Box>
 

@@ -1,6 +1,5 @@
 'use client';
 
-import { varAlpha } from 'minimal-shared/utils';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -33,6 +32,7 @@ export function EnrollmentStepRecap({
   onPayNow,
   onPayLater,
   isSubmitting,
+  isAuthenticated = false,
 }) {
   const scheduledExams = session?.scheduledExams || session?.scheduled_exams || [];
   const institute = session?.institute || {};
@@ -78,7 +78,7 @@ export function EnrollmentStepRecap({
       <Card variant="outlined">
         <CardContent>
           <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary' }}>
-            Candidat
+            {isAuthenticated ? 'Vos informations' : 'Candidat'}
           </Typography>
           <Typography variant="body1">
             {registrationData?.civility} {registrationData?.firstname} {registrationData?.lastname}

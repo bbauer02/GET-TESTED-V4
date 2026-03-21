@@ -11,16 +11,24 @@ import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
-export const ENROLLMENT_STEPS = [
+export const ENROLLMENT_STEPS_GUEST = [
   'Examens',
   'Inscription',
-  'Recapitulatif',
+  'Récapitulatif',
+  'Paiement',
+];
+
+export const ENROLLMENT_STEPS_AUTH = [
+  'Examens',
+  'Récapitulatif',
   'Paiement',
 ];
 
 // ----------------------------------------------------------------------
 
-export function EnrollmentSteps({ activeStep, sx, ...other }) {
+export function EnrollmentSteps({ activeStep, steps, sx, ...other }) {
+  const stepLabels = steps || ENROLLMENT_STEPS_GUEST;
+
   return (
     <Stepper
       alternativeLabel
@@ -29,7 +37,7 @@ export function EnrollmentSteps({ activeStep, sx, ...other }) {
       sx={[{ mb: { xs: 3, md: 5 } }, ...(Array.isArray(sx) ? sx : [sx])]}
       {...other}
     >
-      {ENROLLMENT_STEPS.map((label) => (
+      {stepLabels.map((label) => (
         <Step key={label}>
           <StepLabel
             slots={{ stepIcon: StepIcon }}

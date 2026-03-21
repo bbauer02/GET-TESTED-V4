@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 
 import { SessionEnrollmentView } from 'src/sections/session-public/view';
 
@@ -8,6 +8,8 @@ import { SessionEnrollmentView } from 'src/sections/session-public/view';
 
 export default function Page() {
   const { id } = useParams();
+  const searchParams = useSearchParams();
+  const paymentResult = searchParams.get('payment'); // 'success' | 'cancel' | null
 
-  return <SessionEnrollmentView sessionId={id} />;
+  return <SessionEnrollmentView sessionId={id} paymentResult={paymentResult} />;
 }
