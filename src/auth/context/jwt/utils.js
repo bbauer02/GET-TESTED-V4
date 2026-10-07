@@ -1,6 +1,6 @@
 import { paths } from 'src/routes/paths';
 
-import axios from 'src/lib/axios';
+import axios, { refreshAccessToken, REFRESH_TOKEN_STORAGE_KEY } from 'src/lib/axios';
 
 import { JWT_STORAGE_KEY } from './constant';
 
@@ -51,28 +51,42 @@ export function isValidToken(accessToken) {
 
 // ----------------------------------------------------------------------
 
-export function tokenExpired(exp) {
-  const currentTime = Date.now();
-  const timeLeft = exp * 1000 - currentTime;
+let expiryTimer = null;
 
-  setTimeout(() => {
-    try {
-      alert('Token expired!');
-      sessionStorage.removeItem(JWT_STORAGE_KEY);
-      window.location.href = paths.auth.jwt.signIn;
-    } catch (error) {
-      console.error('Error during token expiration:', error);
-      throw error;
+/**
+ * Planifie le renouvellement du token une minute avant son expiration.
+ * Si la session ne peut pas être prolongée, retour à la connexion (avec retour à la page courante).
+ */
+export function tokenExpired(exp) {
+  clearTimeout(expiryTimer);
+
+  const timeLeft = Math.max(0, exp * 1000 - Date.now() - 60 * 1000);
+
+  expiryTimer = setTimeout(async () => {
+    const newToken = await refreshAccessToken();
+
+    if (newToken) {
+      const decoded = jwtDecode(newToken);
+      if (decoded?.exp) tokenExpired(decoded.exp);
+      return;
     }
+
+    sessionStorage.removeItem(JWT_STORAGE_KEY);
+    sessionStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
+    const returnTo = encodeURIComponent(window.location.pathname);
+    window.location.href = `${paths.auth.jwt.signIn}?returnTo=${returnTo}`;
   }, timeLeft);
 }
 
 // ----------------------------------------------------------------------
 
-export async function setSession(accessToken) {
+export async function setSession(accessToken, refreshToken) {
   try {
     if (accessToken) {
       sessionStorage.setItem(JWT_STORAGE_KEY, accessToken);
+      if (refreshToken) {
+        sessionStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, refreshToken);
+      }
 
       axios.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
 
@@ -84,7 +98,9 @@ export async function setSession(accessToken) {
         throw new Error('Invalid access token!');
       }
     } else {
+      clearTimeout(expiryTimer);
       sessionStorage.removeItem(JWT_STORAGE_KEY);
+      sessionStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
       delete axios.defaults.headers.common.Authorization;
     }
   } catch (error) {

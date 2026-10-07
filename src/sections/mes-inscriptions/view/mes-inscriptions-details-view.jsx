@@ -9,6 +9,7 @@ import List from '@mui/material/List';
 import Stack from '@mui/material/Stack';
 import Table from '@mui/material/Table';
 import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import TableRow from '@mui/material/TableRow';
 import TableBody from '@mui/material/TableBody';
@@ -201,6 +202,7 @@ export function MesInscriptionsDetailsView() {
 
   const { invoice: enrollmentInvoice, state: paymentState } = getEnrollmentPayment(enrollment);
   const canPay = paymentState === 'to_pay' && ['OPEN', 'LOCKED', 'VALIDATED'].includes(status);
+  const examAccessAllowed = ['LOCKED', 'VALIDATED'].includes(status) && paymentState !== 'to_pay';
 
   return (
     <DashboardContent>
@@ -370,6 +372,7 @@ export function MesInscriptionsDetailsView() {
                         <TableCell>{t('date_column')}</TableCell>
                         <TableCell align="center">{t('status_column')}</TableCell>
                         <TableCell align="center">{t('score_column')}</TableCell>
+                        <TableCell align="right" />
                       </TableRow>
                     </TableHead>
 
@@ -408,11 +411,21 @@ export function MesInscriptionsDetailsView() {
                               {ee.finalScore != null ? (
                                 <Typography variant="subtitle2">
                                   {ee.finalScore}
-                                  {exam.nbrQuestions ? `/${exam.nbrQuestions}` : ''}
+                                  {ee.maxScore ? `/${ee.maxScore}` : ''}
                                 </Typography>
                               ) : (
                                 '—'
                               )}
+                            </TableCell>
+
+                            <TableCell align="right">
+                              <OnlineExamAction
+                                enrollmentExam={ee}
+                                scheduledExam={scheduledExam}
+                                exam={exam}
+                                canAccess={examAccessAllowed}
+                                t={t}
+                              />
                             </TableCell>
                           </TableRow>
                         );
@@ -455,5 +468,69 @@ function InfoRow({ icon, label, value }) {
         <Typography variant="subtitle2">{value || '—'}</Typography>
       </Box>
     </Box>
+  );
+}
+
+// ----------------------------------------------------------------------
+
+/**
+ * Accès à une épreuve en ligne : « Passer l'épreuve » pendant le créneau
+ * (de l'heure de début à la fin de la durée), reprise si déjà démarrée, résultat ensuite.
+ */
+function OnlineExamAction({ enrollmentExam, scheduledExam, exam, canAccess, t }) {
+  const router = useRouter();
+  // Heure figée au rendu initial (une page rechargée met à jour l'état du créneau)
+  const [now] = useState(() => Date.now());
+
+  if (!scheduledExam?.online) return null;
+
+  const enrollmentExamId = enrollmentExam.id || enrollmentExam['@id']?.split('/').pop();
+
+  if (['PASSED', 'FAILED'].includes(enrollmentExam.status)) {
+    return (
+      <Button size="small" color="inherit" onClick={() => router.push(paths.dashboard.examSession.results(enrollmentExamId))}>
+        {t('online_exam_results')}
+      </Button>
+    );
+  }
+
+  if (enrollmentExam.status !== 'REGISTERED' || !canAccess) return null;
+
+  const durationMs = (exam?.duration || 0) * 60 * 1000;
+  const opensAt = scheduledExam.startDate ? new Date(scheduledExam.startDate).getTime() : null;
+  const startedAt = enrollmentExam.startedAt ? new Date(enrollmentExam.startedAt).getTime() : null;
+
+  const closesAt = startedAt
+    ? startedAt + durationMs
+    : opensAt !== null && durationMs
+      ? opensAt + durationMs
+      : null;
+
+  if (opensAt !== null && now < opensAt && !startedAt) {
+    return (
+      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+        {t('online_exam_opens_at', { date: fDateTime(scheduledExam.startDate) })}
+      </Typography>
+    );
+  }
+
+  if (closesAt !== null && now > closesAt) {
+    return (
+      <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+        {t('online_exam_closed')}
+      </Typography>
+    );
+  }
+
+  return (
+    <Button
+      size="small"
+      variant="contained"
+      color="primary"
+      startIcon={<Iconify icon={startedAt ? 'solar:play-circle-bold' : 'solar:pen-new-square-bold'} />}
+      onClick={() => router.push(paths.dashboard.examSession.take(enrollmentExamId))}
+    >
+      {startedAt ? t('online_exam_resume') : t('online_exam_start')}
+    </Button>
   );
 }

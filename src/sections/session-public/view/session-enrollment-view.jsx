@@ -185,7 +185,7 @@ export function SessionEnrollmentView({ sessionId, paymentResult }) {
         token = loginRes.data?.token || loginRes.data?.access_token || loginRes.data?.accessToken;
 
         // Le candidat est désormais connecté (le contexte d'auth sera rechargé à la prochaine navigation)
-        await setSession(token);
+        await setSession(token, loginRes.data?.refresh_token);
 
         // Compléter le profil uniquement pour un compte qui vient d'être créé
         if (!registerError) {

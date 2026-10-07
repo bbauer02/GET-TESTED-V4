@@ -3,7 +3,7 @@
 import { useSetState } from 'minimal-shared/hooks';
 import { useMemo, useEffect, useCallback } from 'react';
 
-import axios, { endpoints } from 'src/lib/axios';
+import axios, { endpoints, refreshAccessToken, REFRESH_TOKEN_STORAGE_KEY } from 'src/lib/axios';
 
 import { JWT_STORAGE_KEY } from './constant';
 import { AuthContext } from '../auth-context';
@@ -22,7 +22,12 @@ export function AuthProvider({ children }) {
 
   const checkUserSession = useCallback(async () => {
     try {
-      const accessToken = sessionStorage.getItem(JWT_STORAGE_KEY);
+      let accessToken = sessionStorage.getItem(JWT_STORAGE_KEY);
+
+      // Token expiré (onglet resté ouvert, rechargement tardif) : tentative de renouvellement
+      if (!isValidToken(accessToken) && sessionStorage.getItem(REFRESH_TOKEN_STORAGE_KEY)) {
+        accessToken = await refreshAccessToken();
+      }
 
       if (accessToken && isValidToken(accessToken)) {
         setSession(accessToken);

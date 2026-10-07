@@ -53,5 +53,10 @@
   "print": "Print",
   "download_pdf": "Download (PDF)",
   "download_error": "The document download failed. You can use “Print” then “Save as PDF”.",
-  "document_available_hint": "Available — view, print or download"
+  "document_available_hint": "Available — view, print or download",
+  "online_exam_start": "Take the exam",
+  "online_exam_resume": "Resume the exam",
+  "online_exam_results": "View result",
+  "online_exam_opens_at": "Online on {{date}}",
+  "online_exam_closed": "Slot ended"
 }

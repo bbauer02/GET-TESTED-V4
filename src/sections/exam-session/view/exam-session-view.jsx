@@ -43,6 +43,16 @@ function formatTime(totalSeconds) {
 
 // ----------------------------------------------------------------------
 
+// Identifiant d'une question dans l'épreuve (renvoyé par l'API)
+const questionKey = (question) => question?.subjectQuestionId || question?.id;
+
+const SAVE_RETRY_DELAY_MS = 3000;
+
+// Ces endpoints renvoient des objets simples : en JSON-LD, API Platform les transformerait en collection
+const JSON_REQUEST = { headers: { Accept: 'application/json' } };
+
+// ----------------------------------------------------------------------
+
 export function ExamSessionView({ enrollmentExamId }) {
   const router = useRouter();
   const theme = useTheme();
@@ -53,119 +63,143 @@ export function ExamSessionView({ enrollmentExamId }) {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState({});
-  const questionStartTimeRef = useRef(Date.now());
+  // État de sauvegarde par question : 'saving' | 'saved' | 'error'
+  const [saveStatus, setSaveStatus] = useState({});
+  const questionStartTimeRef = useRef(0);
+  const answersRef = useRef({});
+  const saveTimersRef = useRef({});
 
+  // Échéance calée sur l'horloge du serveur (décalage = heure serveur - heure locale)
+  const [endsAtMs, setEndsAtMs] = useState(null);
   const [timeLeft, setTimeLeft] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showFinishDialog, setShowFinishDialog] = useState(false);
   const [showGridDialog, setShowGridDialog] = useState(false);
+  const finishingRef = useRef(false);
 
-  // ------ Load exam data ------
+  // ------ Load exam data (démarrage ou reprise) ------
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadExam() {
       try {
-        const res = await axiosInstance.get(endpoints.examSession.start(enrollmentExamId));
-        if (!cancelled) {
-          setExamData(res.data);
-          if (res.data.durationMinutes) {
-            setTimeLeft(res.data.durationMinutes * 60);
-          }
-          setLoading(false);
+        const res = await axiosInstance.get(endpoints.examSession.start(enrollmentExamId), JSON_REQUEST);
+        if (cancelled) return;
+
+        const data = res.data;
+        questionStartTimeRef.current = Date.now();
+        setExamData(data);
+
+        const saved = data.savedAnswers || {};
+        answersRef.current = saved;
+        setAnswers(saved);
+        setSaveStatus(Object.fromEntries(Object.keys(saved).map((key) => [key, 'saved'])));
+
+        if (data.endsAt) {
+          const offset = new Date(data.serverNow).getTime() - Date.now();
+          setEndsAtMs(new Date(data.endsAt).getTime() - offset);
         }
+        setLoading(false);
       } catch (err) {
         if (!cancelled) {
-          setError(err.message || 'Impossible de charger l\'examen.');
+          setError(err.message || "Impossible de charger l'épreuve.");
           setLoading(false);
         }
       }
     }
 
     loadExam();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [enrollmentExamId]);
 
-  // ------ Timer ------
+  // ------ Timer (recalculé depuis l'échéance : insensible aux onglets en veille) ------
 
   useEffect(() => {
-    if (timeLeft === null || timeLeft <= 0) return undefined;
+    if (!endsAtMs) return undefined;
 
-    const interval = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    const tick = () => setTimeLeft(Math.max(0, Math.round((endsAtMs - Date.now()) / 1000)));
+    tick();
+    const interval = setInterval(tick, 1000);
 
     return () => clearInterval(interval);
-  }, [timeLeft]);
-
-  // Auto-submit when time runs out
-  useEffect(() => {
-    if (timeLeft === 0 && examData) {
-      handleFinishExam();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeLeft]);
+  }, [endsAtMs]);
 
   // ------ Derived data ------
 
   const questions = useMemo(() => examData?.questions || [], [examData]);
   const currentQuestion = questions[currentIndex] || null;
+  const currentKey = questionKey(currentQuestion);
   const totalQuestions = questions.length;
   const answeredCount = Object.keys(answers).length;
+  const unsavedKeys = Object.keys(answers).filter((key) => saveStatus[key] !== 'saved');
   const progress = totalQuestions > 0 ? ((currentIndex + 1) / totalQuestions) * 100 : 0;
 
-  // ------ Submit answer to API ------
+  // ------ Sauvegarde d'une réponse (avec nouvel essai automatique) ------
 
-  const submitAnswer = useCallback(async (questionId, answerData) => {
-    if (!answerData) return;
+  const saveAnswer = useCallback(
+    async (key) => {
+      const answerData = answersRef.current[key];
+      if (!answerData) return true;
 
-    const responseTimeMs = Date.now() - questionStartTimeRef.current;
+      clearTimeout(saveTimersRef.current[key]);
+      setSaveStatus((prev) => ({ ...prev, [key]: 'saving' }));
 
-    try {
-      await axiosInstance.post(endpoints.examSession.answer(enrollmentExamId), {
-        subjectQuestionId: questionId,
-        givenAnswer: answerData,
-        responseTimeMs,
-      });
-    } catch (err) {
-      console.error('Failed to submit answer:', err);
-    }
-  }, [enrollmentExamId]);
+      try {
+        await axiosInstance.post(endpoints.examSession.answer(enrollmentExamId), {
+          subjectQuestionId: key,
+          givenAnswer: answerData,
+          responseTimeMs: Date.now() - questionStartTimeRef.current,
+        }, JSON_REQUEST);
+        // Une modification a pu arriver pendant l'envoi : ne marquer « enregistrée » que si inchangée
+        setSaveStatus((prev) => ({
+          ...prev,
+          [key]: answersRef.current[key] === answerData ? 'saved' : prev[key],
+        }));
+        return true;
+      } catch (err) {
+        setSaveStatus((prev) => ({ ...prev, [key]: 'error' }));
+        if (/écoulé/i.test(err.message || '')) {
+          return false;
+        }
+        saveTimersRef.current[key] = setTimeout(() => saveAnswer(key), SAVE_RETRY_DELAY_MS);
+        return false;
+      }
+    },
+    [enrollmentExamId]
+  );
 
-  // ------ Answer handler ------
+  useEffect(() => () => Object.values(saveTimersRef.current).forEach(clearTimeout), []);
 
-  const handleAnswer = useCallback((answerData) => {
-    if (!currentQuestion) return;
-    const questionId = currentQuestion.id;
-    setAnswers((prev) => ({ ...prev, [questionId]: answerData }));
-  }, [currentQuestion]);
+  // ------ Answer handler : la réponse est enregistrée dès qu'elle change ------
+
+  const handleAnswer = useCallback(
+    (answerData) => {
+      if (!currentKey) return;
+      answersRef.current = { ...answersRef.current, [currentKey]: answerData };
+      setAnswers(answersRef.current);
+      setSaveStatus((prev) => ({ ...prev, [currentKey]: 'saving' }));
+
+      clearTimeout(saveTimersRef.current[currentKey]);
+      saveTimersRef.current[currentKey] = setTimeout(() => saveAnswer(currentKey), 600);
+    },
+    [currentKey, saveAnswer]
+  );
 
   // ------ Navigation ------
 
-  const handleNavigate = useCallback(async (newIndex) => {
-    if (!currentQuestion) {
+  const handleNavigate = useCallback(
+    (newIndex) => {
+      if (currentKey && answersRef.current[currentKey] && saveStatus[currentKey] !== 'saved') {
+        saveAnswer(currentKey);
+      }
       setCurrentIndex(newIndex);
-      return;
-    }
-
-    const questionId = currentQuestion.id;
-    const currentAnswer = answers[questionId];
-
-    // Submit current answer before navigating
-    if (currentAnswer) {
-      await submitAnswer(questionId, currentAnswer);
-    }
-
-    setCurrentIndex(newIndex);
-    questionStartTimeRef.current = Date.now();
-  }, [currentQuestion, answers, submitAnswer]);
+      questionStartTimeRef.current = Date.now();
+    },
+    [currentKey, saveStatus, saveAnswer]
+  );
 
   const handlePrevious = useCallback(() => {
     if (currentIndex > 0) handleNavigate(currentIndex - 1);
@@ -175,32 +209,52 @@ export function ExamSessionView({ enrollmentExamId }) {
     if (currentIndex < totalQuestions - 1) handleNavigate(currentIndex + 1);
   }, [currentIndex, totalQuestions, handleNavigate]);
 
-  const handleGoToQuestion = useCallback((index) => {
-    handleNavigate(index);
-    setShowGridDialog(false);
-  }, [handleNavigate]);
+  const handleGoToQuestion = useCallback(
+    (index) => {
+      handleNavigate(index);
+      setShowGridDialog(false);
+    },
+    [handleNavigate]
+  );
 
   // ------ Finish exam ------
 
   const handleFinishExam = useCallback(async () => {
+    if (finishingRef.current) return;
+    finishingRef.current = true;
     setIsSubmitting(true);
     setShowFinishDialog(false);
 
     try {
-      // Submit current answer if any
-      if (currentQuestion && answers[currentQuestion.id]) {
-        await submitAnswer(currentQuestion.id, answers[currentQuestion.id]);
+      // Dernière tentative d'enregistrement des réponses en attente
+      const pending = Object.keys(answersRef.current);
+      await Promise.all(pending.map((key) => saveAnswer(key)));
+
+      const { data: result } = await axiosInstance.post(endpoints.examSession.finish(enrollmentExamId), {}, JSON_REQUEST);
+
+      // Détail par compétence affiché sur la page de résultats (non stocké côté API)
+      try {
+        sessionStorage.setItem(`exam_result_${enrollmentExamId}`, JSON.stringify(result));
+      } catch {
+        // stockage indisponible : la page de résultats affichera la note seule
       }
 
-      const res = await axiosInstance.post(endpoints.examSession.finish(enrollmentExamId));
-
-      toast.success('Examen terminé !');
+      toast.success('Épreuve terminée !');
       router.push(paths.dashboard.examSession.results(enrollmentExamId));
     } catch (err) {
-      toast.error(err.message || 'Erreur lors de la finalisation de l\'examen.');
+      finishingRef.current = false;
+      toast.error(err.message || "Erreur lors de la finalisation de l'épreuve.");
       setIsSubmitting(false);
     }
-  }, [enrollmentExamId, currentQuestion, answers, submitAnswer, router]);
+  }, [enrollmentExamId, saveAnswer, router]);
+
+  // Soumission automatique à la fin du temps
+  useEffect(() => {
+    if (timeLeft === 0 && examData) {
+      toast.info('Temps écoulé : vos réponses sont envoyées.');
+      handleFinishExam();
+    }
+  }, [timeLeft, examData, handleFinishExam]);
 
   // ------ Loading / Error states ------
 
@@ -272,6 +326,22 @@ export function ExamSessionView({ enrollmentExamId }) {
           </Stack>
         )}
 
+        <Tooltip
+          title={
+            unsavedKeys.length
+              ? 'Certaines réponses ne sont pas encore enregistrées : nouvel essai automatique en cours.'
+              : 'Toutes vos réponses sont enregistrées.'
+          }
+        >
+          <Chip
+            size="small"
+            variant="soft"
+            color={unsavedKeys.some((key) => saveStatus[key] === 'error') ? 'error' : unsavedKeys.length ? 'warning' : 'success'}
+            icon={<Iconify icon={unsavedKeys.length ? 'solar:cloud-upload-bold' : 'solar:cloud-check-bold'} />}
+            label={unsavedKeys.length ? `${unsavedKeys.length} non enregistrée(s)` : 'Enregistré'}
+          />
+        </Tooltip>
+
         <Chip
           label={`${answeredCount} / ${totalQuestions} répondu(s)`}
           size="small"
@@ -330,19 +400,12 @@ export function ExamSessionView({ enrollmentExamId }) {
                 size="small"
               />
             )}
-            {currentQuestion.type && (
-              <Chip
-                label={currentQuestion.type}
-                variant="soft"
-                size="small"
-                color="info"
-              />
-            )}
+
           </Stack>
 
           <ExamQuestionRenderer
             question={currentQuestion}
-            answer={answers[currentQuestion.id] || null}
+            answer={answers[currentKey] || null}
             onAnswer={handleAnswer}
           />
         </CardContent>
@@ -400,6 +463,11 @@ export function ExamSessionView({ enrollmentExamId }) {
             Attention : {totalQuestions - answeredCount} question(s) sans réponse.
           </Typography>
         )}
+        {unsavedKeys.length > 0 && (
+          <Typography variant="body2" color="error.main" sx={{ mt: 1 }}>
+            {unsavedKeys.length} réponse(s) pas encore enregistrée(s) : elles seront renvoyées avant la fin.
+          </Typography>
+        )}
         <Typography variant="body2" sx={{ mt: 1 }}>
           Cette action est irréversible. Voulez-vous continuer ?
         </Typography>
@@ -428,7 +496,7 @@ export function ExamSessionView({ enrollmentExamId }) {
           }}
         >
           {questions.map((q, index) => {
-            const isAnswered = !!answers[q.id];
+            const isAnswered = !!answers[questionKey(q)];
             const isCurrent = index === currentIndex;
 
             let bgcolor = 'grey.200';
@@ -444,7 +512,7 @@ export function ExamSessionView({ enrollmentExamId }) {
 
             return (
               <Button
-                key={q.id}
+                key={questionKey(q)}
                 variant="contained"
                 size="small"
                 onClick={() => handleGoToQuestion(index)}

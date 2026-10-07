@@ -40,7 +40,14 @@ export function ExamResultsView({ enrollmentExamId }) {
         // Fetch the enrollment-exam details which should contain results after finish
         const res = await axiosInstance.get(`/api/enrollment-exams/${enrollmentExamId}`);
         if (!cancelled) {
-          setResults(res.data);
+          // Statistiques de la fin d'épreuve (si disponibles) + état enregistré de l'épreuve
+          let stats = {};
+          try {
+            stats = JSON.parse(sessionStorage.getItem(`exam_result_${enrollmentExamId}`) || '{}') || {};
+          } catch {
+            stats = {};
+          }
+          setResults({ ...stats, ...res.data });
           setLoading(false);
         }
       } catch (err) {
@@ -55,11 +62,28 @@ export function ExamResultsView({ enrollmentExamId }) {
     return () => { cancelled = true; };
   }, [enrollmentExamId]);
 
-  const score = results?.score ?? results?.totalScore ?? 0;
-  const maxScore = results?.maxScore ?? results?.totalMaxScore ?? 0;
+  // Résultat de la fin d'épreuve (détail par compétence), conservé juste après la soumission
+  const finishResult = useMemo(() => {
+    try {
+      return JSON.parse(sessionStorage.getItem(`exam_result_${enrollmentExamId}`) || 'null');
+    } catch {
+      return null;
+    }
+  }, [enrollmentExamId]);
+
+  const score = results?.finalScore ?? finishResult?.totalScore ?? 0;
+  const maxScore = results?.maxScore ?? finishResult?.maxScore ?? 0;
   const percentage = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
-  const passed = results?.passed ?? results?.isPassed ?? (percentage >= 50);
-  const skillBreakdown = useMemo(() => results?.skillBreakdown || results?.skills || [], [results]);
+  const passed = results?.status ? results.status === 'PASSED' : !!finishResult?.passed;
+  const skillBreakdown = useMemo(
+    () =>
+      Object.entries(finishResult?.skillBreakdown || {}).map(([name, ratio]) => ({
+        name,
+        score: Math.round(ratio * 100),
+        maxScore: 100,
+      })),
+    [finishResult]
+  );
 
   if (loading) {
     return <LoadingScreen />;
@@ -164,7 +188,8 @@ export function ExamResultsView({ enrollmentExamId }) {
     </Card>
   );
 
-  const renderStats = (
+  // Masqué si les statistiques ne sont plus disponibles (ex. résultat consulté plus tard)
+  const renderStats = results?.totalQuestions != null && (
     <Card>
       <CardHeader title="Statistiques" />
       <CardContent>

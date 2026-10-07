@@ -19,9 +19,72 @@ axiosInstance.interceptors.request.use((config) => {
   return config;
 });
 
+// ----------------------------------------------------------------------
+// Renouvellement du token d'accès (JWT d'une heure) avec le refresh token
+
+export const ACCESS_TOKEN_STORAGE_KEY = 'jwt_access_token';
+export const REFRESH_TOKEN_STORAGE_KEY = 'jwt_refresh_token';
+const REFRESH_URL = '/api/auth/token/refresh';
+const AUTH_URLS = ['/api/auth/login', '/api/auth/register', REFRESH_URL];
+
+// Client sans intercepteur, pour ne pas boucler pendant le renouvellement
+const rawAxios = axios.create({
+  baseURL: CONFIG.serverUrl,
+  headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+});
+
+let refreshPromise = null;
+
+/**
+ * Échange le refresh token contre un nouveau couple de tokens.
+ * Les appels simultanés partagent la même requête (le refresh token est à usage unique).
+ * Retourne le nouveau token d'accès, ou null si la session ne peut pas être prolongée.
+ */
+export function refreshAccessToken() {
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    const refreshToken = sessionStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
+    if (!refreshToken) return null;
+
+    try {
+      const { data } = await rawAxios.post(REFRESH_URL, { refresh_token: refreshToken });
+      sessionStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, data.access_token);
+      if (data.refresh_token) {
+        sessionStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, data.refresh_token);
+      }
+      axiosInstance.defaults.headers.common.Authorization = `Bearer ${data.access_token}`;
+      return data.access_token;
+    } catch {
+      return null;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+}
+
 axiosInstance.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    const originalRequest = error?.config;
+
+    // Token expiré : on le renouvelle une fois puis on rejoue la requête
+    if (
+      error?.response?.status === 401 &&
+      originalRequest &&
+      !originalRequest._retry &&
+      !AUTH_URLS.some((url) => originalRequest.url?.startsWith(url))
+    ) {
+      originalRequest._retry = true;
+      const newToken = await refreshAccessToken();
+      if (newToken) {
+        originalRequest.headers = { ...originalRequest.headers, Authorization: `Bearer ${newToken}` };
+        return axiosInstance(originalRequest);
+      }
+    }
+
     const data = error?.response?.data;
     const message =
       data?.['hydra:description'] ||
@@ -104,6 +167,7 @@ export const endpoints = {
     me: '/api/users/me/',
     signIn: '/api/auth/login/',
     signUp: '/api/auth/register/',
+    refresh: '/api/auth/token/refresh',
     invitation: (token) => `/api/auth/invitation/${token}`,
     acceptInvitation: (token) => `/api/auth/accept-invitation/${token}`,
     forgotPassword: '/api/auth/forgot-password',

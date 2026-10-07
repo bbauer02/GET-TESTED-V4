@@ -53,5 +53,10 @@
   "print": "Imprimer",
   "download_pdf": "Télécharger (PDF)",
   "download_error": "Le téléchargement du document a échoué. Vous pouvez utiliser « Imprimer » puis « Enregistrer en PDF ».",
-  "document_available_hint": "Disponible — afficher, imprimer ou télécharger"
+  "document_available_hint": "Disponible — afficher, imprimer ou télécharger",
+  "online_exam_start": "Passer l'épreuve",
+  "online_exam_resume": "Reprendre l'épreuve",
+  "online_exam_results": "Voir le résultat",
+  "online_exam_opens_at": "En ligne le {{date}}",
+  "online_exam_closed": "Créneau terminé"
 }
