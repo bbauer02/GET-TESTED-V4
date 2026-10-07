@@ -1,44 +1,24 @@
 'use client';
 
-import Card from '@mui/material/Card';
-import Table from '@mui/material/Table';
-import TableRow from '@mui/material/TableRow';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-
 import { paths } from 'src/routes/paths';
 
-import { fDateTime } from 'src/utils/format-time';
-
+import { useTranslate } from 'src/locales';
 import { DashboardContent } from 'src/layouts/dashboard';
+import { useGetInstituteMembres } from 'src/actions/espace-institut';
 
-import { Label } from 'src/components/label';
-import { Scrollbar } from 'src/components/scrollbar';
 import { LoadingScreen } from 'src/components/loading-screen';
-import { EmptyContent } from 'src/components/empty-content';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useTable, TableHeadCustom, TablePaginationCustom } from 'src/components/table';
 
 import { useCurrentInstitute } from 'src/auth/hooks';
 
-import { useGetInstituteMembres } from 'src/actions/espace-institut';
-
-// ----------------------------------------------------------------------
-
-const TABLE_HEAD = [
-  { id: 'name', label: 'Nom' },
-  { id: 'email', label: 'Email' },
-  { id: 'role', label: 'Role' },
-  { id: 'since', label: 'Depuis' },
-];
+import { InstituteFicheTeam } from '../institute-fiche-team';
 
 // ----------------------------------------------------------------------
 
 export function InstituteMembresView() {
-  const table = useTable();
+  const { t } = useTranslate('institute_space');
   const currentInstitute = useCurrentInstitute();
-  const { membres, membresLoading, membresEmpty } = useGetInstituteMembres(currentInstitute?.id);
+  const { membres, membresLoading } = useGetInstituteMembres(currentInstitute?.id);
 
   if (membresLoading) {
     return (
@@ -48,68 +28,18 @@ export function InstituteMembresView() {
     );
   }
 
-  const dataSliced = membres.slice(
-    table.page * table.rowsPerPage,
-    table.page * table.rowsPerPage + table.rowsPerPage
-  );
-
   return (
-    <DashboardContent>
+    <DashboardContent maxWidth="xl">
       <CustomBreadcrumbs
-        heading="Membres"
+        heading={t('team_title')}
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
           { name: currentInstitute?.label || 'Institut' },
-          { name: 'Membres' },
+          { name: t('team_title') },
         ]}
-        sx={{ mb: { xs: 3, md: 5 } }}
       />
 
-      <Card>
-        <TableContainer>
-          <Scrollbar>
-            <Table sx={{ minWidth: 640 }}>
-              <TableHeadCustom headCells={TABLE_HEAD} />
-
-              <TableBody>
-                {membresEmpty ? (
-                  <TableRow>
-                    <TableCell colSpan={TABLE_HEAD.length}>
-                      <EmptyContent title="Aucun membre" />
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  dataSliced.map((membre) => (
-                    <TableRow key={membre.id}>
-                      <TableCell>
-                        {membre.user?.firstname} {membre.user?.lastname}
-                      </TableCell>
-                      <TableCell>{membre.user?.email}</TableCell>
-                      <TableCell>
-                        <Label
-                          variant="soft"
-                          color={membre.role === 'ADMIN' ? 'primary' : 'default'}
-                        >
-                          {membre.role}
-                        </Label>
-                      </TableCell>
-                      <TableCell>{fDateTime(membre.since)}</TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </Scrollbar>
-        </TableContainer>
-
-        <TablePaginationCustom
-          page={table.page}
-          count={membres.length}
-          rowsPerPage={table.rowsPerPage}
-          onPageChange={table.onChangePage}
-          onRowsPerPageChange={table.onChangeRowsPerPage}
-        />
-      </Card>
+      <InstituteFicheTeam memberships={membres} instituteId={currentInstitute?.id} sx={{ my: 3 }} />
     </DashboardContent>
   );
 }

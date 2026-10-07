@@ -1,14 +1,19 @@
+'use client';
+
 import { useCallback } from 'react';
 
 import Chip from '@mui/material/Chip';
 
 import { fDateRangeShortLabel } from 'src/utils/format-time';
 
+import { useTranslate } from 'src/locales';
+
 import { chipProps, FiltersBlock, FiltersResult } from 'src/components/filters-result';
 
 // ----------------------------------------------------------------------
 
 export function InvoiceTableFiltersResult({ filters, totalResults, onResetPage, sx }) {
+  const { t } = useTranslate('invoice');
   const { state: currentFilters, setState: updateFilters, resetState: resetFilters } = filters;
 
   const handleRemoveKeyword = useCallback(() => {
@@ -28,7 +33,7 @@ export function InvoiceTableFiltersResult({ filters, totalResults, onResetPage, 
 
   return (
     <FiltersResult totalResults={totalResults} onReset={() => resetFilters()} sx={sx}>
-      <FiltersBlock label="Statut :" isShow={currentFilters.status !== 'all'}>
+      <FiltersBlock label={t('filter_status_label')} isShow={currentFilters.status !== 'all'}>
         <Chip
           {...chipProps}
           label={currentFilters.status}
@@ -38,7 +43,7 @@ export function InvoiceTableFiltersResult({ filters, totalResults, onResetPage, 
       </FiltersBlock>
 
       <FiltersBlock
-        label="Date :"
+        label={t('filter_date_label')}
         isShow={Boolean(currentFilters.startDate && currentFilters.endDate)}
       >
         <Chip
@@ -48,7 +53,7 @@ export function InvoiceTableFiltersResult({ filters, totalResults, onResetPage, 
         />
       </FiltersBlock>
 
-      <FiltersBlock label="Recherche :" isShow={!!currentFilters.name}>
+      <FiltersBlock label={t('filter_search_label')} isShow={!!currentFilters.name}>
         <Chip {...chipProps} label={currentFilters.name} onDelete={handleRemoveKeyword} />
       </FiltersBlock>
     </FiltersResult>

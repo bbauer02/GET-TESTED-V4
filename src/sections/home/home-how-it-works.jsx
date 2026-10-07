@@ -10,42 +10,31 @@ import Container from '@mui/material/Container';
 import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 
+import { useTranslate } from 'src/locales';
+
 import { Iconify } from 'src/components/iconify';
 import { varFade, MotionViewport } from 'src/components/animate';
 
 // ----------------------------------------------------------------------
 
-const STEPS = [
-  {
-    number: '01',
-    icon: 'solar:magnifer-bold-duotone',
-    title: 'Trouvez votre session',
-    description: 'Parcourez les sessions disponibles et selectionnez celle qui correspond a votre certification et votre localisation.',
-  },
-  {
-    number: '02',
-    icon: 'solar:user-plus-bold-duotone',
-    title: 'Inscrivez-vous',
-    description: 'Creez votre compte ou connectez-vous, selectionnez vos epreuves et completez votre inscription.',
-  },
-  {
-    number: '03',
-    icon: 'solar:card-bold-duotone',
-    title: 'Payez en ligne',
-    description: 'Reglez vos frais d\'inscription via Stripe, ou choisissez de payer ulterieurement.',
-  },
-  {
-    number: '04',
-    icon: 'solar:document-bold-duotone',
-    title: 'Recevez vos documents',
-    description: 'Retrouvez votre convocation, vos resultats et vos attestations dans votre espace candidat.',
-  },
+const STEP_CONFIGS = [
+  { number: '01', icon: 'solar:magnifer-bold-duotone', key: 1 },
+  { number: '02', icon: 'solar:user-plus-bold-duotone', key: 2 },
+  { number: '03', icon: 'solar:card-bold-duotone', key: 3 },
+  { number: '04', icon: 'solar:document-bold-duotone', key: 4 },
 ];
 
 // ----------------------------------------------------------------------
 
 export function HomeHowItWorks() {
   const theme = useTheme();
+  const { t } = useTranslate('home');
+
+  const steps = STEP_CONFIGS.map((cfg) => ({
+    ...cfg,
+    title: t(`step_${cfg.key}_title`),
+    description: t(`step_${cfg.key}_description`),
+  }));
 
   return (
     <Box
@@ -75,39 +64,39 @@ export function HomeHowItWorks() {
                 variant="overline"
                 sx={{ color: 'primary.main', letterSpacing: 2 }}
               >
-                Comment ca marche
+                {t('how_it_works_overline')}
               </Typography>
             </m.div>
 
             <m.div variants={varFade('inUp', { distance: 24 })}>
               <Typography variant="h2" sx={{ fontWeight: 800 }}>
-                Simple et{' '}
+                {t('how_it_works_title_prefix')}
                 <Box
                   component="span"
-                  sx={(t) => ({
-                    ...t.mixins.textGradient(
-                      `135deg, ${t.vars.palette.info.main} 0%, ${t.vars.palette.primary.main} 100%`
+                  sx={(th) => ({
+                    ...th.mixins.textGradient(
+                      `135deg, ${th.vars.palette.info.main} 0%, ${th.vars.palette.primary.main} 100%`
                     ),
                   })}
                 >
-                  rapide
+                  {t('how_it_works_title_highlight')}
                 </Box>
               </Typography>
             </m.div>
 
             <m.div variants={varFade('inUp', { distance: 24 })}>
               <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-                En 4 etapes, de la recherche de session a la reception de vos documents.
+                {t('how_it_works_subtitle')}
               </Typography>
             </m.div>
           </Stack>
 
           {/* Steps */}
           <Grid container spacing={4}>
-            {STEPS.map((step, index) => (
+            {steps.map((step, index) => (
               <Grid key={step.number} size={{ xs: 12, sm: 6, md: 3 }}>
                 <m.div variants={varFade('inUp', { distance: 24 })}>
-                  <StepCard step={step} index={index} isLast={index === STEPS.length - 1} />
+                  <StepCard step={step} index={index} isLast={index === steps.length - 1} />
                 </m.div>
               </Grid>
             ))}

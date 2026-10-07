@@ -10,59 +10,33 @@ import Container from '@mui/material/Container';
 import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 
+import { useTranslate } from 'src/locales';
+
 import { Iconify } from 'src/components/iconify';
 import { varFade, MotionViewport } from 'src/components/animate';
 
 // ----------------------------------------------------------------------
 
-const FEATURES = [
-  {
-    icon: 'solar:magnifer-bold-duotone',
-    title: 'Recherche de sessions',
-    description:
-      'Parcourez les sessions de test disponibles, filtrez par type de certification et par niveau.',
-    color: 'primary',
-  },
-  {
-    icon: 'solar:pen-new-round-bold-duotone',
-    title: 'Inscription en ligne',
-    description:
-      'Inscrivez-vous en quelques etapes, choisissez vos epreuves et payez en toute securite via Stripe.',
-    color: 'info',
-  },
-  {
-    icon: 'solar:diploma-verified-bold-duotone',
-    title: 'Documents certifies',
-    description:
-      'Recevez vos convocations, attestations et certificats directement dans votre espace candidat.',
-    color: 'warning',
-  },
-  {
-    icon: 'solar:buildings-2-bold-duotone',
-    title: 'Espace institut',
-    description:
-      'Gerez vos sessions, suivez les inscriptions, publiez les documents et generez vos factures.',
-    color: 'secondary',
-  },
-  {
-    icon: 'solar:chart-square-bold-duotone',
-    title: 'Suivi des resultats',
-    description:
-      'Consultez vos scores et suivez votre progression pour chaque epreuve passee.',
-    color: 'success',
-  },
-  {
-    icon: 'solar:shield-check-bold-duotone',
-    title: 'Paiement securise',
-    description:
-      'Transactions protegees par Stripe avec facturation automatique et suivi en temps reel.',
-    color: 'error',
-  },
+const FEATURE_CONFIGS = [
+  { icon: 'solar:magnifer-bold-duotone', color: 'primary', key: 1 },
+  { icon: 'solar:pen-new-round-bold-duotone', color: 'info', key: 2 },
+  { icon: 'solar:diploma-verified-bold-duotone', color: 'warning', key: 3 },
+  { icon: 'solar:buildings-2-bold-duotone', color: 'secondary', key: 4 },
+  { icon: 'solar:chart-square-bold-duotone', color: 'success', key: 5 },
+  { icon: 'solar:shield-check-bold-duotone', color: 'error', key: 6 },
 ];
 
 // ----------------------------------------------------------------------
 
 export function HomeFeatures() {
+  const { t } = useTranslate('home');
+
+  const features = FEATURE_CONFIGS.map((cfg) => ({
+    ...cfg,
+    title: t(`feature_${cfg.key}_title`),
+    description: t(`feature_${cfg.key}_description`),
+  }));
+
   return (
     <Box
       component="section"
@@ -88,37 +62,37 @@ export function HomeFeatures() {
                 variant="overline"
                 sx={{ color: 'primary.main', letterSpacing: 2 }}
               >
-                Fonctionnalites
+                {t('features_overline')}
               </Typography>
             </m.div>
 
             <m.div variants={varFade('inUp', { distance: 24 })}>
               <Typography variant="h2" sx={{ fontWeight: 800 }}>
-                Tout ce dont vous avez{' '}
+                {t('features_title_prefix')}
                 <Box
                   component="span"
-                  sx={(t) => ({
-                    ...t.mixins.textGradient(
-                      `135deg, ${t.vars.palette.primary.main} 0%, ${t.vars.palette.primary.dark} 100%`
+                  sx={(th) => ({
+                    ...th.mixins.textGradient(
+                      `135deg, ${th.vars.palette.primary.main} 0%, ${th.vars.palette.primary.dark} 100%`
                     ),
                   })}
                 >
-                  besoin
+                  {t('features_title_highlight')}
                 </Box>
               </Typography>
             </m.div>
 
             <m.div variants={varFade('inUp', { distance: 24 })}>
               <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-                Une plateforme complete pour candidats et instituts de certification.
+                {t('features_subtitle')}
               </Typography>
             </m.div>
           </Stack>
 
           {/* Feature cards */}
           <Grid container spacing={3}>
-            {FEATURES.map((feature, index) => (
-              <Grid key={feature.title} size={{ xs: 12, sm: 6, md: 4 }}>
+            {features.map((feature, index) => (
+              <Grid key={feature.key} size={{ xs: 12, sm: 6, md: 4 }}>
                 <m.div variants={varFade('inUp', { distance: 24 })}>
                   <FeatureCard feature={feature} index={index} />
                 </m.div>

@@ -1,8 +1,8 @@
 'use client';
 
 import { z } from 'zod';
-import { useMemo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useMemo, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import Box from '@mui/material/Box';
@@ -16,8 +16,8 @@ import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
 import axios, { endpoints } from 'src/lib/axios';
-
 import { DashboardContent } from 'src/layouts/dashboard';
+import { useGetInstituteFiche } from 'src/actions/espace-institut';
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
@@ -26,11 +26,9 @@ import { Form, Field } from 'src/components/hook-form';
 import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { useCurrentInstitute } from 'src/auth/hooks';
-
-import { useGetInstituteFiche } from 'src/actions/espace-institut';
-
 import { COUNTRIES } from 'src/sections/profile/utils/countries';
+
+import { useCurrentInstitute } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 

@@ -14,40 +14,24 @@ import Typography from '@mui/material/Typography';
 import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
 
+import { useTranslate } from 'src/locales';
+
 import { Iconify } from 'src/components/iconify';
 import { varFade, MotionViewport } from 'src/components/animate';
 
 // ----------------------------------------------------------------------
 
-const AUDIENCES = [
+const AUDIENCE_CONFIGS = [
   {
-    title: 'Candidats',
-    subtitle: 'Passez votre certification',
-    description:
-      'Trouvez une session pres de chez vous, inscrivez-vous en ligne et suivez vos resultats. Vos convocations et attestations sont disponibles dans votre espace personnel.',
+    key: 1,
     icon: 'solar:user-rounded-bold-duotone',
-    features: [
-      'Recherche de sessions par test et localisation',
-      'Inscription et paiement en ligne',
-      'Convocations et attestations telechargeable',
-      'Suivi des scores et resultats',
-    ],
-    cta: { label: 'Trouver une session', href: paths.sessions.root },
+    ctaHref: paths.sessions.root,
     gradient: 'primary',
   },
   {
-    title: 'Instituts',
-    subtitle: 'Gerez votre centre de test',
-    description:
-      'Creez et gerez vos sessions, suivez les inscriptions, publiez les documents et generez automatiquement vos factures avec paiement Stripe Connect.',
+    key: 2,
     icon: 'solar:buildings-2-bold-duotone',
-    features: [
-      'Creation et gestion de sessions',
-      'Suivi des inscriptions en temps reel',
-      'Publication automatique des documents',
-      'Facturation et paiement via Stripe Connect',
-    ],
-    cta: { label: 'Devenir partenaire', href: paths.devenirPartenaire },
+    ctaHref: paths.devenirPartenaire,
     gradient: 'secondary',
   },
 ];
@@ -55,6 +39,22 @@ const AUDIENCES = [
 // ----------------------------------------------------------------------
 
 export function HomeAudiences() {
+  const { t } = useTranslate('home');
+
+  const audiences = AUDIENCE_CONFIGS.map((cfg) => ({
+    ...cfg,
+    title: t(`audience_${cfg.key}_title`),
+    subtitle: t(`audience_${cfg.key}_subtitle`),
+    description: t(`audience_${cfg.key}_description`),
+    features: [
+      t(`audience_${cfg.key}_feature_1`),
+      t(`audience_${cfg.key}_feature_2`),
+      t(`audience_${cfg.key}_feature_3`),
+      t(`audience_${cfg.key}_feature_4`),
+    ],
+    cta: { label: t(`audience_${cfg.key}_cta`), href: cfg.ctaHref },
+  }));
+
   return (
     <Box
       component="section"
@@ -80,22 +80,22 @@ export function HomeAudiences() {
                 variant="overline"
                 sx={{ color: 'primary.main', letterSpacing: 2 }}
               >
-                Pour qui ?
+                {t('audiences_overline')}
               </Typography>
             </m.div>
 
             <m.div variants={varFade('inUp', { distance: 24 })}>
               <Typography variant="h2" sx={{ fontWeight: 800 }}>
-                Une plateforme pour{' '}
+                {t('audiences_title_prefix')}
                 <Box
                   component="span"
-                  sx={(t) => ({
-                    ...t.mixins.textGradient(
-                      `135deg, ${t.vars.palette.primary.main} 0%, ${t.vars.palette.secondary.main} 100%`
+                  sx={(th) => ({
+                    ...th.mixins.textGradient(
+                      `135deg, ${th.vars.palette.primary.main} 0%, ${th.vars.palette.secondary.main} 100%`
                     ),
                   })}
                 >
-                  tous
+                  {t('audiences_title_highlight')}
                 </Box>
               </Typography>
             </m.div>
@@ -103,8 +103,8 @@ export function HomeAudiences() {
 
           {/* Cards */}
           <Grid container spacing={4}>
-            {AUDIENCES.map((audience) => (
-              <Grid key={audience.title} size={{ xs: 12, md: 6 }}>
+            {audiences.map((audience) => (
+              <Grid key={audience.key} size={{ xs: 12, md: 6 }}>
                 <m.div variants={varFade('inUp', { distance: 24 })}>
                   <AudienceCard audience={audience} />
                 </m.div>

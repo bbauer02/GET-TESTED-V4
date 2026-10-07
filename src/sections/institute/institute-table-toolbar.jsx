@@ -1,3 +1,5 @@
+'use client';
+
 import { useCallback } from 'react';
 import { usePopover } from 'minimal-shared/hooks';
 
@@ -8,12 +10,15 @@ import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 
+import { useTranslate } from 'src/locales';
+
 import { Iconify } from 'src/components/iconify';
 import { CustomPopover } from 'src/components/custom-popover';
 
 // ----------------------------------------------------------------------
 
 export function InstituteTableToolbar({ filters, onResetPage }) {
+  const { t } = useTranslate('institute');
   const menuActions = usePopover();
 
   const { state: currentFilters, setState: updateFilters } = filters;
@@ -36,17 +41,17 @@ export function InstituteTableToolbar({ filters, onResetPage }) {
       <MenuList>
         <MenuItem onClick={() => menuActions.onClose()}>
           <Iconify icon="solar:printer-minimalistic-bold" />
-          Imprimer
+          {t('menu_print')}
         </MenuItem>
 
         <MenuItem onClick={() => menuActions.onClose()}>
           <Iconify icon="solar:import-bold" />
-          Importer
+          {t('menu_import')}
         </MenuItem>
 
         <MenuItem onClick={() => menuActions.onClose()}>
           <Iconify icon="solar:export-bold" />
-          Exporter
+          {t('menu_export')}
         </MenuItem>
       </MenuList>
     </CustomPopover>
@@ -77,7 +82,7 @@ export function InstituteTableToolbar({ filters, onResetPage }) {
             fullWidth
             value={currentFilters.name}
             onChange={handleFilterName}
-            placeholder="Rechercher un institut..."
+            placeholder={t('search_placeholder')}
             slotProps={{
               input: {
                 startAdornment: (

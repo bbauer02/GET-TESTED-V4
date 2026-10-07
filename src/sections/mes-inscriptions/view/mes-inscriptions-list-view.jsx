@@ -11,7 +11,9 @@ import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
 import { fDateTime } from 'src/utils/format-time';
+import { PAYMENT_STATE_ICONS, getEnrollmentPayment } from 'src/utils/enrollment-payment';
 
+import { useTranslate } from 'src/locales';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { useGetMyEnrollments } from 'src/actions/mes-inscriptions';
 
@@ -26,24 +28,25 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 const STATUS_COLORS = {
   DRAFT: 'default',
   OPEN: 'success',
-  LOCKED: 'warning',
+  LOCKED: 'default',
   VALIDATED: 'info',
   CANCELLED: 'error',
-};
-
-const STATUS_LABELS = {
-  DRAFT: 'Brouillon',
-  OPEN: 'Ouverte',
-  LOCKED: 'Verrouillée',
-  VALIDATED: 'Validée',
-  CANCELLED: 'Annulée',
 };
 
 // ----------------------------------------------------------------------
 
 export function MesInscriptionsListView() {
+  const { t } = useTranslate('inscriptions');
   const router = useRouter();
   const { enrollments, enrollmentsLoading, enrollmentsEmpty } = useGetMyEnrollments();
+
+  const STATUS_LABELS = {
+    DRAFT: t('status_draft'),
+    OPEN: t('status_open'),
+    LOCKED: t('status_locked'),
+    VALIDATED: t('status_validated'),
+    CANCELLED: t('status_cancelled'),
+  };
 
   if (enrollmentsLoading) {
     return (
@@ -56,18 +59,18 @@ export function MesInscriptionsListView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Mes inscriptions"
+        heading={t('my_enrollments')}
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Mes inscriptions' },
+          { name: t('my_enrollments') },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
       {enrollmentsEmpty ? (
         <EmptyContent
-          title="Aucune inscription"
-          description="Vous n'êtes inscrit à aucune session pour le moment."
+          title={t('no_enrollment')}
+          description={t('no_enrollment_desc')}
         />
       ) : (
         <Grid container spacing={3}>
@@ -75,6 +78,8 @@ export function MesInscriptionsListView() {
             <Grid key={enrollment.id || enrollment['@id']} size={{ xs: 12, sm: 6, md: 4 }}>
               <EnrollmentCard
                 enrollment={enrollment}
+                t={t}
+                statusLabels={STATUS_LABELS}
                 onClick={() => {
                   const enrollmentId = enrollment.id || enrollment['@id']?.split('/').pop();
                   router.push(paths.dashboard.mesInscriptions.details(enrollmentId));
@@ -90,15 +95,11 @@ export function MesInscriptionsListView() {
 
 // ----------------------------------------------------------------------
 
-function EnrollmentCard({ enrollment, onClick }) {
+function EnrollmentCard({ enrollment, onClick, t, statusLabels }) {
   const session = enrollment.session || {};
   const status = session.status || 'DRAFT';
   const enrollmentExams = enrollment.enrollmentExams || [];
-  const invoices = enrollment.invoices || [];
-
-  // Payment status
-  const enrollmentInvoice = invoices.find((inv) => inv.businessType !== 'PLATFORM_COMMISSION');
-  const isPaid = enrollmentInvoice?.status === 'PAID';
+  const { state: paymentState } = getEnrollmentPayment(enrollment);
 
   // Count published documents
   const docCount = session.documentPublications?.length || 0;
@@ -111,10 +112,10 @@ function EnrollmentCard({ enrollment, onClick }) {
             {/* Header: assessment + status */}
             <Stack direction="row" alignItems="center" justifyContent="space-between">
               <Typography variant="subtitle1" noWrap sx={{ flexGrow: 1, mr: 1 }}>
-                {session.assessment?.label || 'Session'}
+                {session.assessment?.label || t('session')}
               </Typography>
               <Label color={STATUS_COLORS[status]} variant="soft">
-                {STATUS_LABELS[status] || status}
+                {statusLabels[status] || status}
               </Label>
             </Stack>
 
@@ -150,19 +151,19 @@ function EnrollmentCard({ enrollment, onClick }) {
             <Stack direction="row" alignItems="center" spacing={2} sx={{ pt: 1, borderTop: '1px dashed', borderColor: 'divider' }}>
               <Stack direction="row" alignItems="center" spacing={0.5}>
                 <Iconify
-                  icon={isPaid ? 'solar:check-circle-bold' : 'solar:clock-circle-bold'}
+                  icon={PAYMENT_STATE_ICONS[paymentState]}
                   width={18}
-                  sx={{ color: isPaid ? 'success.main' : 'warning.main' }}
+                  sx={{ color: paymentState === 'paid' ? 'success.main' : paymentState === 'to_pay' ? 'warning.main' : 'text.disabled' }}
                 />
                 <Typography variant="caption">
-                  {isPaid ? 'Payé' : 'En attente'}
+                  {t(`payment_state_${paymentState}`)}
                 </Typography>
               </Stack>
 
               <Stack direction="row" alignItems="center" spacing={0.5}>
                 <Iconify icon="solar:notebook-bold" width={18} sx={{ color: 'text.secondary' }} />
                 <Typography variant="caption">
-                  {enrollmentExams.length} épreuve(s)
+                  {t('exams_count', { count: enrollmentExams.length })}
                 </Typography>
               </Stack>
 
@@ -170,7 +171,7 @@ function EnrollmentCard({ enrollment, onClick }) {
                 <Stack direction="row" alignItems="center" spacing={0.5}>
                   <Iconify icon="solar:document-bold" width={18} sx={{ color: 'info.main' }} />
                   <Typography variant="caption">
-                    {docCount} doc(s)
+                    {t('docs_count', { count: docCount })}
                   </Typography>
                 </Stack>
               )}

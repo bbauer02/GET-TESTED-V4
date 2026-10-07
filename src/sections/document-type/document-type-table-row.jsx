@@ -1,3 +1,5 @@
+'use client';
+
 import { useBoolean, usePopover } from 'minimal-shared/hooks';
 
 import Box from '@mui/material/Box';
@@ -11,6 +13,8 @@ import IconButton from '@mui/material/IconButton';
 import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
 
+import { useTranslate } from 'src/locales';
+
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/custom-dialog';
@@ -19,6 +23,7 @@ import { CustomPopover } from 'src/components/custom-popover';
 // ----------------------------------------------------------------------
 
 export function DocumentTypeTableRow({ row, onDeleteRow }) {
+  const { t } = useTranslate('document_type');
   const menuActions = usePopover();
   const confirmDialog = useBoolean();
 
@@ -36,7 +41,7 @@ export function DocumentTypeTableRow({ row, onDeleteRow }) {
           onClick={menuActions.onClose}
         >
           <Iconify icon="solar:pen-bold" />
-          Modifier
+          {t('menu_edit')}
         </MenuItem>
 
         <MenuItem
@@ -47,7 +52,7 @@ export function DocumentTypeTableRow({ row, onDeleteRow }) {
           sx={{ color: 'error.main' }}
         >
           <Iconify icon="solar:trash-bin-trash-bold" />
-          Supprimer
+          {t('menu_delete')}
         </MenuItem>
       </MenuList>
     </CustomPopover>
@@ -57,11 +62,11 @@ export function DocumentTypeTableRow({ row, onDeleteRow }) {
     <ConfirmDialog
       open={confirmDialog.value}
       onClose={confirmDialog.onFalse}
-      title="Supprimer"
-      content="Etes-vous sur de vouloir supprimer ce type de document ?"
+      title={t('delete_title')}
+      content={t('delete_confirm')}
       action={
         <Button variant="contained" color="error" onClick={onDeleteRow}>
-          Supprimer
+          {t('delete_button')}
         </Button>
       }
     />

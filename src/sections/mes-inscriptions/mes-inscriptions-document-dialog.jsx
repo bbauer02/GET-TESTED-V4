@@ -10,6 +10,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 
+import { useTranslate } from 'src/locales';
 import { fetcher, endpoints, extractMembers } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
@@ -17,7 +18,7 @@ import { EmptyContent } from 'src/components/empty-content';
 import { LoadingScreen } from 'src/components/loading-screen';
 
 import { DocumentTemplatePreview } from 'src/sections/document-template/document-template-preview';
-import { buildMergeContext, replaceMergeFields } from 'src/sections/document-template/utils/merge-engine';
+import { renderDocumentTemplate } from 'src/sections/espace-institut/utils/render-document-template';
 
 // ----------------------------------------------------------------------
 
@@ -27,22 +28,27 @@ const swrOptions = {
   revalidateOnReconnect: false,
 };
 
+/**
+ * @param {object} template  Optional: template already resolved by the API
+ *                           (GET /api/enrollment-sessions/{id}/documents). When provided,
+ *                           the institute templates are not fetched.
+ */
 export function MesInscriptionsDocumentDialog({
   open,
   onClose,
   enrollment,
   documentType,
+  template: providedTemplate,
 }) {
+  const { t } = useTranslate('inscriptions');
   const session = enrollment?.session;
   const institute = session?.institute;
 
-  // Fetch the document template for this institute + document type
+  // Fetch the document template for this institute + document type (unless provided)
   const dtId = documentType?.id || documentType?.['@id']?.split('/').pop();
   const instId = institute?.id || institute?.['@id']?.split('/').pop();
 
-  const templateUrl = instId
-    ? endpoints.documentTemplate.list(instId)
-    : '';
+  const templateUrl = instId && !providedTemplate ? endpoints.documentTemplate.list(instId) : '';
 
   const { data: templatesData, isLoading } = useSWR(
     open && templateUrl ? templateUrl : '',
@@ -54,30 +60,19 @@ export function MesInscriptionsDocumentDialog({
 
   // Find the template matching this document type
   const template = useMemo(() => {
+    if (providedTemplate?.content) return providedTemplate;
     if (!templates.length || !dtId) return null;
-    return templates.find((t) => {
-      const tDtId = t.documentType?.id || t.documentType?.['@id']?.split('/').pop();
+    return templates.find((tpl) => {
+      const tDtId = tpl.documentType?.id || tpl.documentType?.['@id']?.split('/').pop();
       return tDtId === dtId;
     });
-  }, [templates, dtId]);
+  }, [providedTemplate, templates, dtId]);
 
   // Build merge context and merge
-  const mergedHtml = useMemo(() => {
-    if (!template?.content) return '';
-
-    // Find the enrollment invoice
-    const invoices = enrollment?.invoices || [];
-    const invoice = invoices.find((inv) => inv.businessType !== 'PLATFORM_COMMISSION');
-
-    const context = buildMergeContext({
-      enrollment,
-      session,
-      institute,
-      invoice,
-    });
-
-    return replaceMergeFields(template.content, context);
-  }, [template, enrollment, session, institute]);
+  const mergedHtml = useMemo(
+    () => renderDocumentTemplate({ template, enrollment, session, institute }),
+    [template, enrollment, session, institute]
+  );
 
   const handlePrint = () => {
     window.print();
@@ -103,7 +98,7 @@ export function MesInscriptionsDocumentDialog({
       }}
     >
       <DialogTitle className="no-print" sx={{ display: 'flex', alignItems: 'center' }}>
-        {documentType?.label || 'Document'}
+        {documentType?.label || t('document_label')}
 
         <IconButton onClick={onClose} sx={{ ml: 'auto' }}>
           <Iconify icon="mingcute:close-line" />
@@ -115,8 +110,8 @@ export function MesInscriptionsDocumentDialog({
           <LoadingScreen sx={{ py: 5 }} />
         ) : !template ? (
           <EmptyContent
-            title="Modèle introuvable"
-            description="Aucun modèle de document n'est configuré pour ce type."
+            title={t('template_not_found')}
+            description={t('template_not_found_desc')}
             sx={{ py: 5 }}
           />
         ) : (
@@ -126,7 +121,7 @@ export function MesInscriptionsDocumentDialog({
 
       <DialogActions className="no-print">
         <Button onClick={onClose} color="inherit">
-          Fermer
+          {t('close')}
         </Button>
         {template && (
           <Button
@@ -134,7 +129,7 @@ export function MesInscriptionsDocumentDialog({
             startIcon={<Iconify icon="solar:printer-bold" />}
             onClick={handlePrint}
           >
-            Imprimer / PDF
+            {t('print_pdf')}
           </Button>
         )}
       </DialogActions>

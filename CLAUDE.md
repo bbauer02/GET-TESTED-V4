@@ -17,7 +17,7 @@
 - **Langage**: JavaScript (JSX) - PAS de TypeScript
 - **Package Manager**: Yarn 1.22.22
 - **Node**: >= 22.12.0
-- **Port dev**: 3032
+- **Port dev**: 3033
 
 ## Commandes
 

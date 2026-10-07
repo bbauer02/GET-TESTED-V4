@@ -1,8 +1,8 @@
 'use client';
 
 import { z } from 'zod';
-import { useMemo } from 'react';
 import { mutate } from 'swr';
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -15,12 +15,12 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
+import { useTranslate } from 'src/locales';
 import axios, { endpoints } from 'src/lib/axios';
+import { useGetSkills } from 'src/actions/skill';
 
 import { toast } from 'src/components/snackbar';
 import { Form, Field } from 'src/components/hook-form';
-
-import { useGetSkills } from 'src/actions/skill';
 
 // ----------------------------------------------------------------------
 
@@ -41,6 +41,7 @@ function getSkillIri(skill) {
 // ----------------------------------------------------------------------
 
 export function SkillCreateEditForm({ currentSkill }) {
+  const { t } = useTranslate('skill');
   const router = useRouter();
 
   const isEdit = !!currentSkill;
@@ -84,10 +85,10 @@ export function SkillCreateEditForm({ currentSkill }) {
         await axios.patch(`${endpoints.skill.details}/${currentSkill.id}`, payload, {
           headers: { 'Content-Type': 'application/merge-patch+json' },
         });
-        toast.success('Skill modifie avec succes !');
+        toast.success(t('edit_success'));
       } else {
         await axios.post(endpoints.skill.list, payload);
-        toast.success('Skill cree avec succes !');
+        toast.success(t('create_success'));
       }
 
       await mutate(endpoints.skill.list, undefined, { revalidate: false });
@@ -101,8 +102,7 @@ export function SkillCreateEditForm({ currentSkill }) {
     } catch (error) {
       console.error(error);
       toast.error(
-        error?.message ||
-          `Erreur lors de ${isEdit ? 'la modification' : 'la creation'} du skill`
+        error?.message || (isEdit ? t('edit_error') : t('create_error'))
       );
     }
   });
@@ -111,7 +111,7 @@ export function SkillCreateEditForm({ currentSkill }) {
     <Form methods={methods} onSubmit={onSubmit}>
       <Card sx={{ p: 3 }}>
         <Typography variant="subtitle1" sx={{ mb: 2 }}>
-          Informations du skill
+          {t('section_info')}
         </Typography>
 
         <Box
@@ -122,11 +122,11 @@ export function SkillCreateEditForm({ currentSkill }) {
             gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' },
           }}
         >
-          <Field.Text name="label" label="Label" />
+          <Field.Text name="label" label={t('label_label')} />
 
           <Field.Autocomplete
             name="parent"
-            label="Skill parent (optionnel)"
+            label={t('label_parent')}
             options={parentOptions.map((s) => s['@id'] || `/api/skills/${s.id}`)}
             getOptionLabel={(option) => {
               const found = parentOptions.find(
@@ -139,7 +139,7 @@ export function SkillCreateEditForm({ currentSkill }) {
 
           <Field.Text
             name="description"
-            label="Description"
+            label={t('label_description')}
             multiline
             rows={3}
             sx={{ gridColumn: '1 / -1' }}
@@ -148,7 +148,7 @@ export function SkillCreateEditForm({ currentSkill }) {
 
         <Stack alignItems="flex-end" sx={{ mt: 3 }}>
           <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-            {isEdit ? 'Modifier le skill' : 'Creer le skill'}
+            {isEdit ? t('submit_edit') : t('submit_create')}
           </LoadingButton>
         </Stack>
       </Card>

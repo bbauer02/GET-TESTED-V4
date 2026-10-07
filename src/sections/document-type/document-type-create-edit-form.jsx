@@ -1,8 +1,8 @@
 'use client';
 
 import { z } from 'zod';
-import { useMemo } from 'react';
 import { mutate } from 'swr';
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -13,6 +13,7 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
+import { useTranslate } from 'src/locales';
 import axiosInstance, { endpoints } from 'src/lib/axios';
 
 import { toast } from 'src/components/snackbar';
@@ -33,6 +34,7 @@ const DocumentTypeSchema = z.object({
 // ----------------------------------------------------------------------
 
 export function DocumentTypeCreateEditForm({ currentDocumentType }) {
+  const { t } = useTranslate('document_type');
   const router = useRouter();
 
   const isEdit = !!currentDocumentType;
@@ -64,10 +66,10 @@ export function DocumentTypeCreateEditForm({ currentDocumentType }) {
           data,
           { headers: { 'Content-Type': 'application/merge-patch+json' } }
         );
-        toast.success('Type de document modifie avec succes !');
+        toast.success(t('edit_success'));
       } else {
         await axiosInstance.post(endpoints.documentType.list, data);
-        toast.success('Type de document cree avec succes !');
+        toast.success(t('create_success'));
       }
 
       await mutate(endpoints.documentType.list, undefined, { revalidate: true });
@@ -76,7 +78,7 @@ export function DocumentTypeCreateEditForm({ currentDocumentType }) {
     } catch (error) {
       console.error(error);
       toast.error(
-        error?.message || `Erreur lors de ${isEdit ? 'la modification' : 'la creation'}`
+        error?.message || (isEdit ? t('edit_error') : t('create_error'))
       );
     }
   });
@@ -85,18 +87,18 @@ export function DocumentTypeCreateEditForm({ currentDocumentType }) {
     <Form methods={methods} onSubmit={onSubmit}>
       <Card sx={{ p: 3 }}>
         <Stack spacing={3}>
-          <Field.Text name="label" label="Nom du type" />
+          <Field.Text name="label" label={t('label_name')} />
 
           <Field.Text
             name="code"
-            label="Code"
-            helperText="Ex: CONVOCATION, ATTESTATION_PRESENCE"
+            label={t('label_code')}
+            helperText={t('code_helper')}
           />
         </Stack>
 
         <Stack alignItems="flex-end" sx={{ mt: 3 }}>
           <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-            {isEdit ? 'Modifier' : 'Creer'}
+            {isEdit ? t('submit_edit') : t('submit_create')}
           </LoadingButton>
         </Stack>
       </Card>

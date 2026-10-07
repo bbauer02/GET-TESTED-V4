@@ -1,3 +1,5 @@
+'use client';
+
 import { usePopover } from 'minimal-shared/hooks';
 
 import Box from '@mui/material/Box';
@@ -9,6 +11,8 @@ import IconButton from '@mui/material/IconButton';
 
 import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
+
+import { useTranslate } from 'src/locales';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -22,8 +26,8 @@ function getParentIri(parent) {
   return parent['@id'] || `/api/assessments/${parent.id}`;
 }
 
-function getOwnerLabel(row) {
-  if (row.internal) return 'Plateforme';
+function getOwnerLabel(row, t) {
+  if (row.internal) return t('owner_platform');
 
   const ownerships = row.ownerships || [];
   const owner = ownerships.find((o) => o.ownershipType === 'OWNER');
@@ -33,6 +37,7 @@ function getOwnerLabel(row) {
 }
 
 export function AssessmentTableRow({ row, levelsCountMap = {} }) {
+  const { t } = useTranslate('assessment');
   const menuActions = usePopover();
 
   const ownLevelsCount = Array.isArray(row.levels) ? row.levels.length : 0;
@@ -54,7 +59,7 @@ export function AssessmentTableRow({ row, levelsCountMap = {} }) {
           onClick={menuActions.onClose}
         >
           <Iconify icon="solar:pen-bold" />
-          Modifier
+          {t('menu_edit')}
         </MenuItem>
       </MenuList>
     </CustomPopover>
@@ -69,11 +74,11 @@ export function AssessmentTableRow({ row, levelsCountMap = {} }) {
 
         <TableCell>
           <Label variant="soft" color={row.internal ? 'info' : 'default'}>
-            {row.internal ? 'Interne' : 'Externe'}
+            {row.internal ? t('type_internal') : t('type_external')}
           </Label>
         </TableCell>
 
-        <TableCell>{getOwnerLabel(row)}</TableCell>
+        <TableCell>{getOwnerLabel(row, t)}</TableCell>
 
         <TableCell>{totalLevelsCount}</TableCell>
 

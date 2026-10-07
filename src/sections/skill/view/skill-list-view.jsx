@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
-import useSWR from 'swr';
-import { mutate } from 'swr';
+import useSWR, { mutate } from 'swr';
+import { useMemo, useState, useCallback } from 'react';
 
 import Card from '@mui/material/Card';
 import Table from '@mui/material/Table';
@@ -15,39 +14,32 @@ import TableContainer from '@mui/material/TableContainer';
 import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
 
+import { useTranslate } from 'src/locales';
+import { useGetSkills } from 'src/actions/skill';
+import { DashboardContent } from 'src/layouts/dashboard';
+import { useGetAssessments } from 'src/actions/assessment';
+import { useGetExams, useGetLevels } from 'src/actions/exam';
 import axios, { fetcher, endpoints, extractMembers } from 'src/lib/axios';
 
-import { DashboardContent } from 'src/layouts/dashboard';
-
+import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { LoadingScreen } from 'src/components/loading-screen';
 import { EmptyContent } from 'src/components/empty-content';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { ConfirmDialog } from 'src/components/custom-dialog';
-import { toast } from 'src/components/snackbar';
+import { LoadingScreen } from 'src/components/loading-screen';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   useTable,
   TableHeadCustom,
   TablePaginationCustom,
 } from 'src/components/table';
 
-import { useGetSkills } from 'src/actions/skill';
-import { useGetAssessments } from 'src/actions/assessment';
-import { useGetExams, useGetLevels } from 'src/actions/exam';
 import { SkillTableRow } from '../skill-table-row';
 import { SkillTableToolbar } from '../skill-table-toolbar';
 
 // ----------------------------------------------------------------------
 
-const TABLE_HEAD = [
-  { id: 'label', label: 'Label' },
-  { id: 'parent', label: 'Parent', width: 180 },
-  { id: 'assessment', label: 'Assessment', width: 160 },
-  { id: 'level', label: 'Level', width: 160 },
-  { id: 'description', label: 'Description', width: 250 },
-  { id: '', width: 100 },
-];
+// TABLE_HEAD moved inside component for i18n
 
 const swrOptions = {
   revalidateIfStale: false,
@@ -58,6 +50,17 @@ const swrOptions = {
 // ----------------------------------------------------------------------
 
 export function SkillListView() {
+  const { t } = useTranslate('skill');
+
+  const TABLE_HEAD = [
+    { id: 'label', label: t('table_label') },
+    { id: 'parent', label: t('table_parent'), width: 180 },
+    { id: 'assessment', label: t('table_assessment'), width: 160 },
+    { id: 'level', label: t('table_level'), width: 160 },
+    { id: 'description', label: t('table_description'), width: 250 },
+    { id: '', width: 100 },
+  ];
+
   const table = useTable();
   const { skills, skillsLoading } = useGetSkills();
   const { assessments } = useGetAssessments();
@@ -176,11 +179,11 @@ export function SkillListView() {
     if (!deleteId) return;
     try {
       await axios.delete(`${endpoints.skill.details}/${deleteId}`);
-      toast.success('Skill supprime !');
+      toast.success(t('delete_success'));
       await mutate(endpoints.skill.list, undefined, { revalidate: true });
     } catch (error) {
       console.error(error);
-      toast.error(error?.message || 'Erreur lors de la suppression');
+      toast.error(error?.message || t('delete_error'));
     } finally {
       setDeleteId(null);
     }
@@ -202,10 +205,10 @@ export function SkillListView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Skills"
+        heading={t('heading')}
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Skills' },
+          { name: t('dashboard'), href: paths.dashboard.root },
+          { name: t('heading') },
         ]}
         action={
           <Button
@@ -214,7 +217,7 @@ export function SkillListView() {
             variant="contained"
             startIcon={<Iconify icon="mingcute:add-line" />}
           >
-            Nouveau skill
+            {t('new_button')}
           </Button>
         }
         sx={{ mb: { xs: 3, md: 5 } }}
@@ -239,7 +242,7 @@ export function SkillListView() {
                 {!filteredSkills.length ? (
                   <TableRow>
                     <TableCell colSpan={TABLE_HEAD.length}>
-                      <EmptyContent title="Aucun skill" />
+                      <EmptyContent title={t('empty_title')} />
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -271,11 +274,11 @@ export function SkillListView() {
       <ConfirmDialog
         open={!!deleteId}
         onClose={() => setDeleteId(null)}
-        title="Supprimer"
-        content="Etes-vous sur de vouloir supprimer ce skill ?"
+        title={t('delete_title')}
+        content={t('delete_confirm')}
         action={
           <Button variant="contained" color="error" onClick={handleDelete}>
-            Supprimer
+            {t('delete_button')}
           </Button>
         }
       />

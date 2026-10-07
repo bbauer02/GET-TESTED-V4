@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { loadConnectAndInitialize } from '@stripe/connect-js';
 import {
-  ConnectComponentsProvider,
-  ConnectAccountOnboarding,
-  ConnectPayments,
   ConnectPayouts,
+  ConnectPayments,
   ConnectBalances,
+  ConnectAccountOnboarding,
+  ConnectComponentsProvider,
   ConnectNotificationBanner,
 } from '@stripe/react-connect-js';
 

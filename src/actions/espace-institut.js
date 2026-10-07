@@ -1,7 +1,7 @@
-import useSWR from 'swr';
 import { useMemo } from 'react';
+import useSWR, { mutate as globalMutate } from 'swr';
 
-import { fetcher, endpoints, extractMembers, normalizeExam } from 'src/lib/axios';
+import axios, { fetcher, endpoints, normalizeExam, extractMembers } from 'src/lib/axios';
 
 // ----------------------------------------------------------------------
 
@@ -30,6 +30,30 @@ export function useGetInstituteFiche(id) {
   );
 
   return memoizedValue;
+}
+
+// ----------------------------------------------------------------------
+
+export async function updateMembershipRole({ membershipId, role, instituteId }) {
+  const response = await axios.patch(
+    endpoints.institute.membership(membershipId),
+    { role },
+    { headers: { 'Content-Type': 'application/merge-patch+json' } }
+  );
+
+  if (instituteId) {
+    globalMutate(endpoints.institute.memberships(instituteId));
+  }
+
+  return response.data;
+}
+
+// ----------------------------------------------------------------------
+
+export async function deleteEnrollment(enrollmentId) {
+  const id = String(enrollmentId).split('/').pop();
+  const response = await axios.delete(`/api/enrollments/${id}`);
+  return response.data;
 }
 
 // ----------------------------------------------------------------------
@@ -128,6 +152,57 @@ export function useGetSession(sessionId) {
       };
     },
     [data, examsData, error, isLoading, isValidating, mutate]
+  );
+
+  return memoizedValue;
+}
+
+// ----------------------------------------------------------------------
+
+export function useGetInstituteEnrollments(id) {
+  const { sessions, sessionsLoading, sessionsError, sessionsValidating } =
+    useGetInstituteSessions(id);
+
+  const enrollments = useMemo(() => {
+    if (!sessions?.length) return [];
+    return sessions.flatMap((session) =>
+      (session.enrollments || []).map((enrollment) => ({
+        ...enrollment,
+        session,
+      }))
+    );
+  }, [sessions]);
+
+  const memoizedValue = useMemo(
+    () => ({
+      enrollments,
+      enrollmentsLoading: sessionsLoading,
+      enrollmentsError: sessionsError,
+      enrollmentsValidating: sessionsValidating,
+      enrollmentsEmpty: !sessionsLoading && !sessionsValidating && !enrollments.length,
+    }),
+    [enrollments, sessionsLoading, sessionsError, sessionsValidating]
+  );
+
+  return memoizedValue;
+}
+
+// ----------------------------------------------------------------------
+
+export function useGetInstituteEnrollment(enrollmentId) {
+  const url = enrollmentId ? endpoints.enrollment.details(enrollmentId) : '';
+
+  const { data, isLoading, error, isValidating, mutate } = useSWR(url, fetcher, swrOptions);
+
+  const memoizedValue = useMemo(
+    () => ({
+      enrollment: data || null,
+      enrollmentLoading: isLoading,
+      enrollmentError: error,
+      enrollmentValidating: isValidating,
+      enrollmentMutate: mutate,
+    }),
+    [data, error, isLoading, isValidating, mutate]
   );
 
   return memoizedValue;

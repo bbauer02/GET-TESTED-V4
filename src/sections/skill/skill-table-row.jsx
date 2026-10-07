@@ -1,13 +1,14 @@
 'use client';
 
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
+import Tooltip from '@mui/material/Tooltip';
 import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
 import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
 
 import { RouterLink } from 'src/routes/components';
+
+import { useTranslate } from 'src/locales';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -15,6 +16,7 @@ import { Iconify } from 'src/components/iconify';
 // ----------------------------------------------------------------------
 
 export function SkillTableRow({ row, assessmentLabels, levelLabels, editHref, onDelete }) {
+  const { t } = useTranslate('skill');
   const parentLabel = row.parent?.label || '-';
   const assessments = assessmentLabels ? [...assessmentLabels] : [];
   const levels = levelLabels ? [...levelLabels] : [];
@@ -49,12 +51,12 @@ export function SkillTableRow({ row, assessmentLabels, levelLabels, editHref, on
         {row.description || '-'}
       </TableCell>
       <TableCell align="right" sx={{ display: 'flex', gap: 0.5 }}>
-        <Tooltip title="Modifier">
+        <Tooltip title={t('tooltip_edit')}>
           <IconButton component={RouterLink} href={editHref} size="small">
             <Iconify icon="solar:pen-bold" />
           </IconButton>
         </Tooltip>
-        <Tooltip title="Supprimer">
+        <Tooltip title={t('tooltip_delete')}>
           <IconButton size="small" color="error" onClick={onDelete}>
             <Iconify icon="solar:trash-bin-trash-bold" />
           </IconButton>

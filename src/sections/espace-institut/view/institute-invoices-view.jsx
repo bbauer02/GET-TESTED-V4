@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useCallback } from 'react';
 import { sumBy } from 'es-toolkit';
+import { useMemo, useCallback } from 'react';
 import { varAlpha } from 'minimal-shared/utils';
 import { useSetState } from 'minimal-shared/hooks';
 
@@ -12,14 +12,13 @@ import Table from '@mui/material/Table';
 import Stack from '@mui/material/Stack';
 import Divider from '@mui/material/Divider';
 import TableBody from '@mui/material/TableBody';
-import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
+import Typography from '@mui/material/Typography';
 
 import { paths } from 'src/routes/paths';
+import { useSearchParams } from 'src/routes/hooks';
 
 import { fIsAfter, fIsBetween } from 'src/utils/format-time';
-
-import { useCurrentInstitute } from 'src/auth/hooks/use-current-institute';
 
 import { DashboardContent } from 'src/layouts/dashboard';
 import { useGetInstituteInvoices } from 'src/actions/invoice';
@@ -41,6 +40,8 @@ import { InvoiceAnalytic } from 'src/sections/invoice/invoice-analytic';
 import { InvoiceTableRow } from 'src/sections/invoice/invoice-table-row';
 import { InvoiceTableToolbar } from 'src/sections/invoice/invoice-table-toolbar';
 import { InvoiceTableFiltersResult } from 'src/sections/invoice/invoice-table-filters-result';
+
+import { useCurrentInstitute } from 'src/auth/hooks/use-current-institute';
 
 // ----------------------------------------------------------------------
 
@@ -65,6 +66,13 @@ const TABLE_HEAD_RECUES = [
 export function InstituteInvoicesView() {
   const theme = useTheme();
   const currentInstitute = useCurrentInstitute();
+  const searchParams = useSearchParams();
+
+  const initialSection = searchParams.get('section') === 'recues' ? 'recues' : 'emises';
+  const initialStatus = ['PAID', 'ISSUED'].includes(searchParams.get('status'))
+    ? searchParams.get('status')
+    : 'all';
+
   const tableEmises = useTable({ defaultOrderBy: 'invoiceDate' });
   const tableRecues = useTable({ defaultOrderBy: 'invoiceDate' });
 
@@ -85,7 +93,7 @@ export function InstituteInvoicesView() {
   }, [invoices]);
 
   // --- Section active : émises ou reçues ---
-  const { state: section, setState: setSection } = useSetState({ value: 'emises' });
+  const { state: section, setState: setSection } = useSetState({ value: initialSection });
 
   const handleChangeSection = useCallback(
     (event, newValue) => {
@@ -103,7 +111,7 @@ export function InstituteInvoicesView() {
   // --- Filtres ---
   const filters = useSetState({
     name: '',
-    status: 'all',
+    status: initialStatus,
     startDate: null,
     endDate: null,
   });

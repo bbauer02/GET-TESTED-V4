@@ -10,7 +10,9 @@ import TableBody from '@mui/material/TableBody';
 import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
 
+import { useTranslate } from 'src/locales';
 import { DashboardContent } from 'src/layouts/dashboard';
+import { useGetAssessments } from 'src/actions/assessment';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -24,24 +26,26 @@ import {
   TablePaginationCustom,
 } from 'src/components/table';
 
-import { useGetAssessments } from 'src/actions/assessment';
-
 import { AssessmentTableRow } from '../assessment-table-row';
 
 // ----------------------------------------------------------------------
 
-const TABLE_HEAD = [
-  { id: 'label', label: 'Label' },
-  { id: 'ref', label: 'Ref', width: 160 },
-  { id: 'isInternal', label: 'Type', width: 120 },
-  { id: 'owner', label: 'Proprietaire', width: 200 },
-  { id: 'levels', label: 'Niveaux', width: 100 },
-  { id: '', width: 88 },
-];
+// TABLE_HEAD moved inside component for i18n
 
 // ----------------------------------------------------------------------
 
 export function AssessmentListView() {
+  const { t } = useTranslate('assessment');
+
+  const TABLE_HEAD = [
+    { id: 'label', label: t('table_label') },
+    { id: 'ref', label: t('table_ref'), width: 160 },
+    { id: 'isInternal', label: t('table_type'), width: 120 },
+    { id: 'owner', label: t('table_owner'), width: 200 },
+    { id: 'levels', label: t('table_levels'), width: 100 },
+    { id: '', width: 88 },
+  ];
+
   const table = useTable();
 
   const { assessments, assessmentsLoading, assessmentsEmpty } = useGetAssessments();
@@ -63,11 +67,11 @@ export function AssessmentListView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Assessments"
+        heading={t('heading')}
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Assessments', href: paths.dashboard.assessment.root },
-          { name: 'Liste' },
+          { name: t('dashboard'), href: paths.dashboard.root },
+          { name: t('heading'), href: paths.dashboard.assessment.root },
+          { name: t('breadcrumb_list') },
         ]}
         action={
           <Button
@@ -76,7 +80,7 @@ export function AssessmentListView() {
             variant="contained"
             startIcon={<Iconify icon="mingcute:add-line" />}
           >
-            Nouvel assessment
+            {t('new_button')}
           </Button>
         }
         sx={{ mb: { xs: 3, md: 5 } }}

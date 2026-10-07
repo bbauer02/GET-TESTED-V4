@@ -13,6 +13,8 @@ import Typography from '@mui/material/Typography';
 import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
 
+import { useTranslate } from 'src/locales';
+
 import { Iconify } from 'src/components/iconify';
 import { varFade, MotionContainer } from 'src/components/animate';
 
@@ -20,6 +22,7 @@ import { varFade, MotionContainer } from 'src/components/animate';
 
 export function HomeHero() {
   const theme = useTheme();
+  const { t } = useTranslate('home');
 
   return (
     <Box
@@ -125,7 +128,7 @@ export function HomeHero() {
                   fontSize: { xs: '0.7rem', md: '0.75rem' },
                 }}
               >
-                Plateforme de certification linguistique
+                {t('hero_overline')}
               </Typography>
             </m.div>
 
@@ -139,9 +142,9 @@ export function HomeHero() {
                   lineHeight: 1.15,
                 }}
               >
-                Certifiez votre niveau
+                {t('hero_title_line1')}
                 <br />
-                de langue en{' '}
+                {t('hero_title_line2')}
                 <Box
                   component="span"
                   sx={{
@@ -150,7 +153,7 @@ export function HomeHero() {
                     color: theme.vars.palette.primary.lighter,
                   }}
                 >
-                  quelques clics
+                  {t('hero_title_highlight')}
                   <Box
                     component={m.span}
                     initial={{ scaleX: 0 }}
@@ -182,8 +185,7 @@ export function HomeHero() {
                   mx: { xs: 'auto', md: 0 },
                 }}
               >
-                Trouvez une session de test, inscrivez-vous en ligne et recevez vos
-                resultats et attestations directement sur votre espace.
+                {t('hero_description')}
               </Typography>
             </m.div>
 
@@ -215,7 +217,7 @@ export function HomeHero() {
                     },
                   }}
                 >
-                  Trouver une session
+                  {t('hero_cta_find_session')}
                 </Button>
 
                 <Button
@@ -237,7 +239,7 @@ export function HomeHero() {
                     },
                   }}
                 >
-                  Creer un compte
+                  {t('hero_cta_create_account')}
                 </Button>
               </Stack>
             </m.div>

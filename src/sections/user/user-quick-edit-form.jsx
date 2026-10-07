@@ -2,10 +2,11 @@
 
 import { z } from 'zod';
 import dayjs from 'dayjs';
-import { useMemo } from 'react';
 import { mutate } from 'swr';
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { parsePhoneNumber } from 'react-phone-number-input/input';
 
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
@@ -18,24 +19,20 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import InputAdornment from '@mui/material/InputAdornment';
 
-import { parsePhoneNumber } from 'react-phone-number-input/input';
-
+import { useTranslate } from 'src/locales';
 import axios, { endpoints } from 'src/lib/axios';
-
-import { useAuthContext } from 'src/auth/hooks';
 
 import { toast } from 'src/components/snackbar';
 import { FlagIcon } from 'src/components/flag-icon';
 import { Form, Field, schemaUtils } from 'src/components/hook-form';
 
+import { useAuthContext } from 'src/auth/hooks';
+
 import { COUNTRIES, LANGUAGES, GENDER_OPTIONS, CIVILITY_OPTIONS } from '../profile/utils/countries';
 
 // ----------------------------------------------------------------------
 
-const ROLE_OPTIONS = [
-  { value: 'USER', label: 'Utilisateur' },
-  { value: 'ADMIN', label: 'Administrateur' },
-];
+// ROLE_OPTIONS moved inside component for i18n
 
 const UserQuickEditSchema = z.object({
   active: z.boolean(),
@@ -62,7 +59,14 @@ const UserQuickEditSchema = z.object({
 // ----------------------------------------------------------------------
 
 export function UserQuickEditForm({ currentUser, open, onClose }) {
+  const { t } = useTranslate('user');
+
   const { user: authUser, checkUserSession } = useAuthContext();
+
+  const ROLE_OPTIONS = [
+    { value: 'USER', label: t('role_user') },
+    { value: 'ADMIN', label: t('role_admin') },
+  ];
 
   const defaultValues = useMemo(
     () => ({
@@ -157,11 +161,11 @@ export function UserQuickEditForm({ currentUser, open, onClose }) {
         await checkUserSession?.();
       }
 
-      toast.success('Utilisateur mis a jour !');
+      toast.success(t('update_success'));
       onClose();
     } catch (error) {
       console.error(error);
-      toast.error(error?.message || 'Erreur lors de la mise a jour');
+      toast.error(error?.message || t('update_error'));
     }
   });
 
@@ -173,13 +177,13 @@ export function UserQuickEditForm({ currentUser, open, onClose }) {
       onClose={onClose}
       slotProps={{ paper: { sx: { maxWidth: 720 } } }}
     >
-      <DialogTitle>Modification rapide</DialogTitle>
+      <DialogTitle>{t('quick_edit_title')}</DialogTitle>
 
       <Form methods={methods} onSubmit={onSubmit}>
         <DialogContent>
           {!currentUser?.active && (
             <Alert variant="outlined" severity="warning" sx={{ mb: 3 }}>
-              Le compte est desactive
+              {t('account_disabled_alert')}
             </Alert>
           )}
 
@@ -189,10 +193,10 @@ export function UserQuickEditForm({ currentUser, open, onClose }) {
             label={
               <>
                 <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-                  Compte actif
+                  {t('switch_active_title')}
                 </Typography>
                 <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  Desactiver le compte de l&apos;utilisateur
+                  {t('switch_active_description')}
                 </Typography>
               </>
             }
@@ -205,10 +209,10 @@ export function UserQuickEditForm({ currentUser, open, onClose }) {
             label={
               <>
                 <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-                  Email verifie
+                  {t('switch_verified_title')}
                 </Typography>
                 <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  L&apos;email de l&apos;utilisateur a ete verifie
+                  {t('switch_verified_description')}
                 </Typography>
               </>
             }
@@ -223,7 +227,7 @@ export function UserQuickEditForm({ currentUser, open, onClose }) {
               gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' },
             }}
           >
-            <Field.Select name="platformRole" label="Role">
+            <Field.Select name="platformRole" label={t('label_role')}>
               {ROLE_OPTIONS.map((option) => (
                 <MenuItem key={option.value} value={option.value}>
                   {option.label}
@@ -233,7 +237,7 @@ export function UserQuickEditForm({ currentUser, open, onClose }) {
 
             <Box sx={{ display: { xs: 'none', sm: 'block' } }} />
 
-            <Field.Select name="civility" label="Civilite">
+            <Field.Select name="civility" label={t('label_civility')}>
               {CIVILITY_OPTIONS.map((option) => (
                 <MenuItem key={option.value} value={option.value}>
                   {option.label}
@@ -241,7 +245,7 @@ export function UserQuickEditForm({ currentUser, open, onClose }) {
               ))}
             </Field.Select>
 
-            <Field.Select name="gender" label="Genre">
+            <Field.Select name="gender" label={t('label_gender')}>
               {GENDER_OPTIONS.map((option) => (
                 <MenuItem key={option.value} value={option.value}>
                   {option.label}
@@ -249,16 +253,16 @@ export function UserQuickEditForm({ currentUser, open, onClose }) {
               ))}
             </Field.Select>
 
-            <Field.Text name="firstname" label="Prenom" />
-            <Field.Text name="lastname" label="Nom" />
-            <Field.Text name="email" label="Email" />
-            <Field.Phone name="phone" label="Telephone" defaultCountry="FR" />
+            <Field.Text name="firstname" label={t('label_firstname')} />
+            <Field.Text name="lastname" label={t('label_lastname')} />
+            <Field.Text name="email" label={t('label_email')} />
+            <Field.Phone name="phone" label={t('label_phone')} defaultCountry="FR" />
 
-            <Field.DatePicker name="birthday" label="Date de naissance" />
+            <Field.DatePicker name="birthday" label={t('label_birthday')} />
 
             <Field.Autocomplete
               name="firstlanguage"
-              label="Langue maternelle"
+              label={t('label_first_language')}
               options={LANGUAGES.map((lang) => lang.code)}
               getOptionLabel={(option) => LANGUAGES.find((l) => l.code === option)?.label ?? ''}
               isOptionEqualToValue={(option, value) => option === value}
@@ -286,14 +290,14 @@ export function UserQuickEditForm({ currentUser, open, onClose }) {
               }}
             />
 
-            <Field.Text name="address1" label="Adresse" sx={{ gridColumn: '1 / -1' }} />
-            <Field.Text name="address2" label="Complement" sx={{ gridColumn: '1 / -1' }} />
-            <Field.Text name="zipcode" label="Code postal" />
-            <Field.Text name="city" label="Ville" />
+            <Field.Text name="address1" label={t('label_address')} sx={{ gridColumn: '1 / -1' }} />
+            <Field.Text name="address2" label={t('label_address2')} sx={{ gridColumn: '1 / -1' }} />
+            <Field.Text name="zipcode" label={t('label_zipcode')} />
+            <Field.Text name="city" label={t('label_city')} />
 
             <Field.Autocomplete
               name="countryCode"
-              label="Pays"
+              label={t('label_country')}
               options={COUNTRIES.map((c) => c.code)}
               getOptionLabel={(option) => COUNTRIES.find((c) => c.code === option)?.label ?? ''}
               isOptionEqualToValue={(option, value) => option === value}
@@ -320,7 +324,7 @@ export function UserQuickEditForm({ currentUser, open, onClose }) {
 
             <Field.Autocomplete
               name="nativeCountry"
-              label="Pays de naissance"
+              label={t('label_native_country')}
               options={COUNTRIES.map((c) => c.code)}
               getOptionLabel={(option) => COUNTRIES.find((c) => c.code === option)?.label ?? ''}
               isOptionEqualToValue={(option, value) => option === value}
@@ -347,7 +351,7 @@ export function UserQuickEditForm({ currentUser, open, onClose }) {
 
             <Field.Autocomplete
               name="nationality"
-              label="Nationalite"
+              label={t('label_nationality')}
               options={COUNTRIES.map((c) => c.code)}
               getOptionLabel={(option) => COUNTRIES.find((c) => c.code === option)?.label ?? ''}
               isOptionEqualToValue={(option, value) => option === value}
@@ -376,10 +380,10 @@ export function UserQuickEditForm({ currentUser, open, onClose }) {
 
         <DialogActions>
           <Button variant="outlined" onClick={onClose}>
-            Annuler
+            {t('cancel')}
           </Button>
           <Button type="submit" variant="contained" loading={isSubmitting}>
-            Enregistrer
+            {t('save')}
           </Button>
         </DialogActions>
       </Form>

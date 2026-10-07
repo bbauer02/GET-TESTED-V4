@@ -2,39 +2,45 @@
 
 import { useState, useEffect } from 'react';
 
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
+
 import { paths } from 'src/routes/paths';
 import { useParams } from 'src/routes/hooks';
 
 import axios from 'src/lib/axios';
-
+import { useTranslate } from 'src/locales';
 import { DashboardContent } from 'src/layouts/dashboard';
+import { useGetAssessment } from 'src/actions/assessment';
 
+import { Iconify } from 'src/components/iconify';
 import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { useGetAssessment } from 'src/actions/assessment';
-
+import { AssessmentSkillsTab } from '../assessment-skills-tab';
 import { AssessmentCreateEditForm } from '../assessment-create-edit-form';
 
 // ----------------------------------------------------------------------
 
 export function AssessmentEditView() {
+  const { t } = useTranslate('assessment');
   const { id } = useParams();
 
   const { assessment, assessmentLoading } = useGetAssessment(id);
 
+  const [currentTab, setCurrentTab] = useState('general');
   const [resolvedAssessment, setResolvedAssessment] = useState(null);
   const [resolvingLevels, setResolvingLevels] = useState(false);
 
   useEffect(() => {
-    if (!assessment) return;
+    if (!assessment) return undefined;
 
     const levels = assessment.levels;
 
     // No levels or already embedded objects → nothing to resolve
     if (!Array.isArray(levels) || levels.length === 0 || typeof levels[0] !== 'string') {
       setResolvedAssessment(assessment);
-      return;
+      return undefined;
     }
 
     // Levels are IRIs → fetch each one
@@ -69,16 +75,35 @@ export function AssessmentEditView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Modifier l'assessment"
+        heading={t('heading_edit')}
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Assessments', href: paths.dashboard.assessment.list },
+          { name: t('dashboard'), href: paths.dashboard.root },
+          { name: t('heading'), href: paths.dashboard.assessment.list },
           { name: resolvedAssessment?.label || '' },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
-      <AssessmentCreateEditForm currentAssessment={resolvedAssessment} />
+      <Tabs value={currentTab} onChange={(_, value) => setCurrentTab(value)} sx={{ mb: 3 }}>
+        <Tab
+          value="general"
+          iconPosition="start"
+          icon={<Iconify icon="solar:document-bold" width={20} />}
+          label={t('tab_general')}
+        />
+        <Tab
+          value="skills"
+          iconPosition="start"
+          icon={<Iconify icon="solar:star-bold" width={20} />}
+          label={t('skills_title')}
+        />
+      </Tabs>
+
+      {currentTab === 'general' && (
+        <AssessmentCreateEditForm currentAssessment={resolvedAssessment} />
+      )}
+
+      {currentTab === 'skills' && <AssessmentSkillsTab assessmentId={id} canEdit />}
     </DashboardContent>
   );
 }

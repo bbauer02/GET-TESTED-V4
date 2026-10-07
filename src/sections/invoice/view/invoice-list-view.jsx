@@ -1,7 +1,7 @@
 'use client';
 
 import { sumBy } from 'es-toolkit';
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { varAlpha } from 'minimal-shared/utils';
 import { useSetState } from 'minimal-shared/hooks';
 
@@ -18,8 +18,9 @@ import { paths } from 'src/routes/paths';
 
 import { fIsAfter, fIsBetween } from 'src/utils/format-time';
 
-import { DashboardContent } from 'src/layouts/dashboard';
+import { useTranslate } from 'src/locales';
 import { useGetInvoices } from 'src/actions/invoice';
+import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Label } from 'src/components/label';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -42,19 +43,22 @@ import { InvoiceTableFiltersResult } from '../invoice-table-filters-result';
 
 // ----------------------------------------------------------------------
 
-const TABLE_HEAD = [
-  { id: 'buyer', label: 'Client' },
-  { id: 'invoiceDate', label: 'Date' },
-  { id: 'totalTTC', label: 'Montant TTC' },
-  { id: 'status', label: 'Statut' },
-  { id: 'businessType', label: 'Type' },
-  { id: '', width: 64 },
-];
+// TABLE_HEAD moved inside component for i18n
 
 // ----------------------------------------------------------------------
 
 export function InvoiceListView() {
+  const { t } = useTranslate('invoice');
   const theme = useTheme();
+
+  const TABLE_HEAD = [
+    { id: 'buyer', label: t('table_client') },
+    { id: 'invoiceDate', label: t('table_date') },
+    { id: 'totalTTC', label: t('table_amount_ttc') },
+    { id: 'status', label: t('table_status') },
+    { id: 'businessType', label: t('table_type') },
+    { id: '', width: 64 },
+  ];
 
   const table = useTable({ defaultOrderBy: 'invoiceDate' });
 
@@ -98,11 +102,11 @@ export function InvoiceListView() {
     invoices.length ? (getInvoiceLength(status) / invoices.length) * 100 : 0;
 
   const TABS = [
-    { value: 'all', label: 'Toutes', color: 'default', count: invoices.length },
-    { value: 'PAID', label: 'Payées', color: 'success', count: getInvoiceLength('PAID') },
-    { value: 'ISSUED', label: 'Émises', color: 'warning', count: getInvoiceLength('ISSUED') },
-    { value: 'DRAFT', label: 'Brouillon', color: 'default', count: getInvoiceLength('DRAFT') },
-    { value: 'CANCELLED', label: 'Annulées', color: 'error', count: getInvoiceLength('CANCELLED') },
+    { value: 'all', label: t('tab_all'), color: 'default', count: invoices.length },
+    { value: 'PAID', label: t('tab_paid'), color: 'success', count: getInvoiceLength('PAID') },
+    { value: 'ISSUED', label: t('tab_issued'), color: 'warning', count: getInvoiceLength('ISSUED') },
+    { value: 'DRAFT', label: t('tab_draft'), color: 'default', count: getInvoiceLength('DRAFT') },
+    { value: 'CANCELLED', label: t('tab_cancelled'), color: 'error', count: getInvoiceLength('CANCELLED') },
   ];
 
   const handleFilterStatus = useCallback(
@@ -116,11 +120,11 @@ export function InvoiceListView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Factures"
+        heading={t('heading')}
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Factures', href: paths.dashboard.invoice.root },
-          { name: 'Liste' },
+          { name: t('dashboard'), href: paths.dashboard.root },
+          { name: t('heading'), href: paths.dashboard.invoice.root },
+          { name: t('breadcrumb_list') },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />
@@ -132,7 +136,7 @@ export function InvoiceListView() {
             sx={{ py: 2, flexDirection: 'row' }}
           >
             <InvoiceAnalytic
-              title="Total"
+              title={t('analytic_total')}
               total={invoices.length}
               percent={100}
               price={sumBy(invoices, (inv) => inv.totalTTC || 0)}
@@ -141,7 +145,7 @@ export function InvoiceListView() {
             />
 
             <InvoiceAnalytic
-              title="Payées"
+              title={t('analytic_paid')}
               total={getInvoiceLength('PAID')}
               percent={getPercentByStatus('PAID')}
               price={getTotalAmount('PAID')}
@@ -150,7 +154,7 @@ export function InvoiceListView() {
             />
 
             <InvoiceAnalytic
-              title="Émises"
+              title={t('analytic_issued')}
               total={getInvoiceLength('ISSUED')}
               percent={getPercentByStatus('ISSUED')}
               price={getTotalAmount('ISSUED')}
@@ -159,7 +163,7 @@ export function InvoiceListView() {
             />
 
             <InvoiceAnalytic
-              title="Annulées"
+              title={t('analytic_cancelled')}
               total={getInvoiceLength('CANCELLED')}
               percent={getPercentByStatus('CANCELLED')}
               price={getTotalAmount('CANCELLED')}

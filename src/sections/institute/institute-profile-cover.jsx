@@ -1,15 +1,15 @@
 'use client';
 
-import { useRef, useState, useCallback } from 'react';
 import { varAlpha } from 'minimal-shared/utils';
+import { useRef, useState, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
-import ListItemText from '@mui/material/ListItemText';
-import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
-import Stack from '@mui/material/Stack';
+import IconButton from '@mui/material/IconButton';
+import ListItemText from '@mui/material/ListItemText';
 
 import { Iconify } from 'src/components/iconify';
 

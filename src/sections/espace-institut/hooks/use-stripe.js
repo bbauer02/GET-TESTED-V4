@@ -1,6 +1,6 @@
 import useSWR from 'swr';
-import { useMemo, useState, useCallback } from 'react';
 import { toast } from 'sonner';
+import { useMemo, useState, useCallback } from 'react';
 
 import axiosInstance, { fetcher, endpoints } from 'src/lib/axios';
 

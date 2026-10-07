@@ -1,14 +1,15 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-
 import { varAlpha } from 'minimal-shared/utils';
 
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Typography from '@mui/material/Typography';
 
+import { useTranslate } from 'src/locales';
 import { DashboardContent } from 'src/layouts/dashboard';
+
 import { Iconify } from 'src/components/iconify';
 
 import { ProfileEditForm } from '../profile-edit-form';
@@ -16,24 +17,23 @@ import { ChangePasswordForm } from '../change-password-form';
 
 // ----------------------------------------------------------------------
 
-const TABS = [
-  { value: 'general', label: 'Général', icon: 'solar:user-id-bold' },
-  { value: 'security', label: 'Sécurité', icon: 'ic:round-vpn-key' },
-];
-
-// ----------------------------------------------------------------------
-
 export function ProfileView() {
+  const { t } = useTranslate('profile');
   const [currentTab, setCurrentTab] = useState('general');
 
   const handleChangeTab = useCallback((event, newValue) => {
     setCurrentTab(newValue);
   }, []);
 
+  const TABS = [
+    { value: 'general', label: t('tab_general'), icon: 'solar:user-id-bold' },
+    { value: 'security', label: t('tab_security'), icon: 'ic:round-vpn-key' },
+  ];
+
   return (
     <DashboardContent maxWidth="xl">
       <Typography variant="h4" sx={{ mb: 3 }}>
-        Mon profil
+        {t('my_profile')}
       </Typography>
 
       <Tabs

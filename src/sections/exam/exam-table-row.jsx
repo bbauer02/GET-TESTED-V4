@@ -1,3 +1,5 @@
+'use client';
+
 import { usePopover } from 'minimal-shared/hooks';
 
 import Box from '@mui/material/Box';
@@ -10,6 +12,8 @@ import IconButton from '@mui/material/IconButton';
 import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
 
+import { useTranslate } from 'src/locales';
+
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { CustomPopover } from 'src/components/custom-popover';
@@ -17,6 +21,7 @@ import { CustomPopover } from 'src/components/custom-popover';
 // ----------------------------------------------------------------------
 
 export function ExamTableRow({ row, assessmentLabel, levelLabel }) {
+  const { t } = useTranslate('exam');
   const menuActions = usePopover();
 
   const price = row.price;
@@ -36,7 +41,7 @@ export function ExamTableRow({ row, assessmentLabel, levelLabel }) {
           onClick={menuActions.onClose}
         >
           <Iconify icon="solar:pen-bold" />
-          Modifier
+          {t('menu_edit')}
         </MenuItem>
       </MenuList>
     </CustomPopover>
@@ -53,13 +58,13 @@ export function ExamTableRow({ row, assessmentLabel, levelLabel }) {
 
         <TableCell>
           <Label variant="soft" color={row.isWritten ? 'info' : 'default'}>
-            {row.isWritten ? 'Oui' : 'Non'}
+            {row.isWritten ? t('yes') : t('no')}
           </Label>
         </TableCell>
 
         <TableCell>
           <Label variant="soft" color={row.isOption ? 'warning' : 'default'}>
-            {row.isOption ? 'Oui' : 'Non'}
+            {row.isOption ? t('yes') : t('no')}
           </Label>
         </TableCell>
 

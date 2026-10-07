@@ -6,18 +6,16 @@ import { paths } from 'src/routes/paths';
 import { useParams } from 'src/routes/hooks';
 
 import axios from 'src/lib/axios';
-
+import { useGetExam } from 'src/actions/exam';
 import { DashboardContent } from 'src/layouts/dashboard';
+import { useGetAssessment } from 'src/actions/assessment';
 
 import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { useCurrentInstitute } from 'src/auth/hooks';
-
-import { useGetAssessment } from 'src/actions/assessment';
-import { useGetExam } from 'src/actions/exam';
-
 import { ExamCreateEditForm } from 'src/sections/exam/exam-create-edit-form';
+
+import { useCurrentInstitute } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
@@ -34,13 +32,13 @@ export function InstituteExamEditView() {
   const [resolving, setResolving] = useState(false);
 
   useEffect(() => {
-    if (!exam) return;
+    if (!exam) return undefined;
 
     const skills = exam.skills;
 
     if (!Array.isArray(skills) || skills.length === 0 || typeof skills[0] !== 'string') {
       setResolvedExam(exam);
-      return;
+      return undefined;
     }
 
     let cancelled = false;
@@ -69,11 +67,11 @@ export function InstituteExamEditView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Modifier l'exam"
+        heading="Modifier l'épreuve"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
           { name: currentInstitute?.label || 'Institut' },
-          { name: 'Assessments', href: paths.dashboard.espaceInstitut.assessments },
+          { name: 'Tests', href: paths.dashboard.espaceInstitut.assessments },
           { name: assessment?.label || '', href: paths.dashboard.espaceInstitut.assessmentView(assessmentId) },
           { name: resolvedExam?.label || '' },
         ]}

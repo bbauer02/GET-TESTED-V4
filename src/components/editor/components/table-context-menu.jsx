@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 
 import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
 import Divider from '@mui/material/Divider';
+import MenuItem from '@mui/material/MenuItem';
 import ListSubheader from '@mui/material/ListSubheader';
 
 import { Iconify } from '../../iconify';

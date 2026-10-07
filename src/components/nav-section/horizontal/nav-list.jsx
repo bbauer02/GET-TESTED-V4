@@ -127,7 +127,7 @@ export function NavList({
     );
 
   // Hidden item by role
-  if (data.allowedRoles && checkPermissions && checkPermissions(data.allowedRoles)) {
+  if ((data.allowedRoles || data.excludedRoles) && checkPermissions && checkPermissions(data.allowedRoles, data.excludedRoles)) {
     return null;
   }
 

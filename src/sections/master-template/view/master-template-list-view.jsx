@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback } from 'react';
 import { toast } from 'sonner';
+import { useCallback } from 'react';
 
 import Card from '@mui/material/Card';
 import Table from '@mui/material/Table';
@@ -14,18 +14,17 @@ import { useRouter } from 'src/routes/hooks';
 import { RouterLink } from 'src/routes/components';
 
 import axiosInstance from 'src/lib/axios';
-import { getErrorMessage } from 'src/auth/utils/error-message';
-
 import { DashboardContent } from 'src/layouts/dashboard';
+import { useGetMasterTemplates } from 'src/actions/document-template';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { LoadingScreen } from 'src/components/loading-screen';
 import { EmptyContent } from 'src/components/empty-content';
+import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useTable, TableHeadCustom, TablePaginationCustom } from 'src/components/table';
 
-import { useGetMasterTemplates } from 'src/actions/document-template';
+import { getErrorMessage } from 'src/auth/utils/error-message';
 
 import { MasterTemplateTableRow } from '../master-template-table-row';
 

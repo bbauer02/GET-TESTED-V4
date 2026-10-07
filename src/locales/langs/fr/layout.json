@@ -1,0 +1,21 @@
+{
+  "home": "Accueil",
+  "dashboard": "Tableau de bord",
+  "notifications": "Notifications",
+  "mark_all_read": "Tout marquer comme lu",
+  "tab_all": "Tout",
+  "tab_unread": "Non lues",
+  "tab_read": "Lues",
+  "no_notifications": "Aucune notification",
+  "search_placeholder": "Rechercher...",
+  "switch_to": "Basculer vers : {{name}}",
+  "add_account": "Ajouter un compte",
+  "role_admin_institute": "Admin Institut",
+  "role_staff": "Staff",
+  "role_examiner": "Examinateur",
+  "role_admin": "Admin",
+  "role_candidate": "Candidat",
+  "upgrade_discount": "-35 %",
+  "upgrade_text": "Boostez votre productivité !",
+  "upgrade_button": "Passer à Pro"
+}

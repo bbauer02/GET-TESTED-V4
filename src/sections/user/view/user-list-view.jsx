@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
 import { varAlpha } from 'minimal-shared/utils';
+import { useMemo, useState, useCallback } from 'react';
+import { parsePhoneNumber } from 'react-phone-number-input';
 
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
@@ -9,27 +10,26 @@ import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Select from '@mui/material/Select';
+import Tooltip from '@mui/material/Tooltip';
+import { DataGrid } from '@mui/x-data-grid';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import InputAdornment from '@mui/material/InputAdornment';
-import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
-import { DataGrid } from '@mui/x-data-grid';
+import FormControl from '@mui/material/FormControl';
+import InputAdornment from '@mui/material/InputAdornment';
 
 import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
 
-import { parsePhoneNumber } from 'react-phone-number-input';
-
+import { useTranslate } from 'src/locales';
 import { useGetUsers } from 'src/actions/user';
+import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { FlagIcon } from 'src/components/flag-icon';
-import { DashboardContent } from 'src/layouts/dashboard';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { UserQuickEditForm } from '../user-quick-edit-form';
@@ -43,15 +43,13 @@ const ROLE_COLOR_MAP = {
   superadmin: 'error',
 };
 
-const TAB_OPTIONS = [
-  { value: 'all', label: 'All' },
-  { value: 'verified', label: 'Verified' },
-  { value: 'active', label: 'Active' },
-];
+// TAB_OPTIONS moved inside component to use translations
 
 // ----------------------------------------------------------------------
 
 export function UserListView() {
+  const { t } = useTranslate('user');
+
   const { users: rawUsers, usersLoading } = useGetUsers();
 
   const [currentTab, setCurrentTab] = useState('all');
@@ -80,11 +78,17 @@ export function UserListView() {
     setSelectedUser(null);
   }, []);
 
+  const TAB_OPTIONS = useMemo(() => [
+    { value: 'all', label: t('tab_all') },
+    { value: 'verified', label: t('tab_verified') },
+    { value: 'active', label: t('tab_active') },
+  ], [t]);
+
   const columns = useMemo(
     () => [
       {
         field: 'name',
-        headerName: 'Name',
+        headerName: t('table_name'),
         flex: 1,
         minWidth: 200,
         renderCell: (params) => (
@@ -128,13 +132,13 @@ export function UserListView() {
       },
       {
         field: 'email',
-        headerName: 'Email',
+        headerName: t('table_email'),
         flex: 1,
         minWidth: 200,
       },
       {
         field: 'phone',
-        headerName: 'Phone',
+        headerName: t('table_phone'),
         width: 200,
         renderCell: (params) => {
           const { phoneCountryCode, phone } = params.row;
@@ -156,7 +160,7 @@ export function UserListView() {
       },
       {
         field: 'platformRole',
-        headerName: 'Role',
+        headerName: t('table_role'),
         width: 160,
         renderCell: (params) => (
           <Label
@@ -175,7 +179,7 @@ export function UserListView() {
         filterable: false,
         disableColumnMenu: true,
         renderCell: (params) => (
-          <Tooltip title="Quick Edit">
+          <Tooltip title={t('quick_edit_tooltip')}>
             <IconButton onClick={() => handleEditRow(params.row)}>
               <Iconify icon="solar:pen-bold" />
             </IconButton>
@@ -183,7 +187,7 @@ export function UserListView() {
         ),
       },
     ],
-    [handleEditRow]
+    [handleEditRow, t]
   );
 
   // Extract unique roles from user data
@@ -232,11 +236,11 @@ export function UserListView() {
   return (
     <DashboardContent maxWidth="xl">
       <CustomBreadcrumbs
-        heading="Utilisateurs"
+        heading={t('heading')}
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Utilisateurs', href: paths.dashboard.user.root },
-          { name: 'Liste' },
+          { name: t('dashboard'), href: paths.dashboard.root },
+          { name: t('heading'), href: paths.dashboard.user.root },
+          { name: t('breadcrumb_list') },
         ]}
         action={
           <Button
@@ -246,7 +250,7 @@ export function UserListView() {
             color="inherit"
             startIcon={<Iconify icon="mingcute:add-line" />}
           >
-            New user
+            {t('new_button')}
           </Button>
         }
         sx={{ mb: { xs: 3, md: 5 } }}
@@ -293,13 +297,13 @@ export function UserListView() {
           sx={{ px: 2.5, py: 2 }}
         >
           <FormControl size="small" sx={{ minWidth: 160 }}>
-            <InputLabel>Role</InputLabel>
+            <InputLabel>{t('filter_role')}</InputLabel>
             <Select
               value={roleFilter}
-              label="Role"
+              label={t('filter_role')}
               onChange={(e) => setRoleFilter(e.target.value)}
             >
-              <MenuItem value="all">All</MenuItem>
+              <MenuItem value="all">{t('filter_role_all')}</MenuItem>
               {roleOptions.map((role) => (
                 <MenuItem key={role} value={role}>
                   {role}
@@ -312,7 +316,7 @@ export function UserListView() {
             size="small"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by name..."
+            placeholder={t('search_placeholder')}
             slotProps={{
               input: {
                 startAdornment: (

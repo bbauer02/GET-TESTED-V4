@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
+
 import Card from '@mui/material/Card';
 import Table from '@mui/material/Table';
 import Button from '@mui/material/Button';
@@ -12,16 +13,16 @@ import { useRouter } from 'src/routes/hooks';
 import { RouterLink } from 'src/routes/components';
 
 import { DashboardContent } from 'src/layouts/dashboard';
+import { useGetDocumentTemplates } from 'src/actions/document-template';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { LoadingScreen } from 'src/components/loading-screen';
 import { EmptyContent } from 'src/components/empty-content';
+import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useTable, TableHeadCustom, TablePaginationCustom } from 'src/components/table';
 
 import { useCurrentInstitute } from 'src/auth/hooks';
-import { useGetDocumentTemplates } from 'src/actions/document-template';
 
 import { DocumentTemplateTableRow } from '../document-template-table-row';
 

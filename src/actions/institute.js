@@ -1,7 +1,7 @@
-import useSWR from 'swr';
 import { useMemo } from 'react';
+import useSWR, { mutate } from 'swr';
 
-import { fetcher, endpoints, extractMembers, extractTotalItems } from 'src/lib/axios';
+import axios, { fetcher, endpoints, extractMembers, extractTotalItems } from 'src/lib/axios';
 
 // ----------------------------------------------------------------------
 
@@ -100,4 +100,15 @@ export function useGetInstituteSessions(instituteId) {
   );
 
   return memoizedValue;
+}
+
+// ----------------------------------------------------------------------
+
+/**
+ * Suppression définitive (admin plateforme). L'API refuse (409) si l'institut
+ * possède des sessions ou des factures.
+ */
+export async function deleteInstitute(instituteId) {
+  await axios.delete(`${endpoints.institute.details}/${instituteId}`);
+  await mutate(endpoints.institute.list);
 }

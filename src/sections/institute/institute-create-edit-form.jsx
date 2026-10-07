@@ -1,8 +1,8 @@
 'use client';
 
 import { z } from 'zod';
-import { useMemo } from 'react';
 import { mutate } from 'swr';
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -16,6 +16,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
+import { useTranslate } from 'src/locales';
 import axios, { endpoints } from 'src/lib/axios';
 
 import { toast } from 'src/components/snackbar';
@@ -55,6 +56,7 @@ const InstituteSchema = z.object({
 // ----------------------------------------------------------------------
 
 export function InstituteCreateEditForm({ currentInstitute }) {
+  const { t } = useTranslate('institute');
   const router = useRouter();
 
   const isEdit = !!currentInstitute;
@@ -132,10 +134,10 @@ export function InstituteCreateEditForm({ currentInstitute }) {
         await axios.patch(`${endpoints.institute.details}/${currentInstitute.id}`, payload, {
           headers: { 'Content-Type': 'application/merge-patch+json' },
         });
-        toast.success('Institut modifie avec succes !');
+        toast.success(t('edit_success'));
       } else {
         await axios.post(endpoints.institute.list, payload);
-        toast.success('Institut cree avec succes !');
+        toast.success(t('create_success'));
       }
 
       await mutate(endpoints.institute.list, undefined, { revalidate: false });
@@ -143,14 +145,14 @@ export function InstituteCreateEditForm({ currentInstitute }) {
       router.push(paths.dashboard.institute.list);
     } catch (error) {
       console.error(error);
-      toast.error(error?.message || `Erreur lors de ${isEdit ? 'la modification' : 'la creation'}`);
+      toast.error(error?.message || (isEdit ? t('edit_error') : t('create_error')));
     }
   });
 
   const renderGeneralInfo = () => (
     <>
       <Typography variant="subtitle1" sx={{ mb: 2 }}>
-        Informations generales
+        {t('section_general')}
       </Typography>
 
       <Box
@@ -161,9 +163,9 @@ export function InstituteCreateEditForm({ currentInstitute }) {
           gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' },
         }}
       >
-        <Field.Text name="label" label="Nom de l'institut" />
-        <Field.Text name="email" label="Email de contact" />
-        <Field.Text name="siteweb" label="Site web" sx={{ gridColumn: '1 / -1' }} />
+        <Field.Text name="label" label={t('label_name')} />
+        <Field.Text name="email" label={t('label_email')} />
+        <Field.Text name="siteweb" label={t('label_website')} sx={{ gridColumn: '1 / -1' }} />
       </Box>
     </>
   );
@@ -171,7 +173,7 @@ export function InstituteCreateEditForm({ currentInstitute }) {
   const renderAddress = () => (
     <>
       <Typography variant="subtitle1" sx={{ mb: 2, mt: 4 }}>
-        Adresse
+        {t('section_address')}
       </Typography>
 
       <Box
@@ -182,18 +184,18 @@ export function InstituteCreateEditForm({ currentInstitute }) {
           gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' },
         }}
       >
-        <Field.Text name="address.address1" label="Adresse" sx={{ gridColumn: '1 / -1' }} />
+        <Field.Text name="address.address1" label={t('label_address')} sx={{ gridColumn: '1 / -1' }} />
         <Field.Text
           name="address.address2"
-          label="Complement d'adresse"
+          label={t('label_address2')}
           sx={{ gridColumn: '1 / -1' }}
         />
-        <Field.Text name="address.zipcode" label="Code postal" />
-        <Field.Text name="address.city" label="Ville" />
+        <Field.Text name="address.zipcode" label={t('label_zipcode')} />
+        <Field.Text name="address.city" label={t('label_city')} />
 
         <Field.Autocomplete
           name="address.countryCode"
-          label="Pays"
+          label={t('label_country')}
           options={COUNTRIES.map((c) => c.code)}
           getOptionLabel={(option) => COUNTRIES.find((c) => c.code === option)?.label ?? ''}
           isOptionEqualToValue={(option, value) => option === value}
@@ -224,7 +226,7 @@ export function InstituteCreateEditForm({ currentInstitute }) {
   const renderLegalInfo = () => (
     <>
       <Typography variant="subtitle1" sx={{ mb: 2, mt: 4 }}>
-        Informations legales
+        {t('section_legal')}
       </Typography>
 
       <Box
@@ -235,12 +237,12 @@ export function InstituteCreateEditForm({ currentInstitute }) {
           gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' },
         }}
       >
-        <Field.Text name="legalForm" label="Forme juridique" />
-        <Field.Text name="shareCapital" label="Capital social" />
-        <Field.Text name="siren" label="SIREN" slotProps={{ htmlInput: { maxLength: 9 } }} />
-        <Field.Text name="siret" label="SIRET" slotProps={{ htmlInput: { maxLength: 14 } }} />
-        <Field.Text name="vatNumber" label="Numero de TVA" />
-        <Field.Text name="rcsCity" label="Ville RCS" />
+        <Field.Text name="legalForm" label={t('label_legal_form')} />
+        <Field.Text name="shareCapital" label={t('label_share_capital')} />
+        <Field.Text name="siren" label={t('label_siren')} slotProps={{ htmlInput: { maxLength: 9 } }} />
+        <Field.Text name="siret" label={t('label_siret')} slotProps={{ htmlInput: { maxLength: 14 } }} />
+        <Field.Text name="vatNumber" label={t('label_vat_number')} />
+        <Field.Text name="rcsCity" label={t('label_rcs_city')} />
       </Box>
     </>
   );
@@ -248,7 +250,7 @@ export function InstituteCreateEditForm({ currentInstitute }) {
   const renderSocialNetworks = () => (
     <>
       <Typography variant="subtitle1" sx={{ mb: 2, mt: 4 }}>
-        Reseaux sociaux
+        {t('section_social')}
       </Typography>
 
       <Box
@@ -325,7 +327,7 @@ export function InstituteCreateEditForm({ currentInstitute }) {
 
         <Stack alignItems="flex-end" sx={{ mt: 3 }}>
           <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-            {isEdit ? "Modifier l'institut" : "Creer l'institut"}
+            {isEdit ? t('submit_edit') : t('submit_create')}
           </LoadingButton>
         </Stack>
       </Card>

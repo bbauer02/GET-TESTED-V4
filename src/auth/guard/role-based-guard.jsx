@@ -2,9 +2,14 @@
 
 import { m } from 'framer-motion';
 
+import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 
+import { paths } from 'src/routes/paths';
+import { RouterLink } from 'src/routes/components';
+
+import { useTranslate } from 'src/locales';
 import { ForbiddenIllustration } from 'src/assets/illustrations';
 
 import { varBounce, MotionContainer } from 'src/components/animate';
@@ -18,6 +23,7 @@ import { varBounce, MotionContainer } from 'src/components/animate';
  */
 
 export function RoleBasedGuard({ sx, children, hasContent, currentRole, allowedRoles }) {
+  const { t } = useTranslate('common');
   const rolesArray = Array.isArray(currentRole) ? currentRole : [currentRole].filter(Boolean);
 
   if (rolesArray.length && allowedRoles && !allowedRoles.some((r) => rolesArray.includes(r))) {
@@ -28,19 +34,23 @@ export function RoleBasedGuard({ sx, children, hasContent, currentRole, allowedR
       >
         <m.div variants={varBounce('in')}>
           <Typography variant="h3" sx={{ mb: 2 }}>
-            Permission denied
+            {t('permission_denied_title')}
           </Typography>
         </m.div>
 
         <m.div variants={varBounce('in')}>
           <Typography sx={{ color: 'text.secondary' }}>
-            You do not have permission to access this page.
+            {t('permission_denied_description')}
           </Typography>
         </m.div>
 
         <m.div variants={varBounce('in')}>
           <ForbiddenIllustration sx={{ my: { xs: 5, sm: 10 } }} />
         </m.div>
+
+        <Button component={RouterLink} href={paths.dashboard.root} size="large" variant="contained">
+          {t('back_to_dashboard')}
+        </Button>
       </Container>
     ) : null;
   }

@@ -1,0 +1,21 @@
+{
+  "home": "Home",
+  "dashboard": "Dashboard",
+  "notifications": "Notifications",
+  "mark_all_read": "Mark all as read",
+  "tab_all": "All",
+  "tab_unread": "Unread",
+  "tab_read": "Read",
+  "no_notifications": "No notifications",
+  "search_placeholder": "Search...",
+  "switch_to": "Switch to: {{name}}",
+  "add_account": "Add account",
+  "role_admin_institute": "Institute Admin",
+  "role_staff": "Staff",
+  "role_examiner": "Examiner",
+  "role_admin": "Admin",
+  "role_candidate": "Candidate",
+  "upgrade_discount": "35% OFF",
+  "upgrade_text": "Power up Productivity!",
+  "upgrade_button": "Upgrade to Pro"
+}

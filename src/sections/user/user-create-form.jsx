@@ -5,6 +5,7 @@ import dayjs from 'dayjs';
 import { mutate } from 'swr';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { parsePhoneNumber } from 'react-phone-number-input/input';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -18,8 +19,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
-import { parsePhoneNumber } from 'react-phone-number-input/input';
-
+import { useTranslate } from 'src/locales';
 import axios, { endpoints } from 'src/lib/axios';
 
 import { toast } from 'src/components/snackbar';
@@ -30,10 +30,7 @@ import { COUNTRIES, LANGUAGES, GENDER_OPTIONS, CIVILITY_OPTIONS } from '../profi
 
 // ----------------------------------------------------------------------
 
-const ROLE_OPTIONS = [
-  { value: 'USER', label: 'Utilisateur' },
-  { value: 'ADMIN', label: 'Administrateur' },
-];
+// ROLE_OPTIONS moved inside component for i18n
 
 const UserCreateSchema = z.object({
   avatar: z.any().nullable(),
@@ -80,7 +77,13 @@ const defaultValues = {
 // ----------------------------------------------------------------------
 
 export function UserCreateForm() {
+  const { t } = useTranslate('user');
   const router = useRouter();
+
+  const ROLE_OPTIONS = [
+    { value: 'USER', label: t('role_user') },
+    { value: 'ADMIN', label: t('role_admin') },
+  ];
 
   const methods = useForm({
     mode: 'onSubmit',
@@ -151,18 +154,18 @@ export function UserCreateForm() {
       // Invalidate the user list cache so it re-fetches on next mount
       await mutate(endpoints.user.list, undefined, { revalidate: false });
 
-      toast.success('Utilisateur cree avec succes !');
+      toast.success(t('create_success'));
       router.push(paths.dashboard.user.list);
     } catch (error) {
       console.error(error);
-      toast.error(error?.message || 'Erreur lors de la creation');
+      toast.error(error?.message || t('create_error'));
     }
   });
 
   const renderAccountInfo = () => (
     <>
       <Typography variant="subtitle1" sx={{ mb: 2 }}>
-        Informations du compte
+        {t('section_account_info')}
       </Typography>
 
       <Box
@@ -173,10 +176,10 @@ export function UserCreateForm() {
           gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' },
         }}
       >
-        <Field.Text name="email" label="Email" />
-        <Field.Text name="password" label="Mot de passe" type="password" />
+        <Field.Text name="email" label={t('label_email')} />
+        <Field.Text name="password" label={t('label_password')} type="password" />
 
-        <Field.Select name="platformRole" label="Role">
+        <Field.Select name="platformRole" label={t('label_role')}>
           {ROLE_OPTIONS.map((option) => (
             <MenuItem key={option.value} value={option.value}>
               {option.label}
@@ -190,7 +193,7 @@ export function UserCreateForm() {
   const renderPersonalInfo = () => (
     <>
       <Typography variant="subtitle1" sx={{ mb: 2, mt: 4 }}>
-        Informations personnelles
+        {t('section_personal_info')}
       </Typography>
 
       <Box
@@ -201,7 +204,7 @@ export function UserCreateForm() {
           gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' },
         }}
       >
-        <Field.Select name="civility" label="Civilite">
+        <Field.Select name="civility" label={t('label_civility')}>
           {CIVILITY_OPTIONS.map((option) => (
             <MenuItem key={option.value} value={option.value}>
               {option.label}
@@ -209,7 +212,7 @@ export function UserCreateForm() {
           ))}
         </Field.Select>
 
-        <Field.Select name="gender" label="Genre">
+        <Field.Select name="gender" label={t('label_gender')}>
           {GENDER_OPTIONS.map((option) => (
             <MenuItem key={option.value} value={option.value}>
               {option.label}
@@ -217,16 +220,16 @@ export function UserCreateForm() {
           ))}
         </Field.Select>
 
-        <Field.Text name="firstname" label="Prenom" />
-        <Field.Text name="lastname" label="Nom" />
+        <Field.Text name="firstname" label={t('label_firstname')} />
+        <Field.Text name="lastname" label={t('label_lastname')} />
 
-        <Field.Phone name="phone" label="Telephone" defaultCountry="FR" />
+        <Field.Phone name="phone" label={t('label_phone')} defaultCountry="FR" />
 
-        <Field.DatePicker name="birthday" label="Date de naissance" />
+        <Field.DatePicker name="birthday" label={t('label_birthday')} />
 
         <Field.Autocomplete
           name="firstlanguage"
-          label="Langue maternelle"
+          label={t('label_first_language')}
           options={LANGUAGES.map((lang) => lang.code)}
           getOptionLabel={(option) => LANGUAGES.find((l) => l.code === option)?.label ?? ''}
           isOptionEqualToValue={(option, value) => option === value}
@@ -260,7 +263,7 @@ export function UserCreateForm() {
   const renderAddress = () => (
     <>
       <Typography variant="subtitle1" sx={{ mb: 2, mt: 4 }}>
-        Adresse
+        {t('section_address')}
       </Typography>
 
       <Box
@@ -271,14 +274,14 @@ export function UserCreateForm() {
           gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' },
         }}
       >
-        <Field.Text name="address1" label="Adresse" sx={{ gridColumn: '1 / -1' }} />
-        <Field.Text name="address2" label="Complement d'adresse" sx={{ gridColumn: '1 / -1' }} />
-        <Field.Text name="zipcode" label="Code postal" />
-        <Field.Text name="city" label="Ville" />
+        <Field.Text name="address1" label={t('label_address')} sx={{ gridColumn: '1 / -1' }} />
+        <Field.Text name="address2" label={t('label_address2_full')} sx={{ gridColumn: '1 / -1' }} />
+        <Field.Text name="zipcode" label={t('label_zipcode')} />
+        <Field.Text name="city" label={t('label_city')} />
 
         <Field.Autocomplete
           name="countryCode"
-          label="Pays"
+          label={t('label_country')}
           options={COUNTRIES.map((c) => c.code)}
           getOptionLabel={(option) => COUNTRIES.find((c) => c.code === option)?.label ?? ''}
           isOptionEqualToValue={(option, value) => option === value}
@@ -309,7 +312,7 @@ export function UserCreateForm() {
   const renderNationality = () => (
     <>
       <Typography variant="subtitle1" sx={{ mb: 2, mt: 4 }}>
-        Nationalite et origine
+        {t('section_nationality')}
       </Typography>
 
       <Box
@@ -322,7 +325,7 @@ export function UserCreateForm() {
       >
         <Field.Autocomplete
           name="nativeCountry"
-          label="Pays de naissance"
+          label={t('label_native_country')}
           options={COUNTRIES.map((c) => c.code)}
           getOptionLabel={(option) => COUNTRIES.find((c) => c.code === option)?.label ?? ''}
           isOptionEqualToValue={(option, value) => option === value}
@@ -349,7 +352,7 @@ export function UserCreateForm() {
 
         <Field.Autocomplete
           name="nationality"
-          label="Nationalite"
+          label={t('label_nationality')}
           options={COUNTRIES.map((c) => c.code)}
           getOptionLabel={(option) => COUNTRIES.find((c) => c.code === option)?.label ?? ''}
           isOptionEqualToValue={(option, value) => option === value}
@@ -395,7 +398,7 @@ export function UserCreateForm() {
 
             <Stack alignItems="flex-end" sx={{ mt: 3 }}>
               <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-                Creer l&apos;utilisateur
+                {t('submit_create')}
               </LoadingButton>
             </Stack>
           </Card>

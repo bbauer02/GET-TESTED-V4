@@ -1,35 +1,35 @@
 'use client';
 
 import { z } from 'zod';
-import { useMemo, useState, useEffect } from 'react';
 import { mutate } from 'swr';
 import { useForm } from 'react-hook-form';
+import { useMemo, useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
-import MenuItem from '@mui/material/MenuItem';
 import Divider from '@mui/material/Divider';
+import MenuItem from '@mui/material/MenuItem';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
 
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
+import { useTranslate } from 'src/locales';
 import axios, { endpoints } from 'src/lib/axios';
+import { useGetAssessments } from 'src/actions/assessment';
 
 import { toast } from 'src/components/snackbar';
 import { Form, Field } from 'src/components/hook-form';
-
-import { useGetAssessments } from 'src/actions/assessment';
 
 // ----------------------------------------------------------------------
 
 const ExamSchema = z.object({
   label: z.string().min(1, { message: 'Le label est requis !' }),
-  assessment: z.string().min(1, { message: "L'assessment est requis !" }),
+  assessment: z.string().min(1, { message: 'Le test est requis !' }),
   level: z.string().nullable(),
   isWritten: z.boolean(),
   isOption: z.boolean(),
@@ -68,6 +68,7 @@ function getSkillIris(exam) {
 // ----------------------------------------------------------------------
 
 export function ExamCreateEditForm({ currentExam, fixedAssessmentIri, redirectPath }) {
+  const { t } = useTranslate('exam');
   const router = useRouter();
 
   const isEdit = !!currentExam;
@@ -118,7 +119,7 @@ export function ExamCreateEditForm({ currentExam, fixedAssessmentIri, redirectPa
     if (!watchAssessment) {
       setAvailableLevels([]);
       setAssessmentSkills([]);
-      return;
+      return undefined;
     }
 
     let cancelled = false;
@@ -216,7 +217,7 @@ export function ExamCreateEditForm({ currentExam, fixedAssessmentIri, redirectPa
     try {
       // Level is required if the assessment has levels
       if (availableLevels.length > 0 && !data.level) {
-        toast.error('Le niveau est obligatoire pour cet assessment.');
+        toast.error(t('level_required'));
         return;
       }
 
@@ -249,7 +250,7 @@ export function ExamCreateEditForm({ currentExam, fixedAssessmentIri, redirectPa
         await axios.post(endpoints.exam.list, payload);
       }
 
-      toast.success(isEdit ? 'Exam modifie avec succes !' : 'Exam cree avec succes !');
+      toast.success(isEdit ? t('edit_success') : t('create_success'));
 
       await mutate(endpoints.exam.list, undefined, { revalidate: true });
       if (fixedAssessmentIri) {
@@ -265,7 +266,7 @@ export function ExamCreateEditForm({ currentExam, fixedAssessmentIri, redirectPa
     } catch (error) {
       console.error(error);
       toast.error(
-        error?.message || `Erreur lors de ${isEdit ? 'la modification' : 'la creation'} de l'exam`
+        error?.message || (isEdit ? t('edit_error') : t('create_error'))
       );
     }
   });
@@ -317,7 +318,7 @@ export function ExamCreateEditForm({ currentExam, fixedAssessmentIri, redirectPa
   const renderExamInfo = () => (
     <>
       <Typography variant="subtitle1" sx={{ mb: 2 }}>
-        Informations de l&apos;exam
+        {t('section_info')}
       </Typography>
 
       <Box
@@ -328,11 +329,11 @@ export function ExamCreateEditForm({ currentExam, fixedAssessmentIri, redirectPa
           gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' },
         }}
       >
-        <Field.Text name="label" label="Label" sx={{ gridColumn: '1 / -1' }} />
+        <Field.Text name="label" label={t('label_label')} sx={{ gridColumn: '1 / -1' }} />
 
         <Field.Autocomplete
           name="assessment"
-          label="Assessment"
+          label={t('label_assessment')}
           options={assessmentOptions}
           getOptionLabel={getAssessmentOptionLabel}
           isOptionEqualToValue={(option, value) => option === value}
@@ -342,7 +343,7 @@ export function ExamCreateEditForm({ currentExam, fixedAssessmentIri, redirectPa
         {availableLevels.length > 0 && (
           <Field.Autocomplete
             name="level"
-            label="Niveau *"
+            label={t('label_level')}
             options={levelOptions}
             getOptionLabel={getLevelOptionLabel}
             isOptionEqualToValue={(option, value) => option === value}
@@ -351,8 +352,8 @@ export function ExamCreateEditForm({ currentExam, fixedAssessmentIri, redirectPa
       </Box>
 
       <Box sx={{ display: 'flex', gap: 3, mt: 2 }}>
-        <Field.Switch name="isWritten" label="Epreuve ecrite" />
-        <Field.Switch name="isOption" label="Option" />
+        <Field.Switch name="isWritten" label={t('switch_written')} />
+        <Field.Switch name="isOption" label={t('switch_option')} />
       </Box>
     </>
   );
@@ -362,13 +363,13 @@ export function ExamCreateEditForm({ currentExam, fixedAssessmentIri, redirectPa
       <Divider sx={{ my: 3, borderStyle: 'dashed' }} />
 
       <Typography variant="subtitle1" sx={{ mb: 2 }}>
-        Competences evaluees
+        {t('section_skills')}
       </Typography>
 
       {skillOptions.length > 0 ? (
         <Field.Autocomplete
           name="skills"
-          label="Competences de l'assessment"
+          label={t('label_skills')}
           multiple
           options={skillOptions}
           getOptionLabel={getSkillOptionLabel}
@@ -386,7 +387,7 @@ export function ExamCreateEditForm({ currentExam, fixedAssessmentIri, redirectPa
         />
       ) : (
         <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center', py: 2 }}>
-          Aucune competence sur cet assessment. Creez-les depuis la fiche de l&apos;assessment.
+          {t('no_skills')}
         </Typography>
       )}
     </>
@@ -397,7 +398,7 @@ export function ExamCreateEditForm({ currentExam, fixedAssessmentIri, redirectPa
       <Divider sx={{ my: 3, borderStyle: 'dashed' }} />
 
       <Typography variant="subtitle1" sx={{ mb: 2 }}>
-        Details
+        {t('section_details')}
       </Typography>
 
       <Box
@@ -408,10 +409,10 @@ export function ExamCreateEditForm({ currentExam, fixedAssessmentIri, redirectPa
           gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' },
         }}
       >
-        <Field.Text name="coeff" label="Coefficient" type="number" />
-        <Field.Text name="nbrQuestions" label="Nombre de questions" type="number" />
-        <Field.Text name="duration" label="Duree (minutes)" type="number" />
-        <Field.Text name="successScore" label="Score de reussite" type="number" />
+        <Field.Text name="coeff" label={t('label_coeff')} type="number" />
+        <Field.Text name="nbrQuestions" label={t('label_nbr_questions')} type="number" />
+        <Field.Text name="duration" label={t('label_duration')} type="number" />
+        <Field.Text name="successScore" label={t('label_success_score')} type="number" />
       </Box>
     </>
   );
@@ -421,7 +422,7 @@ export function ExamCreateEditForm({ currentExam, fixedAssessmentIri, redirectPa
       <Divider sx={{ my: 3, borderStyle: 'dashed' }} />
 
       <Typography variant="subtitle1" sx={{ mb: 2 }}>
-        Prix
+        {t('section_price')}
       </Typography>
 
       <Box
@@ -432,15 +433,15 @@ export function ExamCreateEditForm({ currentExam, fixedAssessmentIri, redirectPa
           gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(3, 1fr)' },
         }}
       >
-        <Field.Text name="priceAmount" label="Montant" type="number" />
+        <Field.Text name="priceAmount" label={t('label_amount')} type="number" />
 
-        <Field.Select name="priceCurrency" label="Devise">
+        <Field.Select name="priceCurrency" label={t('label_currency')}>
           <MenuItem value="EUR">EUR</MenuItem>
           <MenuItem value="USD">USD</MenuItem>
           <MenuItem value="GBP">GBP</MenuItem>
         </Field.Select>
 
-        <Field.Text name="priceTva" label="TVA (%)" type="number" />
+        <Field.Text name="priceTva" label={t('label_tva')} type="number" />
       </Box>
     </>
   );
@@ -455,7 +456,7 @@ export function ExamCreateEditForm({ currentExam, fixedAssessmentIri, redirectPa
 
         <Stack alignItems="flex-end" sx={{ mt: 3 }}>
           <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-            {isEdit ? "Modifier l'exam" : "Creer l'exam"}
+            {isEdit ? t('submit_edit') : t('submit_create')}
           </LoadingButton>
         </Stack>
       </Card>

@@ -14,28 +14,19 @@ import { RouterLink } from 'src/routes/components';
 
 import { fCurrency } from 'src/utils/format-number';
 
+import { useTranslate } from 'src/locales';
+
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 
+import { getExamsTotals } from './utils/pricing';
+
 // ----------------------------------------------------------------------
 
+// Prix TTC « à partir de » : épreuves obligatoires uniquement
 function getMinPrice(session) {
   const scheduledExams = session?.scheduledExams || session?.scheduled_exams || [];
-
-  let total = 0;
-
-  for (const se of scheduledExams) {
-    const exam = se.exam || {};
-    if (exam.isOption) continue; // Skip optional exams for "starting from" price
-
-    const institutePrice = se.examPricing?.price?.amount ?? se.exam_pricing?.price?.amount;
-    const defaultPrice = exam.price?.amount;
-    const price = institutePrice ?? defaultPrice ?? 0;
-
-    total += price;
-  }
-
-  return total;
+  return getExamsTotals(scheduledExams.filter((se) => !se.exam?.isOption)).ttc;
 }
 
 function formatSessionDate(session) {
@@ -62,6 +53,7 @@ function getCity(session) {
 // ----------------------------------------------------------------------
 
 export function SessionCard({ session, basePath, sx, ...other }) {
+  const { t } = useTranslate('sessions');
   const institute = session?.institute || {};
   const assessment = session?.assessment || {};
   const level = session?.level;
@@ -69,7 +61,7 @@ export function SessionCard({ session, basePath, sx, ...other }) {
   const city = getCity(session);
   const sessionDate = formatSessionDate(session);
   const placesAvailable = session?.placesAvailable;
-  const enrollmentsCount = (session?.enrollments || []).length;
+  const enrollmentsCount = session?.enrollmentsCount ?? 0;
   const placesLeft = placesAvailable ? placesAvailable - enrollmentsCount : null;
 
   return (
@@ -107,7 +99,7 @@ export function SessionCard({ session, basePath, sx, ...other }) {
             textShadow: '0 1px 3px rgba(0,0,0,0.3)',
           }}
         >
-          {assessment.label || 'Session de test'}
+          {assessment.label || t('test_session')}
         </Typography>
 
         {level && (
@@ -115,7 +107,7 @@ export function SessionCard({ session, basePath, sx, ...other }) {
             color="warning"
             sx={{ position: 'absolute', top: 12, right: 12 }}
           >
-            Niveau {level.label || level.ref}
+            {t('level_label', { label: level.label || level.ref })}
           </Label>
         )}
 
@@ -172,7 +164,7 @@ export function SessionCard({ session, basePath, sx, ...other }) {
               fontWeight: placesLeft <= 5 ? 'bold' : 'normal',
             }}
           >
-            {placesLeft > 0 ? `${placesLeft} place${placesLeft > 1 ? 's' : ''} restante${placesLeft > 1 ? 's' : ''}` : 'Complet'}
+            {placesLeft > 0 ? t('places_remaining_other', { count: placesLeft }) : t('full')}
           </Typography>
         )}
       </Stack>
@@ -190,7 +182,7 @@ export function SessionCard({ session, basePath, sx, ...other }) {
       >
         <Box>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            A partir de
+            {t('starting_from')}
           </Typography>
           <Typography variant="h6" color="primary">
             {fCurrency(minPrice)}
@@ -208,7 +200,7 @@ export function SessionCard({ session, basePath, sx, ...other }) {
           size="small"
           disabled={placesLeft !== null && placesLeft <= 0}
         >
-          {placesLeft !== null && placesLeft <= 0 ? 'Complet' : "S\u0027inscrire"}
+          {placesLeft !== null && placesLeft <= 0 ? t('full') : t('register')}
         </Button>
       </Stack>
     </Card>

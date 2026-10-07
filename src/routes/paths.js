@@ -28,6 +28,9 @@ export const paths = {
     jwt: {
       signIn: `${ROOTS.AUTH}/jwt/sign-in`,
       signUp: `${ROOTS.AUTH}/jwt/sign-up`,
+      setPassword: `${ROOTS.AUTH}/jwt/set-password`,
+      forgotPassword: `${ROOTS.AUTH}/jwt/forgot-password`,
+      resetPassword: `${ROOTS.AUTH}/jwt/reset-password`,
     },
     firebase: {
       signIn: `${ROOTS.AUTH}/firebase/sign-in`,
@@ -106,10 +109,15 @@ export const paths = {
       root: `${ROOTS.DASHBOARD}/mes-inscriptions`,
       details: (id) => `${ROOTS.DASHBOARD}/mes-inscriptions/${id}`,
     },
+    examSession: {
+      take: (enrollmentExamId) => `${ROOTS.DASHBOARD}/exam-session/${enrollmentExamId}`,
+      results: (enrollmentExamId) => `${ROOTS.DASHBOARD}/exam-session/${enrollmentExamId}/results`,
+    },
     espaceInstitut: {
       root: `${ROOTS.DASHBOARD}/espace-institut`,
       fiche: `${ROOTS.DASHBOARD}/espace-institut/fiche`,
       ficheEdit: `${ROOTS.DASHBOARD}/espace-institut/fiche/edit`,
+      candidats: `${ROOTS.DASHBOARD}/espace-institut/candidats`,
       membres: `${ROOTS.DASHBOARD}/espace-institut/membres`,
       sessions: `${ROOTS.DASHBOARD}/espace-institut/sessions`,
       assessments: `${ROOTS.DASHBOARD}/espace-institut/assessments`,
@@ -120,6 +128,7 @@ export const paths = {
       examNew: (assessmentId) => `${ROOTS.DASHBOARD}/espace-institut/assessments/${assessmentId}/exams/new`,
       examEdit: (assessmentId, examId) => `${ROOTS.DASHBOARD}/espace-institut/assessments/${assessmentId}/exams/${examId}/edit`,
       sessionView: (id) => `${ROOTS.DASHBOARD}/espace-institut/sessions/${id}`,
+      sessionResults: (id) => `${ROOTS.DASHBOARD}/espace-institut/sessions/${id}/results`,
       sessionNew: `${ROOTS.DASHBOARD}/espace-institut/sessions/new`,
       sessionEdit: (id) => `${ROOTS.DASHBOARD}/espace-institut/sessions/${id}/edit`,
       stripe: `${ROOTS.DASHBOARD}/espace-institut/stripe`,
@@ -129,6 +138,18 @@ export const paths = {
       documentNew: `${ROOTS.DASHBOARD}/espace-institut/documents/new`,
       documentEdit: (id) => `${ROOTS.DASHBOARD}/espace-institut/documents/${id}/edit`,
       documentGenerate: (id) => `${ROOTS.DASHBOARD}/espace-institut/documents/${id}/generate`,
+      questions: `${ROOTS.DASHBOARD}/espace-institut/questions`,
+      questionImport: `${ROOTS.DASHBOARD}/espace-institut/questions/import`,
+      questionNew: (assessmentId, levelId) => {
+        const params = new URLSearchParams();
+        if (assessmentId) params.set('assessment', assessmentId);
+        if (levelId) params.set('level', levelId);
+        const query = params.toString();
+        return `${ROOTS.DASHBOARD}/espace-institut/questions/new${query ? `?${query}` : ''}`;
+      },
+      questionEdit: (id) => `${ROOTS.DASHBOARD}/espace-institut/questions/${id}/edit`,
+      questionView: (id) => `${ROOTS.DASHBOARD}/espace-institut/questions/${id}`,
+      subjectCompose: (scheduledExamId) => `${ROOTS.DASHBOARD}/espace-institut/subject/${scheduledExamId}`,
     },
   },
 };

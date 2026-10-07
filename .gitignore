@@ -35,3 +35,8 @@ build
 .vscode
 tsconfig.tsbuildinfo
 .ncurc.js
+
+# Captures et artefacts de tests navigateur
+/.playwright-mcp/
+/screenshots/
+/*.png

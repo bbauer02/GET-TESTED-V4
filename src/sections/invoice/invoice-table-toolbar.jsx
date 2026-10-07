@@ -1,3 +1,5 @@
+'use client';
+
 import { useCallback } from 'react';
 
 import Box from '@mui/material/Box';
@@ -6,11 +8,14 @@ import InputAdornment from '@mui/material/InputAdornment';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { formHelperTextClasses } from '@mui/material/FormHelperText';
 
+import { useTranslate } from 'src/locales';
+
 import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
 export function InvoiceTableToolbar({ filters, dateError, onResetPage }) {
+  const { t } = useTranslate('invoice');
   const { state: currentFilters, setState: updateFilters } = filters;
 
   const handleFilterName = useCallback(
@@ -49,20 +54,20 @@ export function InvoiceTableToolbar({ filters, dateError, onResetPage }) {
       }}
     >
       <DatePicker
-        label="Date début"
+        label={t('filter_start_date')}
         value={currentFilters.startDate}
         onChange={handleFilterStartDate}
         sx={{ maxWidth: { md: 180 } }}
       />
 
       <DatePicker
-        label="Date fin"
+        label={t('filter_end_date')}
         value={currentFilters.endDate}
         onChange={handleFilterEndDate}
         slotProps={{
           textField: {
             error: dateError,
-            helperText: dateError ? 'La date de fin doit être après la date de début' : null,
+            helperText: dateError ? t('filter_date_error') : null,
           },
         }}
         sx={{
@@ -78,7 +83,7 @@ export function InvoiceTableToolbar({ filters, dateError, onResetPage }) {
         fullWidth
         value={currentFilters.name}
         onChange={handleFilterName}
-        placeholder="Rechercher par client ou numéro..."
+        placeholder={t('search_placeholder')}
         slotProps={{
           input: {
             startAdornment: (

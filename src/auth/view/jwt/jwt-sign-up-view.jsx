@@ -17,6 +17,8 @@ import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 import { RouterLink } from 'src/routes/components';
 
+import { useTranslate } from 'src/locales';
+
 import { Iconify } from 'src/components/iconify';
 import { Form, Field, schemaUtils } from 'src/components/hook-form';
 
@@ -28,32 +30,32 @@ import { SignUpTerms } from '../../components/sign-up-terms';
 
 // ----------------------------------------------------------------------
 
-export const SignUpSchema = z.object({
-  firstName: z.string().min(1, { message: 'First name is required!' }),
-  lastName: z.string().min(1, { message: 'Last name is required!' }),
-  email: schemaUtils.email(),
-  password: z
-    .string()
-    .min(1, { message: 'Password is required!' })
-    .min(6, { message: 'Password must be at least 6 characters!' }),
-});
-
-// ----------------------------------------------------------------------
-
 export function JwtSignUpView() {
   const router = useRouter();
+
+  const { t } = useTranslate('auth');
 
   const showPassword = useBoolean();
 
   const { checkUserSession } = useAuthContext();
 
+  const SignUpSchema = z.object({
+    firstName: z.string().min(1, { message: t('sign_up_first_name_required') }),
+    lastName: z.string().min(1, { message: t('sign_up_last_name_required') }),
+    email: schemaUtils.email(),
+    password: z
+      .string()
+      .min(1, { message: t('sign_up_password_required') })
+      .min(6, { message: t('sign_up_password_min') }),
+  });
+
   const [errorMessage, setErrorMessage] = useState(null);
 
   const defaultValues = {
-    firstName: 'Hello',
-    lastName: 'Friend',
-    email: 'hello@gmail.com',
-    password: '@2Minimal',
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
   };
 
   const methods = useForm({
@@ -91,22 +93,22 @@ export function JwtSignUpView() {
       >
         <Field.Text
           name="firstName"
-          label="First name"
+          label={t('sign_up_first_name')}
           slotProps={{ inputLabel: { shrink: true } }}
         />
         <Field.Text
           name="lastName"
-          label="Last name"
+          label={t('sign_up_last_name')}
           slotProps={{ inputLabel: { shrink: true } }}
         />
       </Box>
 
-      <Field.Text name="email" label="Email address" slotProps={{ inputLabel: { shrink: true } }} />
+      <Field.Text name="email" label={t('sign_up_email_label')} slotProps={{ inputLabel: { shrink: true } }} />
 
       <Field.Text
         name="password"
-        label="Password"
-        placeholder="6+ characters"
+        label={t('sign_up_password_label')}
+        placeholder={t('sign_up_password_placeholder')}
         type={showPassword.value ? 'text' : 'password'}
         slotProps={{
           inputLabel: { shrink: true },
@@ -129,9 +131,9 @@ export function JwtSignUpView() {
         type="submit"
         variant="contained"
         loading={isSubmitting}
-        loadingIndicator="Create account..."
+        loadingIndicator={t('sign_up_button_loading')}
       >
-        Create account
+        {t('sign_up_button')}
       </Button>
     </Box>
   );
@@ -139,12 +141,12 @@ export function JwtSignUpView() {
   return (
     <>
       <FormHead
-        title="Get started absolutely free"
+        title={t('sign_up_title')}
         description={
           <>
-            {`Already have an account? `}
+            {`${t('sign_up_already_account')} `}
             <Link component={RouterLink} href={paths.auth.jwt.signIn} variant="subtitle2">
-              Get started
+              {t('sign_up_sign_in_link')}
             </Link>
           </>
         }

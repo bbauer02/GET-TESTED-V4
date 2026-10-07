@@ -5,24 +5,26 @@ import { useMemo } from 'react';
 import Card from '@mui/material/Card';
 import Table from '@mui/material/Table';
 import Button from '@mui/material/Button';
+import Tooltip from '@mui/material/Tooltip';
 import TableRow from '@mui/material/TableRow';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
 import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
+import TableContainer from '@mui/material/TableContainer';
 
 import { paths } from 'src/routes/paths';
 import { useParams } from 'src/routes/hooks';
 import { RouterLink } from 'src/routes/components';
 
 import { DashboardContent } from 'src/layouts/dashboard';
+import { useGetAssessment } from 'src/actions/assessment';
+import { useGetLevels, useGetAssessmentExams } from 'src/actions/exam';
 
-import { Iconify } from 'src/components/iconify';
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { LoadingScreen } from 'src/components/loading-screen';
 import { EmptyContent } from 'src/components/empty-content';
+import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   useTable,
@@ -31,9 +33,6 @@ import {
 } from 'src/components/table';
 
 import { useCurrentInstitute } from 'src/auth/hooks';
-
-import { useGetAssessment } from 'src/actions/assessment';
-import { useGetAssessmentExams, useGetLevels } from 'src/actions/exam';
 
 // ----------------------------------------------------------------------
 
@@ -97,13 +96,13 @@ export function InstituteExamListView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading={`Exams — ${assessment?.label || ''}`}
+        heading={`Épreuves — ${assessment?.label || ''}`}
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
           { name: currentInstitute?.label || 'Institut' },
-          { name: 'Assessments', href: paths.dashboard.espaceInstitut.assessments },
+          { name: 'Tests', href: paths.dashboard.espaceInstitut.assessments },
           { name: assessment?.label || '', href: paths.dashboard.espaceInstitut.assessmentView(assessmentId) },
-          { name: 'Exams' },
+          { name: 'Épreuves' },
         ]}
         action={
           <Button

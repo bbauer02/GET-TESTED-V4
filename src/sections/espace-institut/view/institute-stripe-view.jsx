@@ -1,21 +1,19 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 
-import Tab from '@mui/material/Tab';
-import Tabs from '@mui/material/Tabs';
 import Card from '@mui/material/Card';
-import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
 
 import { paths } from 'src/routes/paths';
 
-import { useCurrentInstitute } from 'src/auth/hooks/use-current-institute';
-
 import { DashboardContent } from 'src/layouts/dashboard';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+
 import { Iconify } from 'src/components/iconify';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+
+import { useCurrentInstitute } from 'src/auth/hooks/use-current-institute';
 
 import { StripeConnectHub } from '../stripe-connect-hub';
 import { useStripeStatus, useCreateStripeAccount } from '../hooks/use-stripe';

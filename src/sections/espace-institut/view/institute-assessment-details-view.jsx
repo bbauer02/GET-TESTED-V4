@@ -3,33 +3,41 @@
 import { useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
 import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
+import Collapse from '@mui/material/Collapse';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import Autocomplete from '@mui/material/Autocomplete';
-import IconButton from '@mui/material/IconButton';
-import Collapse from '@mui/material/Collapse';
 import LoadingButton from '@mui/lab/LoadingButton';
+import Autocomplete from '@mui/material/Autocomplete';
 
 import { paths } from 'src/routes/paths';
-import { useParams } from 'src/routes/hooks';
+import { useParams, useSearchParams } from 'src/routes/hooks';
 
 import axios from 'src/lib/axios';
-
+import { useTranslate } from 'src/locales';
 import { DashboardContent } from 'src/layouts/dashboard';
+import { useGetAssessment } from 'src/actions/assessment';
 
 import { Label } from 'src/components/label';
+import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { toast } from 'src/components/snackbar';
 
 import { useCurrentInstitute } from 'src/auth/hooks';
-import { useGetAssessment } from 'src/actions/assessment';
+
+import { AssessmentExamList } from '../assessment-exam-list';
+import { AssessmentQuestionBank } from '../assessment-question-bank';
+
+// ----------------------------------------------------------------------
+
+// TABS is defined inside the component to use translations
 
 // ----------------------------------------------------------------------
 
@@ -40,21 +48,21 @@ function matchesInstitute(ownership, instituteId) {
   return iri === `/api/institutes/${instituteId}` || iri.endsWith(`/${instituteId}`);
 }
 
-function getOwnerLabel(assessment) {
-  if (assessment?.internal) return 'Plateforme';
+function getOwnerLabel(assessment, tFn) {
+  if (assessment?.internal) return tFn('platform');
   const owner = (assessment?.ownerships || []).find((o) => o.ownershipType === 'OWNER');
   return owner?.institute?.label || '-';
 }
 
-function getRelationType(assessment, instituteId) {
-  if (assessment?.internal) return { label: 'Interne', color: 'info' };
+function getRelationType(assessment, instituteId, tFn) {
+  if (assessment?.internal) return { label: tFn('internal'), color: 'info' };
 
   const ownerships = assessment?.ownerships || [];
   const match = ownerships.find((o) => matchesInstitute(o, instituteId));
 
   if (!match) return { label: '-', color: 'default' };
-  if (match.ownershipType === 'OWNER') return { label: 'Proprietaire', color: 'success' };
-  if (match.ownershipType === 'BUYER') return { label: 'Licence', color: 'warning' };
+  if (match.ownershipType === 'OWNER') return { label: tFn('owner_relation'), color: 'success' };
+  if (match.ownershipType === 'BUYER') return { label: tFn('license'), color: 'warning' };
   return { label: match.ownershipType, color: 'default' };
 }
 
@@ -97,9 +105,23 @@ function buildSkillTree(skills) {
 // ----------------------------------------------------------------------
 
 export function InstituteAssessmentDetailsView() {
+  const { t } = useTranslate('institute_space');
   const { id } = useParams();
   const currentInstitute = useCurrentInstitute();
+
+  const TABS = [
+    { value: 'informations', label: t('tab_information'), icon: 'solar:info-circle-bold' },
+    { value: 'examens', label: t('tab_exams'), icon: 'solar:document-bold' },
+    { value: 'questions', label: t('tab_questions'), icon: 'solar:question-circle-bold' },
+  ];
   const { assessment, assessmentLoading } = useGetAssessment(id);
+
+  const searchParams = useSearchParams();
+  const tabFromUrl = searchParams.get('tab');
+  const validTabs = ['informations', 'examens', 'questions'];
+  const initialTab = validTabs.includes(tabFromUrl) ? tabFromUrl : 'informations';
+
+  const [currentTab, setCurrentTab] = useState(initialTab);
 
   const [resolvedLevels, setResolvedLevels] = useState([]);
   const [parentAssessment, setParentAssessment] = useState(null);
@@ -209,7 +231,7 @@ export function InstituteAssessmentDetailsView() {
   // Create skill handler
   const handleCreateSkill = async () => {
     if (!newSkillLabel.trim()) {
-      toast.error('Le label est requis.');
+      toast.error(t('skill_label_required'));
       return;
     }
 
@@ -226,7 +248,7 @@ export function InstituteAssessmentDetailsView() {
 
       await axios.post(`${assessmentIri}/skills`, payload);
 
-      toast.success('Competence creee !');
+      toast.success(t('skill_created'));
       setNewSkillLabel('');
       setNewSkillDescription('');
       setNewSkillParent(null);
@@ -235,7 +257,7 @@ export function InstituteAssessmentDetailsView() {
       // Refresh skills
       fetchSkills();
     } catch (error) {
-      toast.error(error?.message || 'Erreur lors de la creation.');
+      toast.error(error?.message || t('skill_creation_error'));
     } finally {
       setCreatingSkill(false);
     }
@@ -251,10 +273,12 @@ export function InstituteAssessmentDetailsView() {
 
   // ------ Render sections ------
 
+  const canEdit = isOwner(assessment, currentInstitute?.id);
+
   const renderInfo = () => (
     <>
       <Typography variant="subtitle1" sx={{ mb: 2 }}>
-        Informations de l&apos;assessment
+        {t('assessment_info')}
       </Typography>
 
       <Box
@@ -267,42 +291,42 @@ export function InstituteAssessmentDetailsView() {
       >
         <Stack spacing={0.5}>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            Label
+            {t('label')}
           </Typography>
           <Typography variant="body2">{assessment.label}</Typography>
         </Stack>
 
         <Stack spacing={0.5}>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            Reference
+            {t('reference')}
           </Typography>
           <Typography variant="body2">{assessment.ref || '-'}</Typography>
         </Stack>
 
         <Stack spacing={0.5}>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            Proprietaire
+            {t('owner')}
           </Typography>
-          <Typography variant="body2">{getOwnerLabel(assessment)}</Typography>
+          <Typography variant="body2">{getOwnerLabel(assessment, t)}</Typography>
         </Stack>
 
         <Stack spacing={0.5}>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            Relation
+            {t('relation')}
           </Typography>
           <Label
             variant="soft"
-            color={getRelationType(assessment, currentInstitute?.id).color}
+            color={getRelationType(assessment, currentInstitute?.id, t).color}
             sx={{ alignSelf: 'flex-start' }}
           >
-            {getRelationType(assessment, currentInstitute?.id).label}
+            {getRelationType(assessment, currentInstitute?.id, t).label}
           </Label>
         </Stack>
 
         {parentAssessment && (
           <Stack spacing={0.5}>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              Assessment parent
+              {t('parent_assessment')}
             </Typography>
             <Typography variant="body2">{parentAssessment.label}</Typography>
           </Stack>
@@ -319,7 +343,7 @@ export function InstituteAssessmentDetailsView() {
         <Divider sx={{ my: 3, borderStyle: 'dashed' }} />
 
         <Typography variant="subtitle1" sx={{ mb: 2 }}>
-          Niveaux herites de &laquo; {parentAssessment.label} &raquo;
+          {t('inherited_levels', { label: parentAssessment.label })}
         </Typography>
 
         <Stack spacing={2}>
@@ -353,7 +377,7 @@ export function InstituteAssessmentDetailsView() {
         <Divider sx={{ my: 3, borderStyle: 'dashed' }} />
 
         <Typography variant="subtitle1" sx={{ mb: 2 }}>
-          Niveaux propres
+          {t('own_levels')}
         </Typography>
 
         <Stack spacing={2}>
@@ -414,8 +438,6 @@ export function InstituteAssessmentDetailsView() {
     </Box>
   );
 
-  const canEdit = isOwner(assessment, currentInstitute?.id);
-
   const renderSkills = () => {
     const skillTree = buildSkillTree(resolvedSkills);
 
@@ -425,7 +447,7 @@ export function InstituteAssessmentDetailsView() {
 
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
           <Typography variant="subtitle1">
-            Competences ({resolvedSkills.length})
+            {t('skills_count', { count: resolvedSkills.length })}
           </Typography>
 
           {canEdit && (
@@ -435,7 +457,7 @@ export function InstituteAssessmentDetailsView() {
               startIcon={<Iconify icon={showSkillForm ? 'mingcute:close-line' : 'mingcute:add-line'} />}
               onClick={() => setShowSkillForm(!showSkillForm)}
             >
-              {showSkillForm ? 'Annuler' : 'Ajouter une competence'}
+              {showSkillForm ? t('cancel') : t('add_skill')}
             </Button>
           )}
         </Stack>
@@ -444,7 +466,7 @@ export function InstituteAssessmentDetailsView() {
         <Collapse in={showSkillForm}>
           <Card variant="outlined" sx={{ p: 2.5, mb: 3 }}>
             <Typography variant="subtitle2" sx={{ mb: 2 }}>
-              Nouvelle competence
+              {t('new_skill')}
             </Typography>
 
             <Stack spacing={2}>
@@ -489,7 +511,7 @@ export function InstituteAssessmentDetailsView() {
                   loading={creatingSkill}
                   onClick={handleCreateSkill}
                 >
-                  Creer la competence
+                  {t('create_skill')}
                 </LoadingButton>
               </Stack>
             </Stack>
@@ -499,11 +521,11 @@ export function InstituteAssessmentDetailsView() {
         {/* Skills list */}
         {skillsLoading ? (
           <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center', py: 2 }}>
-            Chargement...
+            {t('loading')}
           </Typography>
         ) : resolvedSkills.length === 0 ? (
           <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center', py: 2 }}>
-            Aucune competence. Ajoutez-en une pour commencer.
+            {t('no_skills')}
           </Typography>
         ) : (
           <Stack spacing={1}>
@@ -514,6 +536,26 @@ export function InstituteAssessmentDetailsView() {
     );
   };
 
+  const renderTabInformations = () => (
+    <Card sx={{ p: 3 }}>
+      {renderInfo()}
+      {renderParentLevels()}
+      {renderLevels()}
+      {renderSkills()}
+    </Card>
+  );
+
+  const renderTabExamens = () => (
+    <AssessmentExamList assessmentId={id} canEdit={canEdit} />
+  );
+
+  const renderTabQuestions = () => (
+    <AssessmentQuestionBank
+      assessmentId={id}
+      assessmentLevels={resolvedLevels}
+    />
+  );
+
   return (
     <DashboardContent>
       <CustomBreadcrumbs
@@ -521,18 +563,31 @@ export function InstituteAssessmentDetailsView() {
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
           { name: currentInstitute?.label || 'Institut' },
-          { name: 'Assessments', href: paths.dashboard.espaceInstitut.assessments },
+          { name: t('assessments'), href: paths.dashboard.espaceInstitut.assessments },
           { name: assessment.label },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
-      <Card sx={{ p: 3 }}>
-        {renderInfo()}
-        {renderParentLevels()}
-        {renderLevels()}
-        {renderSkills()}
-      </Card>
+      <Tabs
+        value={currentTab}
+        onChange={(_, value) => setCurrentTab(value)}
+        sx={{ mb: 3 }}
+      >
+        {TABS.map((tab) => (
+          <Tab
+            key={tab.value}
+            value={tab.value}
+            label={tab.label}
+            icon={<Iconify icon={tab.icon} />}
+            iconPosition="start"
+          />
+        ))}
+      </Tabs>
+
+      {currentTab === 'informations' && renderTabInformations()}
+      {currentTab === 'examens' && renderTabExamens()}
+      {currentTab === 'questions' && renderTabQuestions()}
     </DashboardContent>
   );
 }

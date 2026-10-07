@@ -1,10 +1,10 @@
 'use client';
 
 import { z } from 'zod';
-import { useMemo, useRef, useState, useEffect } from 'react';
 import { mutate } from 'swr';
-import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm, useFieldArray } from 'react-hook-form';
+import { useRef, useMemo, useState, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -18,13 +18,13 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
+import { useTranslate } from 'src/locales';
 import axios, { endpoints } from 'src/lib/axios';
+import { useGetAssessments } from 'src/actions/assessment';
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { Form, Field } from 'src/components/hook-form';
-
-import { useGetAssessments } from 'src/actions/assessment';
 
 // ----------------------------------------------------------------------
 
@@ -73,6 +73,7 @@ function getParentIri(assessment) {
 // ----------------------------------------------------------------------
 
 export function AssessmentCreateEditForm({ currentAssessment, instituteId }) {
+  const { t } = useTranslate('assessment');
   const router = useRouter();
 
   const isEdit = !!currentAssessment;
@@ -92,7 +93,7 @@ export function AssessmentCreateEditForm({ currentAssessment, instituteId }) {
 
   const defaultValues = useMemo(
     () => ({
-      label: currentAssessment?.label || 'Certification Francais Professionnel',
+      label: currentAssessment?.label || 'Test Français Professionnel',
       ref: currentAssessment?.ref || 'CFP-2026',
       isInternal: currentAssessment?.internal ?? (instituteId ? false : true),
       parent: getParentIri(currentAssessment),
@@ -128,7 +129,7 @@ export function AssessmentCreateEditForm({ currentAssessment, instituteId }) {
   useEffect(() => {
     if (!watchParent) {
       setParentLevels([]);
-      return;
+      return undefined;
     }
 
     let cancelled = false;
@@ -235,7 +236,7 @@ export function AssessmentCreateEditForm({ currentAssessment, instituteId }) {
           });
         }
 
-        toast.success('Assessment modifie avec succes !');
+        toast.success(t('edit_success'));
       } else {
         // Create the assessment first (without levels)
         let res;
@@ -261,7 +262,7 @@ export function AssessmentCreateEditForm({ currentAssessment, instituteId }) {
           });
         }
 
-        toast.success('Assessment cree avec succes !');
+        toast.success(t('create_success'));
       }
 
       // Clear caches so SWR refetches on next mount
@@ -285,8 +286,7 @@ export function AssessmentCreateEditForm({ currentAssessment, instituteId }) {
     } catch (error) {
       console.error(error);
       toast.error(
-        error?.message ||
-          `Erreur lors de ${isEdit ? 'la modification' : 'la creation'} de l'assessment`
+        error?.message || (isEdit ? t('edit_error') : t('create_error'))
       );
     }
   });
@@ -296,7 +296,7 @@ export function AssessmentCreateEditForm({ currentAssessment, instituteId }) {
   const renderAssessmentInfo = () => (
     <>
       <Typography variant="subtitle1" sx={{ mb: 2 }}>
-        Informations de l&apos;assessment
+        {t('section_info')}
       </Typography>
 
       <Box
@@ -307,12 +307,12 @@ export function AssessmentCreateEditForm({ currentAssessment, instituteId }) {
           gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' },
         }}
       >
-        <Field.Text name="label" label="Label" />
-        <Field.Text name="ref" label="Ref" slotProps={{ htmlInput: { maxLength: 50 } }} />
+        <Field.Text name="label" label={t('label_label')} />
+        <Field.Text name="ref" label={t('label_ref')} slotProps={{ htmlInput: { maxLength: 50 } }} />
 
         <Field.Autocomplete
           name="parent"
-          label="Assessment parent"
+          label={t('label_parent')}
           options={parentOptions.map((a) => a['@id'] || `/api/assessments/${a.id}`)}
           getOptionLabel={(option) => {
             const found = parentOptions.find(
@@ -325,7 +325,7 @@ export function AssessmentCreateEditForm({ currentAssessment, instituteId }) {
         />
       </Box>
 
-      <Field.Switch name="isInternal" label="Assessment interne" disabled sx={{ mt: 2 }} />
+      <Field.Switch name="isInternal" label={t('switch_internal')} disabled sx={{ mt: 2 }} />
     </>
   );
 
@@ -341,7 +341,7 @@ export function AssessmentCreateEditForm({ currentAssessment, instituteId }) {
         <Divider sx={{ my: 3, borderStyle: 'dashed' }} />
 
         <Typography variant="subtitle1" sx={{ mb: 2 }}>
-          Niveaux herites de &laquo; {parentAssessment?.label || 'Parent'} &raquo;
+          {t('section_parent_levels')} &laquo; {parentAssessment?.label || 'Parent'} &raquo;
         </Typography>
 
         <Stack spacing={2}>
@@ -380,7 +380,7 @@ export function AssessmentCreateEditForm({ currentAssessment, instituteId }) {
       <Divider sx={{ my: 3, borderStyle: 'dashed' }} />
 
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-        <Typography variant="subtitle1">Niveaux propres</Typography>
+        <Typography variant="subtitle1">{t('section_own_levels')}</Typography>
 
         <Button
           size="small"
@@ -388,17 +388,36 @@ export function AssessmentCreateEditForm({ currentAssessment, instituteId }) {
           startIcon={<Iconify icon="mingcute:add-line" />}
           onClick={handleAddLevel}
         >
-          Ajouter un niveau
+          {t('add_level')}
         </Button>
       </Stack>
 
       {fields.length === 0 && (
-        <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center', py: 3 }}>
-          Aucun niveau propre.{' '}
-          {parentLevels.length > 0
-            ? "Cet assessment utilise les niveaux du parent."
-            : "Cet assessment ne necessite pas de niveaux."}
-        </Typography>
+        <Stack
+          spacing={1.5}
+          alignItems="center"
+          sx={{
+            py: 4,
+            px: 2,
+            borderRadius: 1.5,
+            border: '2px dashed',
+            borderColor: 'divider',
+          }}
+        >
+          <Iconify icon="solar:layers-bold-duotone" width={40} sx={{ color: 'text.disabled' }} />
+          <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center' }}>
+            {t('no_own_levels')}
+            {parentLevels.length > 0 ? ` ${t('uses_parent_levels')}` : ''}
+          </Typography>
+          <Button
+            color="primary"
+            variant="outlined"
+            startIcon={<Iconify icon="mingcute:add-line" />}
+            onClick={handleAddLevel}
+          >
+            {t('add_level')}
+          </Button>
+        </Stack>
       )}
 
       <Stack spacing={3}>
@@ -406,7 +425,7 @@ export function AssessmentCreateEditForm({ currentAssessment, instituteId }) {
           <Stack key={field.id} spacing={1.5}>
             <Stack direction="row" alignItems="center" spacing={1}>
               <Typography variant="subtitle2" sx={{ color: 'text.secondary', flexGrow: 1 }}>
-                Niveau {index + 1}
+                {t('level_number')} {index + 1}
               </Typography>
 
               <Button
@@ -415,7 +434,7 @@ export function AssessmentCreateEditForm({ currentAssessment, instituteId }) {
                 startIcon={<Iconify icon="solar:trash-bin-trash-bold" />}
                 onClick={() => handleRemoveLevel(index)}
               >
-                Supprimer
+                {t('delete_level')}
               </Button>
             </Stack>
 
@@ -427,15 +446,15 @@ export function AssessmentCreateEditForm({ currentAssessment, instituteId }) {
                 gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' },
               }}
             >
-              <Field.Text name={`levels[${index}].label`} label="Label" />
+              <Field.Text name={`levels[${index}].label`} label={t('label_label')} />
               <Field.Text
                 name={`levels[${index}].ref`}
-                label="Ref"
+                label={t('label_ref')}
                 slotProps={{ htmlInput: { maxLength: 50 } }}
               />
               <Field.Text
                 name={`levels[${index}].description`}
-                label="Description"
+                label={t('label_description')}
                 multiline
                 rows={2}
                 sx={{ gridColumn: '1 / -1' }}
@@ -456,7 +475,7 @@ export function AssessmentCreateEditForm({ currentAssessment, instituteId }) {
 
         <Stack alignItems="flex-end" sx={{ mt: 3 }}>
           <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-            {isEdit ? "Modifier l'assessment" : "Creer l'assessment"}
+            {isEdit ? t('submit_edit') : t('submit_create')}
           </LoadingButton>
         </Stack>
       </Card>

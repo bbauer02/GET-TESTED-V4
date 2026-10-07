@@ -1,10 +1,15 @@
+'use client';
+
 import Box from '@mui/material/Box';
 
 import { fCurrency } from 'src/utils/format-number';
 
+import { useTranslate } from 'src/locales';
+
 // ----------------------------------------------------------------------
 
 export function InvoiceTotalSummary({ sx, totalHT, totalTVA, totalTTC, ...other }) {
+  const { t } = useTranslate('invoice');
   const rowStyles = {
     display: 'flex',
     alignItems: 'center',
@@ -36,7 +41,7 @@ export function InvoiceTotalSummary({ sx, totalHT, totalTVA, totalTTC, ...other 
     >
       <Box sx={rowStyles}>
         <Box component="span" sx={labelStyles}>
-          Total HT
+          {t('total_ht')}
         </Box>
         <Box component="span" sx={[valueStyles, { fontWeight: 'fontWeightSemiBold' }]}>
           {fCurrency(totalHT) || '-'}
@@ -45,7 +50,7 @@ export function InvoiceTotalSummary({ sx, totalHT, totalTVA, totalTTC, ...other 
 
       <Box sx={rowStyles}>
         <Box component="span" sx={labelStyles}>
-          TVA
+          {t('total_tva')}
         </Box>
         <Box component="span" sx={valueStyles}>
           {fCurrency(totalTVA) || '-'}
@@ -53,7 +58,7 @@ export function InvoiceTotalSummary({ sx, totalHT, totalTVA, totalTTC, ...other 
       </Box>
 
       <Box sx={[rowStyles, { typography: 'subtitle1' }]}>
-        <Box component="span">Total TTC</Box>
+        <Box component="span">{t('total_ttc')}</Box>
         <Box component="span" sx={valueStyles}>
           {fCurrency(totalTTC) || '-'}
         </Box>

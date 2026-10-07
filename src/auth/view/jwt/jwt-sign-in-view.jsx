@@ -1,8 +1,8 @@
 'use client';
 
 import * as z from 'zod';
-import { useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
+import { useState, useCallback } from 'react';
 import { useBoolean } from 'minimal-shared/hooks';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -12,8 +12,6 @@ import Chip from '@mui/material/Chip';
 import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
-import Divider from '@mui/material/Divider';
-import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -21,6 +19,8 @@ import InputAdornment from '@mui/material/InputAdornment';
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 import { RouterLink } from 'src/routes/components';
+
+import { useTranslate } from 'src/locales';
 
 import { Iconify } from 'src/components/iconify';
 import { Form, Field, schemaUtils } from 'src/components/hook-form';
@@ -32,28 +32,31 @@ import { signInWithPassword } from '../../context/jwt';
 
 // ----------------------------------------------------------------------
 
-export const SignInSchema = z.object({
-  email: schemaUtils.email(),
-  password: z
-    .string()
-    .min(1, { message: 'Password is required!' })
-    .min(6, { message: 'Password must be at least 6 characters!' }),
-});
-
-// ----------------------------------------------------------------------
+// Comptes de démonstration : uniquement en développement local
+const SHOW_QUICK_LOGINS = process.env.NODE_ENV === 'development';
 
 const QUICK_LOGINS = [
-  { label: 'Admin Plateforme', email: 'bbauer02@gmail.com', password: 'password123', color: 'error' },
-  { label: 'Admin Institut (Ayaka)', email: 'umebosi1014@yahoo.co.jp', password: 'password123', color: 'warning' },
-  { label: 'User (Christophe)', email: 'cLefebre@gmail.com', password: 'password123', color: 'info' },
+  { labelKey: 'sign_in_admin_platform', email: 'bbauer02@gmail.com', password: 'password123', color: 'error' },
+  { labelKey: 'sign_in_admin_institute', email: 'umebosi1014@yahoo.co.jp', password: 'password123', color: 'warning' },
+  { labelKey: 'sign_in_user', email: 'cLefebre@gmail.com', password: 'password123', color: 'info' },
 ];
 
 export function JwtSignInView() {
   const router = useRouter();
 
+  const { t } = useTranslate('auth');
+
   const showPassword = useBoolean();
 
   const { checkUserSession } = useAuthContext();
+
+  const SignInSchema = z.object({
+    email: schemaUtils.email(),
+    password: z
+      .string()
+      .min(1, { message: t('sign_in_password_required') })
+      .min(6, { message: t('sign_in_password_min') }),
+  });
 
   const [errorMessage, setErrorMessage] = useState(null);
 
@@ -96,23 +99,23 @@ export function JwtSignInView() {
 
   const renderForm = () => (
     <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
-      <Field.Text name="email" label="Email address" slotProps={{ inputLabel: { shrink: true } }} />
+      <Field.Text name="email" label={t('sign_in_email_label')} slotProps={{ inputLabel: { shrink: true } }} />
 
       <Box sx={{ gap: 1.5, display: 'flex', flexDirection: 'column' }}>
         <Link
           component={RouterLink}
-          href="#"
+          href={paths.auth.jwt.forgotPassword}
           variant="body2"
           color="inherit"
           sx={{ alignSelf: 'flex-end' }}
         >
-          Forgot password?
+          {t('sign_in_forgot_password')}
         </Link>
 
         <Field.Text
           name="password"
-          label="Password"
-          placeholder="6+ characters"
+          label={t('sign_in_password_label')}
+          placeholder={t('sign_in_password_placeholder')}
           type={showPassword.value ? 'text' : 'password'}
           slotProps={{
             inputLabel: { shrink: true },
@@ -138,9 +141,9 @@ export function JwtSignInView() {
         type="submit"
         variant="contained"
         loading={isSubmitting}
-        loadingIndicator="Sign in..."
+        loadingIndicator={t('sign_in_button_loading')}
       >
-        Sign in
+        {t('sign_in_button')}
       </Button>
     </Box>
   );
@@ -148,27 +151,28 @@ export function JwtSignInView() {
   return (
     <>
       <FormHead
-        title="Sign in to your account"
+        title={t('sign_in_title')}
         description={
           <>
-            {`Don’t have an account? `}
+            {`${t('sign_in_no_account')} `}
             <Link component={RouterLink} href={paths.auth.jwt.signUp} variant="subtitle2">
-              Get started
+              {t('sign_in_get_started')}
             </Link>
           </>
         }
         sx={{ textAlign: { xs: 'center', md: 'left' } }}
       />
 
+      {SHOW_QUICK_LOGINS && (
       <Box sx={{ mb: 3 }}>
         <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1.5 }}>
-          Connexion rapide :
+          {t('sign_in_quick_login')}
         </Typography>
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
           {QUICK_LOGINS.map((account) => (
             <Chip
               key={account.email}
-              label={account.label}
+              label={t(account.labelKey)}
               color={account.color}
               variant="soft"
               onClick={() => handleQuickLogin(account)}
@@ -177,6 +181,7 @@ export function JwtSignInView() {
           ))}
         </Stack>
       </Box>
+      )}
 
       {!!errorMessage && (
         <Alert severity="error" sx={{ mb: 3 }}>

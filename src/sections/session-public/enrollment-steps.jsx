@@ -7,10 +7,32 @@ import { styled } from '@mui/material/styles';
 import StepLabel, { stepLabelClasses } from '@mui/material/StepLabel';
 import MuiStepConnector, { stepConnectorClasses } from '@mui/material/StepConnector';
 
+import { useTranslate } from 'src/locales';
+
 import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
+export function useEnrollmentSteps() {
+  const { t } = useTranslate('sessions');
+
+  const ENROLLMENT_STEPS_GUEST = [
+    t('step_exams'),
+    t('step_register'),
+    t('step_recap'),
+    t('step_payment'),
+  ];
+
+  const ENROLLMENT_STEPS_AUTH = [
+    t('step_exams'),
+    t('step_recap'),
+    t('step_payment'),
+  ];
+
+  return { ENROLLMENT_STEPS_GUEST, ENROLLMENT_STEPS_AUTH };
+}
+
+// Keep these for backward compatibility (static French)
 export const ENROLLMENT_STEPS_GUEST = [
   'Examens',
   'Inscription',

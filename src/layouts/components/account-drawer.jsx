@@ -18,6 +18,7 @@ import { usePathname } from 'src/routes/hooks';
 import { RouterLink } from 'src/routes/components';
 
 import { _mock } from 'src/_mock';
+import { useTranslate } from 'src/locales';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -26,14 +27,16 @@ import { AnimateBorder } from 'src/components/animate';
 
 import { useAuthContext } from 'src/auth/hooks';
 
-import { UpgradeBlock } from './nav-upgrade';
 import { AccountButton } from './account-button';
 import { SignOutButton } from './sign-out-button';
+import { UpgradeBlock, getUserRoleDisplay } from './nav-upgrade';
 
 // ----------------------------------------------------------------------
 
 export function AccountDrawer({ data = [], sx, ...other }) {
   const pathname = usePathname();
+
+  const { t } = useTranslate('layout');
 
   const { user } = useAuthContext();
 
@@ -66,7 +69,7 @@ export function AccountDrawer({ data = [], sx, ...other }) {
       ]}
     >
       {data.map((option) => {
-        const rootLabel = pathname.includes('/dashboard') ? 'Home' : 'Dashboard';
+        const rootLabel = pathname.includes('/dashboard') ? t('home') : t('dashboard');
         const rootHref = pathname.includes('/dashboard') ? '/' : paths.dashboard.root;
 
         return (
@@ -152,8 +155,8 @@ export function AccountDrawer({ data = [], sx, ...other }) {
               {user?.displayName}
             </Typography>
 
-            <Label color={user?.platformRole === 'ADMIN' ? 'error' : 'info'} sx={{ mt: 0.5 }}>
-              {user?.platformRole === 'ADMIN' ? 'Administrateur' : user?.platformRole ?? ''}
+            <Label color={getUserRoleDisplay(user, t).color} sx={{ mt: 0.5 }}>
+              {getUserRoleDisplay(user, t).label}
             </Label>
 
             <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }} noWrap>
@@ -173,7 +176,7 @@ export function AccountDrawer({ data = [], sx, ...other }) {
             {Array.from({ length: 3 }, (_, index) => (
               <Tooltip
                 key={_mock.fullName(index + 1)}
-                title={`Switch to: ${_mock.fullName(index + 1)}`}
+                title={t('switch_to', { name: _mock.fullName(index + 1) })}
               >
                 <Avatar
                   alt={_mock.fullName(index + 1)}
@@ -183,7 +186,7 @@ export function AccountDrawer({ data = [], sx, ...other }) {
               </Tooltip>
             ))}
 
-            <Tooltip title="Add account">
+            <Tooltip title={t('add_account')}>
               <IconButton
                 sx={[
                   (theme) => ({

@@ -4,12 +4,12 @@ import { paths } from 'src/routes/paths';
 import { useParams } from 'src/routes/hooks';
 
 import { DashboardContent } from 'src/layouts/dashboard';
+import { useGetSession } from 'src/actions/espace-institut';
 
 import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { useCurrentInstitute } from 'src/auth/hooks';
-import { useGetSession } from 'src/actions/espace-institut';
 
 import { SessionCreateEditForm } from '../session-create-edit-form';
 

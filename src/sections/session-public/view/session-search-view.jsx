@@ -9,6 +9,7 @@ import Pagination from '@mui/material/Pagination';
 
 import { paths } from 'src/routes/paths';
 
+import { useTranslate } from 'src/locales';
 import { useGetLevels, useGetAssessments, useGetPublicSessions } from 'src/actions/session-public';
 
 import { useAuthContext } from 'src/auth/hooks';
@@ -21,6 +22,7 @@ import { SessionFilters } from '../session-filters';
 const ITEMS_PER_PAGE = 12;
 
 export function SessionSearchView() {
+  const { t } = useTranslate('sessions');
   const { authenticated } = useAuthContext();
   const basePath = authenticated ? paths.dashboard.sessionSearch.root : null;
 
@@ -50,10 +52,10 @@ export function SessionSearchView() {
       {/* Header */}
       <Box sx={{ textAlign: 'center', mb: { xs: 4, md: 6 } }}>
         <Typography variant="h3" sx={{ mb: 1 }}>
-          Sessions de test de langue
+          {t('search_title')}
         </Typography>
         <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 600, mx: 'auto' }}>
-          Trouvez une session de test pres de chez vous et inscrivez-vous en quelques clics.
+          {t('search_subtitle')}
         </Typography>
       </Box>
 
@@ -93,10 +95,10 @@ export function SessionSearchView() {
       {sessionsEmpty && !sessionsLoading && (
         <Box sx={{ textAlign: 'center', py: 8 }}>
           <Typography variant="h6" sx={{ mb: 1 }}>
-            Aucune session disponible
+            {t('no_sessions')}
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Revenez plus tard ou modifiez vos filtres.
+            {t('no_sessions_hint')}
           </Typography>
         </Box>
       )}

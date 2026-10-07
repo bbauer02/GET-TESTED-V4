@@ -1,7 +1,7 @@
 'use client';
 
 import { toast } from 'sonner';
-import { useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -12,22 +12,28 @@ import Typography from '@mui/material/Typography';
 import CardContent from '@mui/material/CardContent';
 import CircularProgress from '@mui/material/CircularProgress';
 
+import { useTranslate } from 'src/locales';
 import axiosInstance, { endpoints } from 'src/lib/axios';
+import { waitForInvoicePayment } from 'src/actions/payment';
 import { useGetPublicSession } from 'src/actions/session-public';
 
 import { useAuthContext } from 'src/auth/hooks';
+import { getErrorMessage } from 'src/auth/utils';
+import { setSession } from 'src/auth/context/jwt';
 
 import { EnrollmentStepExams } from '../enrollment-step-exams';
 import { EnrollmentStepRecap } from '../enrollment-step-recap';
 import { EnrollmentStepPayment } from '../enrollment-step-payment';
 import { EnrollmentStepRegister } from '../enrollment-step-register';
-import { EnrollmentSteps, ENROLLMENT_STEPS_AUTH, ENROLLMENT_STEPS_GUEST } from '../enrollment-steps';
+import { EnrollmentSteps, useEnrollmentSteps } from '../enrollment-steps';
 
 // ----------------------------------------------------------------------
 
 export function SessionEnrollmentView({ sessionId, paymentResult }) {
+  const { t } = useTranslate('sessions');
   const { session, sessionLoading, sessionError } = useGetPublicSession(sessionId);
   const { user, authenticated } = useAuthContext();
+  const { ENROLLMENT_STEPS_AUTH, ENROLLMENT_STEPS_GUEST } = useEnrollmentSteps();
 
   const isAuth = !!authenticated && !!user;
   const steps = isAuth ? ENROLLMENT_STEPS_AUTH : ENROLLMENT_STEPS_GUEST;
@@ -44,7 +50,12 @@ export function SessionEnrollmentView({ sessionId, paymentResult }) {
   const recapStepIndex = paymentStepIndex - 1;
 
   // --- Payment return handling ---
+  const handledPaymentReturn = useRef(false);
+
   useEffect(() => {
+    if (!paymentResult || handledPaymentReturn.current) return;
+    handledPaymentReturn.current = true;
+
     if (paymentResult === 'success') {
       setActiveStep(paymentStepIndex);
       setPaymentStatus('processing');
@@ -54,34 +65,26 @@ export function SessionEnrollmentView({ sessionId, paymentResult }) {
       sessionStorage.removeItem('stripe_return_token');
       sessionStorage.removeItem('stripe_return_invoiceId');
 
-      if (token && invoiceId) {
-        axiosInstance
-          .post(
-            endpoints.invoice.verifyPayment(invoiceId),
-            {},
-            { headers: { Authorization: `Bearer ${token}` } }
-          )
-          .then((res) => {
-            if (res.data.status === 'paid' || res.data.status === 'already_paid') {
-              setPaymentStatus('success');
-              toast.success('Paiement confirmé !');
-            } else {
-              setPaymentStatus('success');
-              toast.success('Paiement enregistré, vérification en cours.');
-            }
-          })
-          .catch(() => {
-            setPaymentStatus('success');
-            toast.success('Paiement enregistré !');
-          });
-      } else {
-        setPaymentStatus('success');
-        toast.success('Paiement confirmé !');
+      if (!invoiceId) {
+        setPaymentStatus('payment_unconfirmed');
+        return;
       }
+
+      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : undefined;
+
+      // Ne confirmer qu'après validation du paiement par l'API (qui interroge Stripe)
+      waitForInvoicePayment(invoiceId, { config }).then((result) => {
+        if (result === 'paid') {
+          setPaymentStatus('success');
+          toast.success(t('payment_confirmed_toast'));
+        } else {
+          setPaymentStatus('payment_unconfirmed');
+        }
+      });
     } else if (paymentResult === 'cancel') {
       setActiveStep(paymentStepIndex);
       setPaymentStatus('error');
-      toast.error('Paiement annulé. Vous pouvez réessayer depuis votre espace.');
+      toast.error(t('payment_cancelled_toast'));
     }
   }, [paymentResult, paymentStepIndex]);
 
@@ -142,6 +145,8 @@ export function SessionEnrollmentView({ sessionId, paymentResult }) {
     setPaymentStatus('processing');
     setActiveStep(paymentStepIndex);
 
+    let enrolled = false;
+
     try {
       let token;
 
@@ -158,34 +163,47 @@ export function SessionEnrollmentView({ sessionId, paymentResult }) {
           lastname: registrationData.lastname,
         };
 
+        let registerError = null;
         try {
           await axiosInstance.post(endpoints.auth.signUp, registerPayload);
-        } catch (registerError) {
-          console.warn('Register endpoint error (may be mailer):', registerError.message);
+        } catch (error) {
+          registerError = error;
         }
 
-        const loginRes = await axiosInstance.post(endpoints.auth.signIn, {
-          email: registrationData.email,
-          password: registrationData.password,
-        });
+        let loginRes;
+        try {
+          loginRes = await axiosInstance.post(endpoints.auth.signIn, {
+            email: registrationData.email,
+            password: registrationData.password,
+          });
+        } catch {
+          // Compte existant avec un autre mot de passe : inviter à se connecter
+          const emailTaken = registerError?.message?.startsWith('email:');
+          throw new Error(emailTaken ? t('account_exists_sign_in') : registerError?.message || t('enrollment_error'));
+        }
 
         token = loginRes.data?.token || loginRes.data?.access_token || loginRes.data?.accessToken;
 
-        // Update profile with address/phone
-        const authHeaders = { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/merge-patch+json' } };
-        const profilePayload = {
-          address: {
-            address1: registrationData.address1,
-            address2: registrationData.address2 || '',
-            zipcode: registrationData.zipcode,
-            city: registrationData.city,
-            countryCode: registrationData.countryCode,
-          },
-        };
-        if (registrationData.phone) profilePayload.phone = registrationData.phone;
-        if (registrationData.gender) profilePayload.gender = registrationData.gender;
+        // Le candidat est désormais connecté (le contexte d'auth sera rechargé à la prochaine navigation)
+        await setSession(token);
 
-        await axiosInstance.patch(endpoints.user.update, profilePayload, authHeaders);
+        // Compléter le profil uniquement pour un compte qui vient d'être créé
+        if (!registerError) {
+          const profileHeaders = { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/merge-patch+json' } };
+          const profilePayload = {
+            address: {
+              address1: registrationData.address1,
+              address2: registrationData.address2 || '',
+              zipcode: registrationData.zipcode,
+              city: registrationData.city,
+              countryCode: registrationData.countryCode,
+            },
+          };
+          if (registrationData.phone) profilePayload.phone = registrationData.phone;
+          if (registrationData.gender) profilePayload.gender = registrationData.gender;
+
+          await axiosInstance.patch(endpoints.user.update, profilePayload, profileHeaders);
+        }
       }
 
       const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
@@ -196,6 +214,7 @@ export function SessionEnrollmentView({ sessionId, paymentResult }) {
         { scheduledExamIds: getEnrollmentExamIds() },
         authHeaders,
       );
+      enrolled = true;
 
       // If pay now → create Stripe checkout session
       if (payNow) {
@@ -205,7 +224,7 @@ export function SessionEnrollmentView({ sessionId, paymentResult }) {
           const invoiceId = invoice?.id || invoice?.['@id']?.split('/').pop();
 
           if (!invoiceId) {
-            throw new Error('Aucune facture trouvée pour cette inscription.');
+            throw new Error(t('no_invoice_found'));
           }
 
           const returnBase = getReturnUrl();
@@ -227,20 +246,26 @@ export function SessionEnrollmentView({ sessionId, paymentResult }) {
         } catch (stripeError) {
           console.error('Stripe checkout error:', stripeError);
           setPaymentStatus('error');
-          toast.error('Inscription enregistrée, mais le paiement a échoué. Vous pouvez réessayer plus tard.');
+          toast.error(t('enrollment_saved_payment_failed'));
         }
       } else {
         setPaymentStatus('pending_payment');
-        toast.success('Inscription enregistrée. Paiement en attente.');
+        toast.success(t('enrollment_saved_pending'));
       }
     } catch (error) {
       console.error('Enrollment error:', error);
-      setPaymentStatus('error');
-      toast.error(error.message || 'Erreur lors de l\'inscription');
+      if (enrolled) {
+        setPaymentStatus('error');
+      } else {
+        // Rien n'a été enregistré : retour au récapitulatif pour corriger ou se connecter
+        setPaymentStatus(null);
+        setActiveStep(recapStepIndex);
+      }
+      toast.error(getErrorMessage(error) || t('enrollment_error'));
     } finally {
       setIsSubmitting(false);
     }
-  }, [isAuth, registrationData, sessionId, getEnrollmentExamIds, getReturnUrl, paymentStepIndex]);
+  }, [isAuth, registrationData, sessionId, getEnrollmentExamIds, getReturnUrl, paymentStepIndex, recapStepIndex]);
 
   // --- Loading / Error ---
   if (sessionLoading) {
@@ -254,9 +279,9 @@ export function SessionEnrollmentView({ sessionId, paymentResult }) {
   if (sessionError || !session) {
     return (
       <Container maxWidth="md" sx={{ py: 8, textAlign: 'center' }}>
-        <Typography variant="h5">Session introuvable</Typography>
+        <Typography variant="h5">{t('session_not_found')}</Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
-          Cette session n&apos;existe pas ou n&apos;est plus disponible.
+          {t('session_not_found_desc')}
         </Typography>
       </Container>
     );
@@ -267,20 +292,15 @@ export function SessionEnrollmentView({ sessionId, paymentResult }) {
   const institute = session?.institute || {};
 
   const placesAvailable = session?.placesAvailable;
-  const enrollmentsCount = (session?.enrollments || []).length;
+  const enrollmentsCount = session?.enrollmentsCount ?? 0;
   const isFull = placesAvailable != null && enrollmentsCount >= placesAvailable;
   const isOpen = session?.status === 'OPEN';
   const limitDate = session?.limitDateSubscribe ? new Date(session.limitDateSubscribe) : null;
   const isExpired = limitDate && new Date() > limitDate;
   const canEnroll = isOpen && !isFull && !isExpired;
 
-  // Check if the current user is already enrolled
-  const isAlreadyEnrolled = isAuth && (session?.enrollments || []).some((e) => {
-    const enrolledUserId = e.user?.id || e.user?.['@id'];
-    const currentUserId = user?.id || user?.['@id'];
-    return enrolledUserId === currentUserId
-      || (enrolledUserId && currentUserId && String(enrolledUserId) === String(currentUserId));
-  });
+  // Calculé par l'API pour l'utilisateur connecté
+  const isAlreadyEnrolled = isAuth && !!session?.isEnrolledByMe;
 
   // Build user data for recap (when authenticated)
   const authUserData = isAuth ? {
@@ -307,32 +327,32 @@ export function SessionEnrollmentView({ sessionId, paymentResult }) {
       {/* Alerts */}
       {paymentResult === 'success' && (
         <Alert severity="success" sx={{ mb: 3 }}>
-          Votre paiement a été confirmé. Votre inscription est validée !
+          {t('payment_confirmed_alert')}
         </Alert>
       )}
       {paymentResult === 'cancel' && (
         <Alert severity="warning" sx={{ mb: 3 }}>
-          Le paiement a été annulé. Votre inscription est enregistrée mais reste en attente de paiement.
+          {t('payment_cancelled_alert')}
         </Alert>
       )}
       {isAlreadyEnrolled && !paymentResult && (
         <Alert severity="info" sx={{ mb: 3 }}>
-          Vous êtes déjà inscrit à cette session.
+          {t('already_enrolled')}
         </Alert>
       )}
       {isFull && !paymentResult && !isAlreadyEnrolled && (
         <Alert severity="error" sx={{ mb: 3 }}>
-          Cette session est complète. Il n&apos;y a plus de places disponibles.
+          {t('session_full')}
         </Alert>
       )}
       {isExpired && !isFull && !paymentResult && !isAlreadyEnrolled && (
         <Alert severity="warning" sx={{ mb: 3 }}>
-          La date limite d&apos;inscription est dépassée.
+          {t('deadline_passed')}
         </Alert>
       )}
       {!isOpen && !paymentResult && !isAlreadyEnrolled && (
         <Alert severity="info" sx={{ mb: 3 }}>
-          Cette session n&apos;est pas ouverte aux inscriptions.
+          {t('session_not_open')}
         </Alert>
       )}
 
@@ -358,7 +378,7 @@ export function SessionEnrollmentView({ sessionId, paymentResult }) {
             </Box>
             <Box>
               <Typography variant="h5">
-                {assessment.label || 'Session de test'}
+                {assessment.label || t('test_session')}
               </Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 {institute.label}

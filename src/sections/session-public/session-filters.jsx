@@ -6,6 +6,8 @@ import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
 
+import { useTranslate } from 'src/locales';
+
 // ----------------------------------------------------------------------
 
 export function SessionFilters({
@@ -17,6 +19,8 @@ export function SessionFilters({
   levelsLoading,
   selectedAssessment,
 }) {
+  const { t } = useTranslate('sessions');
+
   const handleChangeAssessment = useCallback(
     (event, newValue) => {
       onChangeFilter('assessment', newValue?.id || '');
@@ -57,7 +61,7 @@ export function SessionFilters({
         value={selectedAssessment}
         onChange={handleChangeAssessment}
         renderInput={(params) => (
-          <TextField {...params} label="Assessment (type de test)" placeholder="Tous" />
+          <TextField {...params} label={t('filter_assessment')} placeholder={t('filter_all')} />
         )}
         sx={{ maxWidth: { sm: 320 } }}
       />
@@ -71,7 +75,7 @@ export function SessionFilters({
         onChange={handleChangeLevel}
         value={filters.level ? filteredLevels.find((l) => l.id === filters.level) || null : null}
         renderInput={(params) => (
-          <TextField {...params} label="Niveau" placeholder="Tous" />
+          <TextField {...params} label={t('filter_level')} placeholder={t('filter_all')} />
         )}
         sx={{ maxWidth: { sm: 240 } }}
       />

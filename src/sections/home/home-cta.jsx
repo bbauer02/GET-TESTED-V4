@@ -13,6 +13,8 @@ import Typography from '@mui/material/Typography';
 import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
 
+import { useTranslate } from 'src/locales';
+
 import { Iconify } from 'src/components/iconify';
 import { varFade, MotionViewport } from 'src/components/animate';
 
@@ -20,6 +22,7 @@ import { varFade, MotionViewport } from 'src/components/animate';
 
 export function HomeCta() {
   const theme = useTheme();
+  const { t } = useTranslate('home');
 
   return (
     <Box
@@ -97,7 +100,7 @@ export function HomeCta() {
                     fontSize: { xs: '1.75rem', md: '2.25rem' },
                   }}
                 >
-                  Pret a passer votre certification ?
+                  {t('cta_title')}
                 </Typography>
               </m.div>
 
@@ -111,8 +114,7 @@ export function HomeCta() {
                     lineHeight: 1.7,
                   }}
                 >
-                  Rejoignez des milliers de candidats qui ont deja certifie leur
-                  niveau de langue grace a notre plateforme.
+                  {t('cta_description')}
                 </Typography>
               </m.div>
 
@@ -138,7 +140,7 @@ export function HomeCta() {
                       '&:hover': { bgcolor: 'grey.200' },
                     }}
                   >
-                    Voir les sessions
+                    {t('cta_view_sessions')}
                   </Button>
 
                   <Button
@@ -159,7 +161,7 @@ export function HomeCta() {
                       },
                     }}
                   >
-                    Creer un compte gratuitement
+                    {t('cta_create_account')}
                   </Button>
                 </Stack>
               </m.div>

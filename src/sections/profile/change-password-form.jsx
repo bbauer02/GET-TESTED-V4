@@ -13,6 +13,7 @@ import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
 import InputAdornment from '@mui/material/InputAdornment';
 
+import { useTranslate } from 'src/locales';
 import axios, { endpoints } from 'src/lib/axios';
 
 import { Iconify } from 'src/components/iconify';
@@ -20,22 +21,21 @@ import { Form, Field } from 'src/components/hook-form';
 
 // ----------------------------------------------------------------------
 
-const ChangePasswordSchema = z.object({
-  currentPassword: z.string().min(1, { error: 'Le mot de passe actuel est requis' }),
-  newPassword: z.string().min(8, { error: 'Le nouveau mot de passe doit contenir au moins 8 caractères' }),
-  confirmPassword: z.string().min(1, { error: 'La confirmation est requise' }),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  error: 'Les mots de passe ne correspondent pas',
-  path: ['confirmPassword'],
-});
-
-// ----------------------------------------------------------------------
-
 export function ChangePasswordForm() {
+  const { t } = useTranslate('profile');
   const [alertState, setAlertState] = useState(null);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const ChangePasswordSchema = z.object({
+    currentPassword: z.string().min(1, { error: t('validation_current_password_required') }),
+    newPassword: z.string().min(8, { error: t('validation_new_password_min') }),
+    confirmPassword: z.string().min(1, { error: t('validation_confirm_required') }),
+  }).refine((data) => data.newPassword === data.confirmPassword, {
+    error: t('validation_passwords_mismatch'),
+    path: ['confirmPassword'],
+  });
 
   const methods = useForm({
     mode: 'onSubmit',
@@ -63,9 +63,9 @@ export function ChangePasswordForm() {
       });
 
       reset();
-      setAlertState({ severity: 'success', message: 'Mot de passe modifié avec succès !' });
+      setAlertState({ severity: 'success', message: t('password_changed') });
     } catch (error) {
-      const message = error?.message || 'Une erreur est survenue';
+      const message = error?.message || t('error_occurred');
       setAlertState({ severity: 'error', message });
     }
   });
@@ -73,7 +73,7 @@ export function ChangePasswordForm() {
   return (
     <Card sx={{ p: 3 }}>
       <Typography variant="subtitle1" sx={{ mb: 3 }}>
-        Changer le mot de passe
+        {t('change_password')}
       </Typography>
 
       <Form methods={methods} onSubmit={onSubmit}>
@@ -86,7 +86,7 @@ export function ChangePasswordForm() {
         <Stack spacing={3}>
           <Field.Text
             name="currentPassword"
-            label="Mot de passe actuel"
+            label={t('current_password')}
             type={showCurrentPassword ? 'text' : 'password'}
             slotProps={{
               input: {
@@ -103,9 +103,9 @@ export function ChangePasswordForm() {
 
           <Field.Text
             name="newPassword"
-            label="Nouveau mot de passe"
+            label={t('new_password')}
             type={showNewPassword ? 'text' : 'password'}
-            helperText="Minimum 8 caractères"
+            helperText={t('min_chars')}
             slotProps={{
               input: {
                 endAdornment: (
@@ -121,7 +121,7 @@ export function ChangePasswordForm() {
 
           <Field.Text
             name="confirmPassword"
-            label="Confirmer le nouveau mot de passe"
+            label={t('confirm_password')}
             type={showConfirmPassword ? 'text' : 'password'}
             slotProps={{
               input: {
@@ -138,7 +138,7 @@ export function ChangePasswordForm() {
 
           <Stack alignItems="flex-end">
             <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-              Modifier le mot de passe
+              {t('change_password_btn')}
             </LoadingButton>
           </Stack>
         </Stack>

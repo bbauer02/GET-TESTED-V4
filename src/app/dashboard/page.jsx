@@ -1,9 +1,7 @@
-import { redirect } from 'next/navigation';
+import { DashboardRedirect } from 'src/sections/overview/view';
 
-import { paths } from 'src/routes/paths';
-
-// ----------------------------------------------------------------------
+export const metadata = { title: 'Dashboard' };
 
 export default function Page() {
-  redirect(paths.dashboard.profile);
+  return <DashboardRedirect />;
 }

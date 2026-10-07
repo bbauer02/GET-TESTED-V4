@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useBoolean, useSetState } from 'minimal-shared/hooks';
 
 import Box from '@mui/material/Box';
@@ -14,7 +14,9 @@ import IconButton from '@mui/material/IconButton';
 import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
 
+import { useTranslate } from 'src/locales';
 import { DashboardContent } from 'src/layouts/dashboard';
+import { deleteInstitute, useGetInstitutes } from 'src/actions/institute';
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
@@ -33,7 +35,7 @@ import {
   TablePaginationCustom,
 } from 'src/components/table';
 
-import { useGetInstitutes } from 'src/actions/institute';
+import { getErrorMessage } from 'src/auth/utils';
 
 import { InstituteTableRow } from '../institute-table-row';
 import { InstituteTableToolbar } from '../institute-table-toolbar';
@@ -41,35 +43,34 @@ import { InstituteTableFiltersResult } from '../institute-table-filters-result';
 
 // ----------------------------------------------------------------------
 
-const TABLE_HEAD = [
-  { id: 'label', label: 'Nom' },
-  { id: 'city', label: 'Ville', width: 180 },
-  { id: 'siteweb', label: 'Site web', width: 220 },
-  { id: 'siren', label: 'SIREN', width: 140 },
-  { id: 'siret', label: 'SIRET', width: 160 },
-  { id: 'stripe', label: 'Stripe', width: 120 },
-  { id: '', width: 88 },
-];
+// TABLE_HEAD moved inside component for i18n
 
 // ----------------------------------------------------------------------
 
 export function InstituteListView() {
+  const { t } = useTranslate('institute');
+
+  const TABLE_HEAD = [
+    { id: 'label', label: t('table_name') },
+    { id: 'city', label: t('table_city'), width: 180 },
+    { id: 'siteweb', label: t('table_website'), width: 220 },
+    { id: 'siren', label: t('table_siren'), width: 140 },
+    { id: 'siret', label: t('table_siret'), width: 160 },
+    { id: 'stripe', label: t('table_stripe'), width: 120 },
+    { id: '', width: 88 },
+  ];
+
   const table = useTable();
 
   const confirmDialog = useBoolean();
 
   const { institutes, institutesLoading, institutesEmpty } = useGetInstitutes();
 
-  const [tableData, setTableData] = useState([]);
-
   const filters = useSetState({ name: '' });
   const { state: currentFilters, setState: updateFilters } = filters;
 
-  // Sync API data to local state
-  const displayData = tableData.length > 0 ? tableData : institutes;
-
   const dataFiltered = applyFilter({
-    inputData: displayData,
+    inputData: institutes,
     comparator: getComparator(table.order, table.orderBy),
     filters: currentFilters,
   });
@@ -81,36 +82,38 @@ export function InstituteListView() {
   const notFound = (!dataFiltered.length && canReset) || !dataFiltered.length;
 
   const handleDeleteRow = useCallback(
-    (id) => {
-      const deleteRow = displayData.filter((row) => row.id !== id);
-
-      toast.success('Suppression réussie !');
-
-      setTableData(deleteRow);
-
-      table.onUpdatePageDeleteRow(dataInPage.length);
+    async (id) => {
+      try {
+        await deleteInstitute(id);
+        toast.success(t('delete_success'));
+        table.onUpdatePageDeleteRow(dataInPage.length);
+      } catch (error) {
+        toast.error(getErrorMessage(error));
+      }
     },
-    [dataInPage.length, table, displayData]
+    [dataInPage.length, table, t]
   );
 
-  const handleDeleteRows = useCallback(() => {
-    const deleteRows = displayData.filter((row) => !table.selected.includes(row.id));
+  const handleDeleteRows = useCallback(async () => {
+    const results = await Promise.allSettled(table.selected.map((id) => deleteInstitute(id)));
+    const failures = results.filter((result) => result.status === 'rejected');
+    const deletedCount = results.length - failures.length;
 
-    toast.success('Suppression réussie !');
-
-    setTableData(deleteRows);
-
-    table.onUpdatePageDeleteRows(dataInPage.length, dataFiltered.length);
-  }, [dataFiltered.length, dataInPage.length, table, displayData]);
+    if (deletedCount) {
+      toast.success(t('delete_success'));
+      table.onUpdatePageDeleteRows(dataInPage.length, dataFiltered.length);
+    }
+    failures.forEach((failure) => toast.error(getErrorMessage(failure.reason)));
+  }, [dataFiltered.length, dataInPage.length, table, t]);
 
   const renderConfirmDialog = () => (
     <ConfirmDialog
       open={confirmDialog.value}
       onClose={confirmDialog.onFalse}
-      title="Supprimer"
+      title={t('delete_title')}
       content={
         <>
-          Êtes-vous sûr de vouloir supprimer <strong> {table.selected.length} </strong> élément(s) ?
+          {t('delete_confirm_multiple_prefix')} <strong> {table.selected.length} </strong> {t('delete_confirm_multiple_suffix')}
         </>
       }
       action={
@@ -122,7 +125,7 @@ export function InstituteListView() {
             confirmDialog.onFalse();
           }}
         >
-          Supprimer
+          {t('delete_button')}
         </Button>
       }
     />
@@ -132,11 +135,11 @@ export function InstituteListView() {
     <>
       <DashboardContent>
         <CustomBreadcrumbs
-          heading="Instituts"
+          heading={t('heading')}
           links={[
-            { name: 'Dashboard', href: paths.dashboard.root },
-            { name: 'Instituts', href: paths.dashboard.institute.root },
-            { name: 'Liste' },
+            { name: t('dashboard'), href: paths.dashboard.root },
+            { name: t('heading'), href: paths.dashboard.institute.root },
+            { name: t('breadcrumb_list') },
           ]}
           action={
             <Button
@@ -145,7 +148,7 @@ export function InstituteListView() {
               variant="contained"
               startIcon={<Iconify icon="mingcute:add-line" />}
             >
-              Nouvel institut
+              {t('new_button')}
             </Button>
           }
           sx={{ mb: { xs: 3, md: 5 } }}
@@ -178,7 +181,7 @@ export function InstituteListView() {
                 )
               }
               action={
-                <Tooltip title="Supprimer">
+                <Tooltip title={t('delete_button')}>
                   <IconButton color="primary" onClick={confirmDialog.onTrue}>
                     <Iconify icon="solar:trash-bin-trash-bold" />
                   </IconButton>

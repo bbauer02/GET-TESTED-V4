@@ -1,8 +1,10 @@
 'use client';
 
 import Stack from '@mui/material/Stack';
-import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
+import Autocomplete from '@mui/material/Autocomplete';
+
+import { useTranslate } from 'src/locales';
 
 // ----------------------------------------------------------------------
 
@@ -14,6 +16,8 @@ export function SkillTableToolbar({
   onFilterAssessment,
   onFilterExam,
 }) {
+  const { t } = useTranslate('skill');
+
   return (
     <Stack
       direction={{ xs: 'column', sm: 'row' }}
@@ -26,7 +30,7 @@ export function SkillTableToolbar({
         options={assessments}
         getOptionLabel={(option) => option.label || ''}
         isOptionEqualToValue={(option, value) => option.id === value?.id}
-        renderInput={(params) => <TextField {...params} label="Assessment" placeholder="Tous" />}
+        renderInput={(params) => <TextField {...params} label={t('filter_assessment')} placeholder={t('filter_all')} />}
         sx={{ minWidth: 240 }}
       />
 
@@ -36,7 +40,7 @@ export function SkillTableToolbar({
         options={exams}
         getOptionLabel={(option) => option.label || ''}
         isOptionEqualToValue={(option, value) => option.id === value?.id}
-        renderInput={(params) => <TextField {...params} label="Exam" placeholder="Tous" />}
+        renderInput={(params) => <TextField {...params} label={t('filter_exam')} placeholder={t('filter_all')} />}
         sx={{ minWidth: 240 }}
       />
     </Stack>

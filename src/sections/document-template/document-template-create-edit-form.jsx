@@ -1,10 +1,10 @@
 'use client';
 
 import { z } from 'zod';
-import { useMemo, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
+import { useForm } from 'react-hook-form';
+import { useMemo, useEffect } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
@@ -15,14 +15,14 @@ import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
 import axiosInstance, { endpoints } from 'src/lib/axios';
-import { getErrorMessage } from 'src/auth/utils/error-message';
+import { useGetDocumentTypes } from 'src/actions/document-template';
 
 import { Form, Field } from 'src/components/hook-form';
-
 import { MergeField } from 'src/components/editor/extension/merge-field';
 import { MergeFieldBlock } from 'src/components/editor/components/merge-field-block';
 
-import { useGetDocumentTypes } from 'src/actions/document-template';
+import { getErrorMessage } from 'src/auth/utils/error-message';
+
 import { MERGE_FIELD_CATEGORIES } from './utils/merge-fields';
 
 // ----------------------------------------------------------------------

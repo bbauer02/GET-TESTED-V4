@@ -1,91 +1,111 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
 import { varAlpha } from 'minimal-shared/utils';
 import { usePopover } from 'minimal-shared/hooks';
+import { useMemo, useState, useCallback } from 'react';
 
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
-import Button from '@mui/material/Button';
 import Table from '@mui/material/Table';
+import Button from '@mui/material/Button';
+import Select from '@mui/material/Select';
+import Tooltip from '@mui/material/Tooltip';
 import TableRow from '@mui/material/TableRow';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import IconButton from '@mui/material/IconButton';
 import MenuItem from '@mui/material/MenuItem';
 import MenuList from '@mui/material/MenuList';
-import Tooltip from '@mui/material/Tooltip';
-import FormControl from '@mui/material/FormControl';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import IconButton from '@mui/material/IconButton';
 import InputLabel from '@mui/material/InputLabel';
-import Select from '@mui/material/Select';
+import FormControl from '@mui/material/FormControl';
+import TableContainer from '@mui/material/TableContainer';
+
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 import { RouterLink } from 'src/routes/components';
 
 import { fDateTime } from 'src/utils/format-time';
+import { exportToCsv } from 'src/utils/export-csv';
 
+import { useTranslate } from 'src/locales';
 import { DashboardContent } from 'src/layouts/dashboard';
+import { useGetInstituteSessions } from 'src/actions/espace-institut';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { LoadingScreen } from 'src/components/loading-screen';
 import { EmptyContent } from 'src/components/empty-content';
+import { LoadingScreen } from 'src/components/loading-screen';
+import { CustomPopover } from 'src/components/custom-popover';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useTable, TableHeadCustom, TablePaginationCustom } from 'src/components/table';
-import { CustomPopover } from 'src/components/custom-popover';
 
-import { useCurrentInstitute } from 'src/auth/hooks';
-
-import { useGetInstituteSessions } from 'src/actions/espace-institut';
+import { useAuthContext, useCurrentInstitute } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
-
-const TABLE_HEAD = [
-  { id: 'assessment', label: 'Assessment' },
-  { id: 'level', label: 'Niveau' },
-  { id: 'start', label: 'Date debut' },
-  { id: 'end', label: 'Date fin' },
-  { id: 'enrollments', label: 'Inscrits' },
-  { id: 'status', label: 'Statut' },
-  { id: '', width: 56 },
-];
-
-const STATUS_OPTIONS = [
-  { value: 'all', label: 'Toutes' },
-  { value: 'DRAFT', label: 'Brouillon' },
-  { value: 'OPEN', label: 'Ouverte' },
-  { value: 'LOCKED', label: 'Verrouillée' },
-  { value: 'VALIDATED', label: 'Validée' },
-  { value: 'CANCELLED', label: 'Annulée' },
-];
 
 const STATUS_COLORS = {
   DRAFT: 'default',
   OPEN: 'success',
-  LOCKED: 'warning',
+  LOCKED: 'default',
   VALIDATED: 'info',
   CANCELLED: 'error',
-};
-
-const STATUS_LABELS = {
-  DRAFT: 'Brouillon',
-  OPEN: 'Ouverte',
-  LOCKED: 'Verrouillée',
-  VALIDATED: 'Validée',
-  CANCELLED: 'Annulée',
 };
 
 // ----------------------------------------------------------------------
 
 export function InstituteSessionsView() {
+  const { t } = useTranslate('institute_space');
   const table = useTable();
   const router = useRouter();
   const currentInstitute = useCurrentInstitute();
-  const { sessions, sessionsLoading } = useGetInstituteSessions(currentInstitute?.id);
+  const { user } = useAuthContext();
+  const { sessions: allSessions, sessionsLoading } = useGetInstituteSessions(currentInstitute?.id);
+
+  const STATUS_LABELS = {
+    DRAFT: t('status_draft'),
+    OPEN: t('status_open'),
+    LOCKED: t('status_locked'),
+    VALIDATED: t('status_validated'),
+    CANCELLED: t('status_cancelled'),
+  };
+
+  const STATUS_OPTIONS = [
+    { value: 'all', label: t('all') },
+    { value: 'DRAFT', label: t('status_draft') },
+    { value: 'OPEN', label: t('status_open') },
+    { value: 'LOCKED', label: t('status_locked') },
+    { value: 'VALIDATED', label: t('status_validated') },
+    { value: 'CANCELLED', label: t('status_cancelled') },
+  ];
+
+  const TABLE_HEAD = [
+    { id: 'assessment', label: t('assessment') },
+    { id: 'level', label: t('level') },
+    { id: 'start', label: t('start_date') },
+    { id: 'end', label: t('end_date') },
+    { id: 'enrollments', label: t('enrolled') },
+    { id: 'status', label: t('status') },
+    { id: '', width: 56 },
+  ];
+
+  const isInstituteAdmin = currentInstitute?.membershipRole === 'ADMIN' || currentInstitute?.membershipRole === 'STAFF';
+  const currentUserId = user?.id;
+
+  // TEACHER only sees sessions where they are an examinator
+  const sessions = useMemo(() => {
+    if (isInstituteAdmin) return allSessions;
+    return allSessions.filter((s) =>
+      (s.scheduledExams || s.scheduled_exams || []).some((se) =>
+        (se.examinators || []).some((ex) => {
+          const exId = typeof ex === 'string' ? ex : (ex.id || ex['@id']);
+          return exId === currentUserId || exId === `/api/users/${currentUserId}`;
+        })
+      )
+    );
+  }, [allSessions, isInstituteAdmin, currentUserId]);
 
   const [statusTab, setStatusTab] = useState('all');
   const [assessmentFilter, setAssessmentFilter] = useState('all');
@@ -176,21 +196,47 @@ export function InstituteSessionsView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Sessions"
+        heading={t('sessions')}
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
           { name: currentInstitute?.label || 'Institut' },
-          { name: 'Sessions' },
+          { name: t('sessions') },
         ]}
         action={
-          <Button
-            component={RouterLink}
-            href={paths.dashboard.espaceInstitut.sessionNew}
-            variant="contained"
-            startIcon={<Iconify icon="mingcute:add-line" />}
-          >
-            Nouvelle session
-          </Button>
+          isInstituteAdmin ? (
+            <Stack direction="row" spacing={1}>
+              <Button
+                variant="soft"
+                color="inherit"
+                startIcon={<Iconify icon="solar:export-bold" />}
+                onClick={() =>
+                  exportToCsv(
+                    filteredSessions,
+                    [
+                      { key: (r) => r.assessment?.label || '', label: t('assessment') },
+                      { key: (r) => r.level?.label || '', label: t('level') },
+                      { key: 'start', label: t('start_date') },
+                      { key: 'end', label: t('end_date') },
+                      { key: 'status', label: t('status') },
+                      { key: 'placesAvailable', label: t('places') },
+                      { key: (r) => r.enrollmentsCount ?? r.enrollments?.length ?? 0, label: t('enrolled') },
+                    ],
+                    'sessions'
+                  )
+                }
+              >
+                {t('export')}
+              </Button>
+              <Button
+                component={RouterLink}
+                href={paths.dashboard.espaceInstitut.sessionNew}
+                variant="contained"
+                startIcon={<Iconify icon="mingcute:add-line" />}
+              >
+                {t('new_session')}
+              </Button>
+            </Stack>
+          ) : null
         }
         sx={{ mb: { xs: 3, md: 5 } }}
       />
@@ -233,13 +279,13 @@ export function InstituteSessionsView() {
           flexWrap="wrap"
         >
           <FormControl size="small" sx={{ minWidth: 180 }}>
-            <InputLabel>Assessment</InputLabel>
+            <InputLabel>{t('assessment')}</InputLabel>
             <Select
               value={assessmentFilter}
-              label="Assessment"
+              label={t('assessment')}
               onChange={handleAssessmentChange}
             >
-              <MenuItem value="all">Tous</MenuItem>
+              <MenuItem value="all">{t('filter_all')}</MenuItem>
               {assessmentOptions.map((label) => (
                 <MenuItem key={label} value={label}>
                   {label}
@@ -250,13 +296,13 @@ export function InstituteSessionsView() {
 
           {levelOptions.length > 0 && (
             <FormControl size="small" sx={{ minWidth: 160 }}>
-              <InputLabel>Niveau</InputLabel>
+              <InputLabel>{t('level')}</InputLabel>
               <Select
                 value={levelFilter}
-                label="Niveau"
+                label={t('level')}
                 onChange={handleLevelChange}
               >
-                <MenuItem value="all">Tous</MenuItem>
+                <MenuItem value="all">{t('filter_all')}</MenuItem>
                 {levelOptions.map((label) => (
                   <MenuItem key={label} value={label}>
                     {label}
@@ -278,7 +324,21 @@ export function InstituteSessionsView() {
                 {filteredSessions.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={TABLE_HEAD.length}>
-                      <EmptyContent title="Aucune session" />
+                      <EmptyContent
+                        title={t('no_session')}
+                        description={t('no_session_desc')}
+                        action={
+                          <Button
+                            component={RouterLink}
+                            href={paths.dashboard.espaceInstitut.sessionNew}
+                            variant="contained"
+                            startIcon={<Iconify icon="mingcute:add-line" />}
+                            sx={{ mt: 2 }}
+                          >
+                            {t('create_session')}
+                          </Button>
+                        }
+                      />
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -286,6 +346,9 @@ export function InstituteSessionsView() {
                     <SessionTableRow
                       key={session.id || session['@id']}
                       session={session}
+                      canEdit={isInstituteAdmin}
+                      statusLabels={STATUS_LABELS}
+                      t={t}
                       onView={() =>
                         router.push(paths.dashboard.espaceInstitut.sessionView(session.id))
                       }
@@ -314,7 +377,7 @@ export function InstituteSessionsView() {
 
 // ----------------------------------------------------------------------
 
-function SessionTableRow({ session, onView, onEdit }) {
+function SessionTableRow({ session, canEdit, statusLabels, t, onView, onEdit }) {
   const popover = usePopover();
 
   const status = session.status || 'DRAFT';
@@ -332,11 +395,11 @@ function SessionTableRow({ session, onView, onEdit }) {
         </TableCell>
         <TableCell>
           <Label color={STATUS_COLORS[status] || 'default'}>
-            {STATUS_LABELS[status] || status}
+            {statusLabels[status] || status}
           </Label>
         </TableCell>
         <TableCell align="right" sx={{ px: 1 }} onClick={(e) => e.stopPropagation()}>
-          <Tooltip title="Actions">
+          <Tooltip title={t('actions')}>
             <IconButton color={popover.open ? 'inherit' : 'default'} onClick={popover.onOpen}>
               <Iconify icon="eva:more-vertical-fill" />
             </IconButton>
@@ -357,17 +420,19 @@ function SessionTableRow({ session, onView, onEdit }) {
             }}
           >
             <Iconify icon="solar:eye-bold" />
-            Voir
+            {t('view')}
           </MenuItem>
-          <MenuItem
-            onClick={() => {
-              popover.onClose();
-              onEdit();
-            }}
-          >
-            <Iconify icon="solar:pen-bold" />
-            Modifier
-          </MenuItem>
+          {canEdit && (
+            <MenuItem
+              onClick={() => {
+                popover.onClose();
+                onEdit();
+              }}
+            >
+              <Iconify icon="solar:pen-bold" />
+              {t('edit')}
+            </MenuItem>
+          )}
         </MenuList>
       </CustomPopover>
     </>

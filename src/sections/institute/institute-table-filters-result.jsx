@@ -1,12 +1,17 @@
+'use client';
+
 import { useCallback } from 'react';
 
 import Chip from '@mui/material/Chip';
+
+import { useTranslate } from 'src/locales';
 
 import { chipProps, FiltersBlock, FiltersResult } from 'src/components/filters-result';
 
 // ----------------------------------------------------------------------
 
 export function InstituteTableFiltersResult({ filters, onResetPage, totalResults, sx }) {
+  const { t } = useTranslate('institute');
   const { state: currentFilters, setState: updateFilters, resetState: resetFilters } = filters;
 
   const handleRemoveKeyword = useCallback(() => {
@@ -21,7 +26,7 @@ export function InstituteTableFiltersResult({ filters, onResetPage, totalResults
 
   return (
     <FiltersResult totalResults={totalResults} onReset={handleReset} sx={sx}>
-      <FiltersBlock label="Recherche :" isShow={!!currentFilters.name}>
+      <FiltersBlock label={t('filter_search_label')} isShow={!!currentFilters.name}>
         <Chip {...chipProps} label={currentFilters.name} onDelete={handleRemoveKeyword} />
       </FiltersBlock>
     </FiltersResult>

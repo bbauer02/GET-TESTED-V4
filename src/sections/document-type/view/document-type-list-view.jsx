@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback } from 'react';
-import { useBoolean } from 'minimal-shared/hooks';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -13,8 +12,9 @@ import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
 
 import axiosInstance from 'src/lib/axios';
-
+import { useTranslate } from 'src/locales';
 import { DashboardContent } from 'src/layouts/dashboard';
+import { useGetDocumentTypes } from 'src/actions/document-template';
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
@@ -29,21 +29,23 @@ import {
   TablePaginationCustom,
 } from 'src/components/table';
 
-import { useGetDocumentTypes } from 'src/actions/document-template';
-
 import { DocumentTypeTableRow } from '../document-type-table-row';
 
 // ----------------------------------------------------------------------
 
-const TABLE_HEAD = [
-  { id: 'label', label: 'Nom' },
-  { id: 'code', label: 'Code' },
-  { id: '', width: 88 },
-];
+// TABLE_HEAD moved inside component for i18n
 
 // ----------------------------------------------------------------------
 
 export function DocumentTypeListView() {
+  const { t } = useTranslate('document_type');
+
+  const TABLE_HEAD = [
+    { id: 'label', label: t('table_name') },
+    { id: 'code', label: t('table_code') },
+    { id: '', width: 88 },
+  ];
+
   const table = useTable();
 
   const { documentTypes, documentTypesLoading, documentTypesEmpty, documentTypesMutate } =
@@ -55,12 +57,12 @@ export function DocumentTypeListView() {
     async (id) => {
       try {
         await axiosInstance.delete(`/api/document-types/${id}`);
-        toast.success('Type de document supprime !');
+        toast.success(t('delete_success'));
         documentTypesMutate();
         table.onUpdatePageDeleteRow(documentTypes.length);
       } catch (error) {
         console.error(error);
-        toast.error(error?.message || 'Erreur lors de la suppression');
+        toast.error(error?.message || t('delete_error'));
       }
     },
     [documentTypes.length, documentTypesMutate, table]
@@ -69,11 +71,11 @@ export function DocumentTypeListView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Types de documents"
+        heading={t('heading')}
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Types de documents', href: paths.dashboard.documentType.root },
-          { name: 'Liste' },
+          { name: t('dashboard'), href: paths.dashboard.root },
+          { name: t('heading'), href: paths.dashboard.documentType.root },
+          { name: t('breadcrumb_list') },
         ]}
         action={
           <Button
@@ -82,7 +84,7 @@ export function DocumentTypeListView() {
             variant="contained"
             startIcon={<Iconify icon="mingcute:add-line" />}
           >
-            Nouveau type
+            {t('new_button')}
           </Button>
         }
         sx={{ mb: { xs: 3, md: 5 } }}

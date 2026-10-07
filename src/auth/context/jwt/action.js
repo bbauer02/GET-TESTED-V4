@@ -57,6 +57,18 @@ export const signUp = async ({ email, password, firstName, lastName }) => {
 };
 
 /** **************************************
+ * Forgot / reset password
+ *************************************** */
+export const requestPasswordReset = async (email) => {
+  // L'API répond toujours 200 pour ne pas révéler l'existence d'un compte
+  await axios.post(endpoints.auth.forgotPassword, { email });
+};
+
+export const resetPassword = async (token, newPassword) => {
+  await axios.post(endpoints.auth.resetPassword(token), { newPassword });
+};
+
+/** **************************************
  * Sign out
  *************************************** */
 export const signOut = async () => {

@@ -11,16 +11,11 @@ import CardContent from '@mui/material/CardContent';
 
 import { fCurrency } from 'src/utils/format-number';
 
+import { useTranslate } from 'src/locales';
+
 import { Iconify } from 'src/components/iconify';
 
-// ----------------------------------------------------------------------
-
-function getExamPrice(scheduledExam) {
-  const institutePrice = scheduledExam.examPricing?.price?.amount
-    ?? scheduledExam.exam_pricing?.price?.amount;
-  const defaultPrice = scheduledExam.exam?.price?.amount;
-  return institutePrice ?? defaultPrice ?? 0;
-}
+import { getExamPricing, getExamsTotals } from './utils/pricing';
 
 // ----------------------------------------------------------------------
 
@@ -34,6 +29,7 @@ export function EnrollmentStepRecap({
   isSubmitting,
   isAuthenticated = false,
 }) {
+  const { t } = useTranslate('sessions');
   const scheduledExams = session?.scheduledExams || session?.scheduled_exams || [];
   const institute = session?.institute || {};
   const assessment = session?.assessment || {};
@@ -43,11 +39,11 @@ export function EnrollmentStepRecap({
     return selectedExamIds.includes(se.id || se['@id']);
   });
 
-  const total = selectedExams.reduce((sum, se) => sum + getExamPrice(se), 0);
+  const totals = getExamsTotals(selectedExams);
 
   return (
     <Stack spacing={3}>
-      <Typography variant="h6">Recapitulatif</Typography>
+      <Typography variant="h6">{t('recap_title')}</Typography>
 
       {/* Session info */}
       <Card variant="outlined">
@@ -78,7 +74,7 @@ export function EnrollmentStepRecap({
       <Card variant="outlined">
         <CardContent>
           <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary' }}>
-            {isAuthenticated ? 'Vos informations' : 'Candidat'}
+            {isAuthenticated ? t('your_info') : t('candidate')}
           </Typography>
           <Typography variant="body1">
             {registrationData?.civility} {registrationData?.firstname} {registrationData?.lastname}
@@ -107,13 +103,13 @@ export function EnrollmentStepRecap({
       <Card variant="outlined">
         <CardContent>
           <Typography variant="subtitle2" sx={{ mb: 2, color: 'text.secondary' }}>
-            Detail des examens
+            {t('exam_details')}
           </Typography>
 
           <Stack spacing={1}>
             {selectedExams.map((se) => {
               const exam = se.exam || {};
-              const price = getExamPrice(se);
+              const price = getExamPricing(se).ttc;
 
               return (
                 <Stack
@@ -127,7 +123,7 @@ export function EnrollmentStepRecap({
                       {exam.label}
                       {exam.isOption && (
                         <Typography component="span" variant="caption" sx={{ ml: 0.5, color: 'info.main' }}>
-                          (option)
+                          {t('option')}
                         </Typography>
                       )}
                     </Typography>
@@ -142,10 +138,21 @@ export function EnrollmentStepRecap({
 
           <Divider sx={{ my: 2, borderStyle: 'dashed' }} />
 
+          <Stack spacing={0.5} sx={{ mb: 1.5, typography: 'body2', color: 'text.secondary' }}>
+            <Stack direction="row" justifyContent="space-between">
+              <span>{t('total_ht')}</span>
+              <span>{fCurrency(totals.ht)}</span>
+            </Stack>
+            <Stack direction="row" justifyContent="space-between">
+              <span>{t('total_vat')}</span>
+              <span>{fCurrency(totals.tva)}</span>
+            </Stack>
+          </Stack>
+
           <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <Typography variant="h6">Total</Typography>
+            <Typography variant="h6">{t('total_ttc')}</Typography>
             <Typography variant="h5" color="primary">
-              {fCurrency(total)}
+              {fCurrency(totals.ttc)}
             </Typography>
           </Stack>
         </CardContent>
@@ -159,7 +166,7 @@ export function EnrollmentStepRecap({
           onClick={onBack}
           disabled={isSubmitting}
         >
-          Retour
+          {t('back')}
         </Button>
 
         <Stack direction="row" spacing={2}>
@@ -169,7 +176,7 @@ export function EnrollmentStepRecap({
             onClick={onPayLater}
             disabled={isSubmitting}
           >
-            Payer plus tard
+            {t('pay_later')}
           </Button>
 
           <Button
@@ -179,7 +186,7 @@ export function EnrollmentStepRecap({
             onClick={onPayNow}
             disabled={isSubmitting}
           >
-            Payer maintenant
+            {t('pay_now')}
           </Button>
         </Stack>
       </Stack>

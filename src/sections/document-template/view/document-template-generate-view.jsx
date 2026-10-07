@@ -1,29 +1,30 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
+import Typography from '@mui/material/Typography';
+import InputLabel from '@mui/material/InputLabel';
 import IconButton from '@mui/material/IconButton';
+import FormControl from '@mui/material/FormControl';
 
-import { useParams } from 'src/routes/hooks';
 import { paths } from 'src/routes/paths';
+import { useParams } from 'src/routes/hooks';
 
 import { DashboardContent } from 'src/layouts/dashboard';
-import { LoadingScreen } from 'src/components/loading-screen';
-import { EmptyContent } from 'src/components/empty-content';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useGetDocumentTemplate } from 'src/actions/document-template';
+import { useGetSession, useGetInstituteSessions } from 'src/actions/espace-institut';
+
 import { Iconify } from 'src/components/iconify';
+import { EmptyContent } from 'src/components/empty-content';
+import { LoadingScreen } from 'src/components/loading-screen';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { useCurrentInstitute } from 'src/auth/hooks';
-import { useGetDocumentTemplate } from 'src/actions/document-template';
-import { useGetInstituteSessions, useGetSession } from 'src/actions/espace-institut';
 
 import { DocumentTemplatePreview } from '../document-template-preview';
 import { buildMergeContext, replaceMergeFields } from '../utils/merge-engine';

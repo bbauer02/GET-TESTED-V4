@@ -1,5 +1,6 @@
 'use client';
 
+import { toast } from 'sonner';
 import { useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
@@ -7,26 +8,26 @@ import Card from '@mui/material/Card';
 import Link from '@mui/material/Link';
 import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
+import Table from '@mui/material/Table';
 import Avatar from '@mui/material/Avatar';
 import Divider from '@mui/material/Divider';
-import TextField from '@mui/material/TextField';
-import CardHeader from '@mui/material/CardHeader';
-import Typography from '@mui/material/Typography';
-import Table from '@mui/material/Table';
 import TableRow from '@mui/material/TableRow';
+import TextField from '@mui/material/TextField';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
+import CardHeader from '@mui/material/CardHeader';
+import Typography from '@mui/material/Typography';
+import LoadingButton from '@mui/lab/LoadingButton';
 import TableContainer from '@mui/material/TableContainer';
 import InputAdornment from '@mui/material/InputAdornment';
-import LoadingButton from '@mui/lab/LoadingButton';
-import { toast } from 'sonner';
 
 import { fDate } from 'src/utils/format-time';
 
 import axiosInstance from 'src/lib/axios';
-import { Iconify } from 'src/components/iconify';
+
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { EmptyContent } from 'src/components/empty-content';
 
@@ -279,7 +280,7 @@ export function InstituteProfileHome({ institute, memberships, sessions, sx, ...
             <Table size="small" sx={{ minWidth: 480 }}>
               <TableHead>
                 <TableRow>
-                  <TableCell>Assessment</TableCell>
+                  <TableCell>Test</TableCell>
                   <TableCell>Debut</TableCell>
                   <TableCell>Fin</TableCell>
                   <TableCell align="center">Places</TableCell>

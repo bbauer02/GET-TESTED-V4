@@ -1,19 +1,21 @@
 'use client';
 
-import { useParams } from 'src/routes/hooks';
 import { paths } from 'src/routes/paths';
+import { useParams } from 'src/routes/hooks';
 
+import { useTranslate } from 'src/locales';
+import { useGetSkill } from 'src/actions/skill';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { useGetSkill } from 'src/actions/skill';
 import { SkillCreateEditForm } from '../skill-create-edit-form';
 
 // ----------------------------------------------------------------------
 
 export function SkillEditView() {
+  const { t } = useTranslate('skill');
   const { id } = useParams();
   const { skill, skillLoading } = useGetSkill(id);
 
@@ -28,10 +30,10 @@ export function SkillEditView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Modifier le skill"
+        heading={t('heading_edit')}
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Skills', href: paths.dashboard.skill.list },
+          { name: t('dashboard'), href: paths.dashboard.root },
+          { name: t('heading'), href: paths.dashboard.skill.list },
           { name: skill?.label || '' },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}

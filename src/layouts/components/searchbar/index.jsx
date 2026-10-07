@@ -16,6 +16,8 @@ import Dialog, { dialogClasses } from '@mui/material/Dialog';
 import MenuItem, { menuItemClasses } from '@mui/material/MenuItem';
 import InputBase, { inputBaseClasses } from '@mui/material/InputBase';
 
+import { useTranslate } from 'src/locales';
+
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -30,6 +32,7 @@ const breakpoint = 'sm';
 
 export function Searchbar({ data: navItems = [], sx, ...other }) {
   const theme = useTheme();
+  const { t } = useTranslate('layout');
   const smUp = useMediaQuery(theme.breakpoints.up(breakpoint));
 
   const { value: open, onFalse: onClose, onTrue: onOpen, onToggle } = useBoolean();
@@ -42,7 +45,7 @@ export function Searchbar({ data: navItems = [], sx, ...other }) {
 
   const handleKeyDown = useCallback(
     (event) => {
-      if (event.metaKey && event.key.toLowerCase() === 'k') {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
         onToggle();
         setSearchQuery('');
@@ -182,7 +185,7 @@ export function Searchbar({ data: navItems = [], sx, ...other }) {
         <InputBase
           fullWidth
           autoFocus={open}
-          placeholder="Search..."
+          placeholder={t('search_placeholder')}
           value={searchQuery}
           onChange={handleSearch}
           startAdornment={

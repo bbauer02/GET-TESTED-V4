@@ -6,17 +6,17 @@ import { paths } from 'src/routes/paths';
 import { useParams } from 'src/routes/hooks';
 
 import { DashboardContent } from 'src/layouts/dashboard';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { LoadingScreen } from 'src/components/loading-screen';
-
 import {
   useGetInstitute,
-  useGetInstituteMemberships,
   useGetInstituteSessions,
+  useGetInstituteMemberships,
 } from 'src/actions/institute';
 
-import { InstituteProfileCover } from '../institute-profile-cover';
+import { LoadingScreen } from 'src/components/loading-screen';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+
 import { InstituteProfileHome } from '../institute-profile-home';
+import { InstituteProfileCover } from '../institute-profile-cover';
 
 // ----------------------------------------------------------------------
 

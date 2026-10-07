@@ -3,7 +3,6 @@
 import { Controller, useFormContext } from 'react-hook-form';
 
 import { Editor } from '../editor';
-import { HelperText } from './help-text';
 
 // ----------------------------------------------------------------------
 

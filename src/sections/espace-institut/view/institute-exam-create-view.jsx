@@ -4,15 +4,14 @@ import { paths } from 'src/routes/paths';
 import { useParams } from 'src/routes/hooks';
 
 import { DashboardContent } from 'src/layouts/dashboard';
+import { useGetAssessment } from 'src/actions/assessment';
 
 import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { useCurrentInstitute } from 'src/auth/hooks';
-
-import { useGetAssessment } from 'src/actions/assessment';
-
 import { ExamCreateEditForm } from 'src/sections/exam/exam-create-edit-form';
+
+import { useCurrentInstitute } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
@@ -30,13 +29,13 @@ export function InstituteExamCreateView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Creer un exam"
+        heading="Créer une épreuve"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
           { name: currentInstitute?.label || 'Institut' },
-          { name: 'Assessments', href: paths.dashboard.espaceInstitut.assessments },
+          { name: 'Tests', href: paths.dashboard.espaceInstitut.assessments },
           { name: assessment?.label || '', href: paths.dashboard.espaceInstitut.assessmentView(assessmentId) },
-          { name: 'Nouvel exam' },
+          { name: 'Nouvelle épreuve' },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />

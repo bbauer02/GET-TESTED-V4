@@ -10,7 +10,10 @@ import TableBody from '@mui/material/TableBody';
 import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
 
+import { useTranslate } from 'src/locales';
 import { DashboardContent } from 'src/layouts/dashboard';
+import { useGetAssessments } from 'src/actions/assessment';
+import { useGetExams, useGetLevels } from 'src/actions/exam';
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -24,27 +27,28 @@ import {
   TablePaginationCustom,
 } from 'src/components/table';
 
-import { useGetExams, useGetLevels } from 'src/actions/exam';
-import { useGetAssessments } from 'src/actions/assessment';
-
 import { ExamTableRow } from '../exam-table-row';
 
 // ----------------------------------------------------------------------
 
-const TABLE_HEAD = [
-  { id: 'label', label: 'Label' },
-  { id: 'assessment', label: 'Assessment', width: 200 },
-  { id: 'level', label: 'Level', width: 160 },
-  { id: 'isWritten', label: 'Ecrit', width: 100 },
-  { id: 'isOption', label: 'Option', width: 100 },
-  { id: 'coeff', label: 'Coeff', width: 80 },
-  { id: 'price', label: 'Prix', width: 120 },
-  { id: '', width: 88 },
-];
+// TABLE_HEAD moved inside component for i18n
 
 // ----------------------------------------------------------------------
 
 export function ExamListView() {
+  const { t } = useTranslate('exam');
+
+  const TABLE_HEAD = [
+    { id: 'label', label: t('table_label') },
+    { id: 'assessment', label: t('table_assessment'), width: 200 },
+    { id: 'level', label: t('table_level'), width: 160 },
+    { id: 'isWritten', label: t('table_written'), width: 100 },
+    { id: 'isOption', label: t('table_option'), width: 100 },
+    { id: 'coeff', label: t('table_coeff'), width: 80 },
+    { id: 'price', label: t('table_price'), width: 120 },
+    { id: '', width: 88 },
+  ];
+
   const table = useTable();
 
   const { exams, examsLoading, examsEmpty } = useGetExams();
@@ -88,11 +92,11 @@ export function ExamListView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Exams"
+        heading={t('heading')}
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Exams', href: paths.dashboard.exam.root },
-          { name: 'Liste' },
+          { name: t('dashboard'), href: paths.dashboard.root },
+          { name: t('heading'), href: paths.dashboard.exam.root },
+          { name: t('breadcrumb_list') },
         ]}
         action={
           <Button
@@ -101,7 +105,7 @@ export function ExamListView() {
             variant="contained"
             startIcon={<Iconify icon="mingcute:add-line" />}
           >
-            Nouvel exam
+            {t('new_button')}
           </Button>
         }
         sx={{ mb: { xs: 3, md: 5 } }}

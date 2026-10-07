@@ -6,11 +6,16 @@ import { useBoolean } from 'minimal-shared/hooks';
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 import { useTheme } from '@mui/material/styles';
+import Typography from '@mui/material/Typography';
 import { iconButtonClasses } from '@mui/material/IconButton';
 
-import { _contacts, _notifications } from 'src/_mock';
+import { _contacts } from 'src/_mock';
+import { allLangs, useTranslate } from 'src/locales';
+import { useNotifications } from 'src/actions/notifications';
 
 import { Logo } from 'src/components/logo';
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { useSettingsContext } from 'src/components/settings';
 
 import { useAuthContext } from 'src/auth/hooks';
@@ -21,14 +26,12 @@ import { NavVertical } from './nav-vertical';
 import { NavHorizontal } from './nav-horizontal';
 import { _account } from '../nav-config-account';
 import { Searchbar } from '../components/searchbar';
-import { _workspaces } from '../nav-config-workspace';
 import { MenuButton } from '../components/menu-button';
 import { AccountDrawer } from '../components/account-drawer';
 import { SettingsButton } from '../components/settings-button';
+import { navData as getNavData } from '../nav-config-dashboard';
 import { LanguagePopover } from '../components/language-popover';
 import { ContactsPopover } from '../components/contacts-popover';
-import { WorkspacesPopover } from '../components/workspaces-popover';
-import { navData as dashboardNavData } from '../nav-config-dashboard';
 import { dashboardLayoutVars, dashboardNavColorVars } from './css-vars';
 import { NotificationsDrawer } from '../components/notifications-drawer';
 import { MainSection, layoutClasses, HeaderSection, LayoutSection } from '../core';
@@ -42,25 +45,36 @@ export function DashboardLayout({ sx, cssVars, children, slotProps, layoutQuery 
 
   const settings = useSettingsContext();
 
+  const { t } = useTranslate('navbar');
+
   const navVars = dashboardNavColorVars(theme, settings.state.navColor, settings.state.navLayout);
 
   const { value: open, onFalse: onClose, onTrue: onOpen } = useBoolean();
 
-  const navData = slotProps?.nav?.data ?? dashboardNavData;
+  const { notifications: smartNotifications } = useNotifications();
+
+  const navData = slotProps?.nav?.data ?? getNavData(t);
 
   const isNavMini = settings.state.navLayout === 'mini';
   const isNavHorizontal = settings.state.navLayout === 'horizontal';
   const isNavVertical = isNavMini || settings.state.navLayout === 'vertical';
 
-  const canDisplayItemByRole = (allowedRoles) => {
+  const canDisplayItemByRole = (allowedRoles, excludedRoles) => {
     const userRoles = user?.roles || [user?.role].filter(Boolean);
-    return !allowedRoles?.some((r) => userRoles.includes(r));
+    // Hide if user has an excluded role
+    if (excludedRoles?.some((r) => userRoles.includes(r))) return true;
+    // Hide if user doesn't have any allowed role
+    if (allowedRoles) return !allowedRoles.some((r) => userRoles.includes(r));
+    return false;
   };
 
   const filteredNavData = navData.filter((group) =>
     group.items.some((item) => {
-      if (!item.allowedRoles) return true;
       const userRoles = user?.roles || [user?.role].filter(Boolean);
+      // Check if excluded
+      if (item.excludedRoles?.some((r) => userRoles.includes(r))) return false;
+      // Check if allowed
+      if (!item.allowedRoles) return true;
       return item.allowedRoles.some((r) => userRoles.includes(r));
     })
   );
@@ -124,9 +138,9 @@ export function DashboardLayout({ sx, cssVars, children, slotProps, layoutQuery 
             <VerticalDivider sx={{ [theme.breakpoints.up(layoutQuery)]: { display: 'flex' } }} />
           )}
 
-          {/** @slot Workspace popover */}
-          <WorkspacesPopover
-            data={_workspaces}
+          {/** @slot Institute / Role indicator */}
+          <InstituteIndicator
+            user={user}
             sx={{ ...(isNavHorizontal && { color: 'var(--layout-nav-text-primary-color)' }) }}
           />
         </>
@@ -137,18 +151,10 @@ export function DashboardLayout({ sx, cssVars, children, slotProps, layoutQuery 
           <Searchbar data={filteredNavData} />
 
           {/** @slot Language popover */}
-          <LanguagePopover
-            data={[
-              { value: 'en', label: 'English', countryCode: 'GB' },
-              { value: 'fr', label: 'French', countryCode: 'FR' },
-              { value: 'vi', label: 'Vietnamese', countryCode: 'VN' },
-              { value: 'cn', label: 'Chinese', countryCode: 'CN' },
-              { value: 'ar', label: 'Arabic', countryCode: 'SA' },
-            ]}
-          />
+          <LanguagePopover data={allLangs} />
 
           {/** @slot Notifications popover */}
-          <NotificationsDrawer data={_notifications} />
+          <NotificationsDrawer data={smartNotifications} />
 
           {/** @slot Contacts popover */}
           <ContactsPopover data={_contacts} />
@@ -229,5 +235,68 @@ export function DashboardLayout({ sx, cssVars, children, slotProps, layoutQuery 
     >
       {renderMain()}
     </LayoutSection>
+  );
+}
+
+// ----------------------------------------------------------------------
+
+function InstituteIndicator({ user, sx }) {
+  const { t } = useTranslate('navbar');
+  const institute = user?.currentInstitute;
+
+  const ROLE_CONFIG = {
+    ADMIN: { label: 'Admin', color: 'error', icon: 'solar:shield-star-bold' },
+    STAFF: { label: 'Staff', color: 'info', icon: 'solar:shield-user-bold' },
+    TEACHER: { label: t('examiner'), color: 'secondary', icon: 'solar:pen-new-square-bold' },
+  };
+
+  if (!institute) {
+    const isPlatformAdmin = user?.platformRole === 'ADMIN';
+    return (
+      <Box
+        sx={[
+          { display: 'flex', alignItems: 'center', gap: 1 },
+          ...(Array.isArray(sx) ? sx : [sx]),
+        ]}
+      >
+        <Iconify
+          icon={isPlatformAdmin ? 'solar:shield-star-bold' : 'solar:user-bold'}
+          width={20}
+          sx={{ color: isPlatformAdmin ? 'error.main' : 'text.secondary' }}
+        />
+        <Typography variant="subtitle2" sx={{ display: { xs: 'none', sm: 'block' } }}>
+          {isPlatformAdmin ? t('admin_platform') : t('candidate')}
+        </Typography>
+      </Box>
+    );
+  }
+
+  const config = ROLE_CONFIG[institute.membershipRole] || ROLE_CONFIG.ADMIN;
+
+  return (
+    <Box
+      sx={[
+        { display: 'flex', alignItems: 'center', gap: 1 },
+        ...(Array.isArray(sx) ? sx : [sx]),
+      ]}
+    >
+      <Iconify icon={config.icon} width={20} sx={{ color: `${config.color}.main` }} />
+
+      <Box sx={{ display: { xs: 'none', sm: 'flex' }, flexDirection: 'column', lineHeight: 1 }}>
+        <Typography variant="subtitle2" noWrap sx={{ maxWidth: 160, lineHeight: 1.2 }}>
+          {institute.label}
+        </Typography>
+      </Box>
+
+      <Label
+        color={config.color}
+        sx={{
+          height: 22,
+          display: { xs: 'none', sm: 'inline-flex' },
+        }}
+      >
+        {config.label}
+      </Label>
+    </Box>
   );
 }

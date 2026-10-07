@@ -1,3 +1,5 @@
+'use client';
+
 import { varAlpha } from 'minimal-shared/utils';
 
 import Box from '@mui/material/Box';
@@ -6,11 +8,15 @@ import CircularProgress from '@mui/material/CircularProgress';
 
 import { fCurrency, fShortenNumber } from 'src/utils/format-number';
 
+import { useTranslate } from 'src/locales';
+
 import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
 export function InvoiceAnalytic({ title, total, icon, color, percent, price }) {
+  const { t } = useTranslate('invoice');
+
   return (
     <Box
       sx={{
@@ -64,7 +70,7 @@ export function InvoiceAnalytic({ title, total, icon, color, percent, price }) {
           component="span"
           sx={{ my: 0.5, display: 'block', typography: 'body2', color: 'text.disabled' }}
         >
-          {fShortenNumber(total)} factures
+          {fShortenNumber(total)} {t('analytic_invoices')}
         </Box>
 
         <Box component="span" sx={{ typography: 'subtitle2' }}>

@@ -9,18 +9,17 @@ import { paths } from 'src/routes/paths';
 import { useParams } from 'src/routes/hooks';
 
 import axios from 'src/lib/axios';
-
 import { DashboardContent } from 'src/layouts/dashboard';
-
-import { LoadingScreen } from 'src/components/loading-screen';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Iconify } from 'src/components/iconify';
-
-import { useCurrentInstitute } from 'src/auth/hooks';
 import { useGetAssessment } from 'src/actions/assessment';
 
-import { AssessmentCreateEditForm } from 'src/sections/assessment/assessment-create-edit-form';
+import { Iconify } from 'src/components/iconify';
+import { LoadingScreen } from 'src/components/loading-screen';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+
 import { AssessmentSkillsTab } from 'src/sections/assessment/assessment-skills-tab';
+import { AssessmentCreateEditForm } from 'src/sections/assessment/assessment-create-edit-form';
+
+import { useCurrentInstitute } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
@@ -41,14 +40,14 @@ export function InstituteAssessmentEditView() {
   const [resolvingLevels, setResolvingLevels] = useState(false);
 
   useEffect(() => {
-    if (!assessment) return;
+    if (!assessment) return undefined;
 
     const levels = assessment.levels;
 
     // No levels or already embedded objects → nothing to resolve
     if (!Array.isArray(levels) || levels.length === 0 || typeof levels[0] !== 'string') {
       setResolvedAssessment(assessment);
-      return;
+      return undefined;
     }
 
     // Levels are IRIs → fetch each one
@@ -83,11 +82,11 @@ export function InstituteAssessmentEditView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Modifier l'assessment"
+        heading="Modifier le test"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
           { name: currentInstitute?.label || 'Institut' },
-          { name: 'Assessments', href: paths.dashboard.espaceInstitut.assessments },
+          { name: 'Tests', href: paths.dashboard.espaceInstitut.assessments },
           { name: resolvedAssessment?.label || '' },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}

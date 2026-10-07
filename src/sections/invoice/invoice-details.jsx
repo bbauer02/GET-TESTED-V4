@@ -1,3 +1,5 @@
+'use client';
+
 import dynamic from 'next/dynamic';
 
 import Box from '@mui/material/Box';
@@ -14,6 +16,8 @@ import Typography from '@mui/material/Typography';
 import { fDate } from 'src/utils/format-time';
 import { fCurrency } from 'src/utils/format-number';
 
+import { useTranslate } from 'src/locales';
+
 import { Label } from 'src/components/label';
 import { Scrollbar } from 'src/components/scrollbar';
 
@@ -26,17 +30,21 @@ const InvoicePDFDownload = dynamic(
 
 // ----------------------------------------------------------------------
 
-const STATUS_MAP = {
-  DRAFT: { label: 'Brouillon', color: 'default' },
-  ISSUED: { label: 'Émise', color: 'warning' },
-  PAID: { label: 'Payée', color: 'success' },
-  CANCELLED: { label: 'Annulée', color: 'error' },
-};
+// STATUS_MAP moved inside component for i18n
 
 // ----------------------------------------------------------------------
 
 export function InvoiceDetails({ invoice }) {
+  const { t } = useTranslate('invoice');
+
   if (!invoice) return null;
+
+  const STATUS_MAP = {
+    DRAFT: { label: t('status_draft'), color: 'default' },
+    ISSUED: { label: t('status_issued'), color: 'warning' },
+    PAID: { label: t('status_paid'), color: 'success' },
+    CANCELLED: { label: t('status_cancelled'), color: 'error' },
+  };
 
   const statusInfo = STATUS_MAP[invoice.status] || { label: invoice.status, color: 'default' };
 
@@ -52,7 +60,7 @@ export function InvoiceDetails({ invoice }) {
     >
       <div>
         <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-          MENTIONS LÉGALES
+          {t('legal_title')}
         </Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           {invoice.earlyPaymentDiscount && `Escompte pour paiement anticipé : ${invoice.earlyPaymentDiscount}`}
@@ -63,7 +71,7 @@ export function InvoiceDetails({ invoice }) {
 
       <Box sx={{ flexGrow: { md: 1 }, textAlign: { md: 'right' } }}>
         <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-          Une question ?
+          {t('question_label')}
         </Typography>
         <Typography variant="body2">support@gettested.fr</Typography>
       </Box>
@@ -118,12 +126,12 @@ export function InvoiceDetails({ invoice }) {
         <TableHead>
           <TableRow>
             <TableCell width={40}>#</TableCell>
-            <TableCell sx={{ typography: 'subtitle2' }}>Description</TableCell>
-            <TableCell>Qté</TableCell>
-            <TableCell align="right">Prix unit. HT</TableCell>
-            <TableCell align="right">TVA</TableCell>
-            <TableCell align="right">Total HT</TableCell>
-            <TableCell align="right">Total TTC</TableCell>
+            <TableCell sx={{ typography: 'subtitle2' }}>{t('line_description')}</TableCell>
+            <TableCell>{t('line_qty')}</TableCell>
+            <TableCell align="right">{t('line_unit_price_ht')}</TableCell>
+            <TableCell align="right">{t('line_tva')}</TableCell>
+            <TableCell align="right">{t('line_total_ht')}</TableCell>
+            <TableCell align="right">{t('line_total_ttc')}</TableCell>
           </TableRow>
         </TableHead>
 
@@ -180,28 +188,28 @@ export function InvoiceDetails({ invoice }) {
             <InvoicePDFDownload invoice={invoice} />
           </Stack>
 
-          <Typography variant="h6">{invoice.invoiceNumber || 'Brouillon'}</Typography>
+          <Typography variant="h6">{invoice.invoiceNumber || t('status_draft')}</Typography>
 
           {invoice.businessType === 'PLATFORM_COMMISSION' && (
             <Label variant="soft" color="info">
-              Facture commission plateforme
+              {t('commission_label')}
             </Label>
           )}
         </Stack>
 
-        {renderCounterparty('Émetteur', invoice.seller)}
-        {renderCounterparty('Destinataire', invoice.buyer)}
+        {renderCounterparty(t('sender_label'), invoice.seller)}
+        {renderCounterparty(t('recipient_label'), invoice.buyer)}
 
         <Stack sx={{ typography: 'body2' }}>
           <Typography variant="subtitle2" sx={{ mb: 1 }}>
-            Date d&apos;émission
+            {t('issue_date')}
           </Typography>
           {fDate(invoice.invoiceDate) || '-'}
         </Stack>
 
         <Stack sx={{ typography: 'body2' }}>
           <Typography variant="subtitle2" sx={{ mb: 1 }}>
-            Date d&apos;échéance
+            {t('due_date')}
           </Typography>
           {fDate(invoice.paymentDueDate) || '-'}
         </Stack>

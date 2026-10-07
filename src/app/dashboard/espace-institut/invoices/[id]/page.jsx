@@ -1,5 +1,6 @@
-import { InvoiceDetailsView } from 'src/sections/invoice/view';
 import { paths } from 'src/routes/paths';
+
+import { InvoiceDetailsView } from 'src/sections/invoice/view';
 
 // ----------------------------------------------------------------------
 

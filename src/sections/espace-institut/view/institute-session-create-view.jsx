@@ -23,7 +23,7 @@ export function InstituteSessionCreateView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Creer une session"
+        heading="Créer une session"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
           { name: currentInstitute?.label || 'Institut' },

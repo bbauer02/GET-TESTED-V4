@@ -6,7 +6,7 @@ import { paths } from 'src/routes/paths';
 import { useParams } from 'src/routes/hooks';
 
 import { fetcher } from 'src/lib/axios';
-
+import { useTranslate } from 'src/locales';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { LoadingScreen } from 'src/components/loading-screen';
@@ -17,6 +17,7 @@ import { DocumentTypeCreateEditForm } from '../document-type-create-edit-form';
 // ----------------------------------------------------------------------
 
 export function DocumentTypeEditView() {
+  const { t } = useTranslate('document_type');
   const { id } = useParams();
 
   const { data: currentDocumentType, isLoading } = useSWR(
@@ -31,10 +32,10 @@ export function DocumentTypeEditView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Modifier le type de document"
+        heading={t('heading_edit')}
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Types de documents', href: paths.dashboard.documentType.root },
+          { name: t('dashboard'), href: paths.dashboard.root },
+          { name: t('heading'), href: paths.dashboard.documentType.root },
           { name: currentDocumentType?.label || '' },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}

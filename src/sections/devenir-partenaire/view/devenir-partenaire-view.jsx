@@ -22,6 +22,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
+import { useTranslate } from 'src/locales';
 import axios, { endpoints } from 'src/lib/axios';
 
 import { toast } from 'src/components/snackbar';
@@ -32,57 +33,33 @@ import { setSession } from 'src/auth/context/jwt/utils';
 
 // ----------------------------------------------------------------------
 
-const STEPS = ['Votre compte', 'Votre institut'];
-
-const AccountSchema = z.object({
-  firstName: z.string().min(1, { message: 'Le prenom est requis' }),
-  lastName: z.string().min(1, { message: 'Le nom est requis' }),
-  email: z.string().min(1, { message: "L'email est requis" }).email({ message: 'Email invalide' }),
-  password: z.string().min(6, { message: '6 caracteres minimum' }),
-});
-
-const InstituteSchema = z.object({
-  label: z.string().min(1, { message: "Le nom de l'institut est requis" }),
-  email: z.string().email({ message: 'Email invalide' }).or(z.literal('')),
-  siteweb: z.string(),
-  address: z.object({
-    address1: z.string(),
-    zipcode: z.string(),
-    city: z.string(),
-  }),
-  legalForm: z.string(),
-  siren: z.string().max(9, { message: '9 caracteres maximum' }),
-  siret: z.string().max(14, { message: '14 caracteres maximum' }),
-  vatNumber: z.string(),
-  rcsCity: z.string(),
-});
-
-const FullSchema = z.object({
-  // Account
-  firstName: AccountSchema.shape.firstName,
-  lastName: AccountSchema.shape.lastName,
-  email: AccountSchema.shape.email,
-  password: AccountSchema.shape.password,
-  // Institute
-  instituteLabel: InstituteSchema.shape.label,
-  instituteEmail: InstituteSchema.shape.email,
-  instituteSiteweb: z.string(),
-  address1: z.string(),
-  zipcode: z.string(),
-  city: z.string(),
-  legalForm: z.string(),
-  siren: z.string().max(9, { message: '9 caracteres maximum' }),
-  siret: z.string().max(14, { message: '14 caracteres maximum' }),
-  vatNumber: z.string(),
-  rcsCity: z.string(),
-});
-
-// ----------------------------------------------------------------------
-
 export function DevenirPartenaireView() {
+  const { t } = useTranslate('partner');
   const theme = useTheme();
   const router = useRouter();
   const [activeStep, setActiveStep] = useState(0);
+
+  const STEPS = [t('step_account'), t('step_institute')];
+
+  const FullSchema = z.object({
+    // Account
+    firstName: z.string().min(1, { message: t('validation_firstname_required') }),
+    lastName: z.string().min(1, { message: t('validation_lastname_required') }),
+    email: z.string().min(1, { message: t('validation_email_required') }).email({ message: t('validation_email_invalid') }),
+    password: z.string().min(6, { message: t('validation_password_min') }),
+    // Institute
+    instituteLabel: z.string().min(1, { message: t('validation_institute_name_required') }),
+    instituteEmail: z.string().email({ message: t('validation_email_invalid') }).or(z.literal('')),
+    instituteSiteweb: z.string(),
+    address1: z.string(),
+    zipcode: z.string(),
+    city: z.string(),
+    legalForm: z.string(),
+    siren: z.string().max(9, { message: t('validation_siren_max') }),
+    siret: z.string().max(14, { message: t('validation_siret_max') }),
+    vatNumber: z.string(),
+    rcsCity: z.string(),
+  });
 
   const methods = useForm({
     mode: 'onSubmit',
@@ -136,7 +113,7 @@ export function DevenirPartenaireView() {
       const { access_token } = registerRes.data;
 
       if (!access_token) {
-        throw new Error('Erreur lors de la creation du compte');
+        throw new Error(t('account_creation_error'));
       }
 
       // Step 2: Set the session (stores token + sets Authorization header)
@@ -161,11 +138,11 @@ export function DevenirPartenaireView() {
         rcsCity: data.rcsCity || null,
       });
 
-      toast.success('Bienvenue ! Votre institut a ete cree avec succes.');
+      toast.success(t('success_toast'));
       router.push(paths.dashboard.espaceInstitut.root);
     } catch (error) {
       console.error(error);
-      toast.error(error?.message || "Erreur lors de l'inscription");
+      toast.error(error?.message || t('error_toast'));
     }
   });
 
@@ -188,12 +165,11 @@ export function DevenirPartenaireView() {
       </Box>
 
       <Typography variant="h3" sx={{ fontWeight: 800 }}>
-        Devenir partenaire
+        {t('title')}
       </Typography>
 
       <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 480, mx: 'auto' }}>
-        Creez votre compte et votre institut en quelques minutes. Gerez vos sessions, inscriptions et
-        documents depuis votre espace dedie.
+        {t('subtitle')}
       </Typography>
     </Stack>
   );
@@ -211,7 +187,7 @@ export function DevenirPartenaireView() {
   const renderAccountStep = () => (
     <Stack spacing={3} sx={{ display: activeStep === 0 ? 'flex' : 'none' }}>
       <Typography variant="h6" sx={{ fontWeight: 700 }}>
-        Informations personnelles
+        {t('personal_info')}
       </Typography>
 
       <Box
@@ -224,7 +200,7 @@ export function DevenirPartenaireView() {
       >
         <Field.Text
           name="firstName"
-          label="Prenom"
+          label={t('firstname')}
           slotProps={{
             input: {
               startAdornment: (
@@ -237,7 +213,7 @@ export function DevenirPartenaireView() {
         />
         <Field.Text
           name="lastName"
-          label="Nom"
+          label={t('lastname')}
           slotProps={{
             input: {
               startAdornment: (
@@ -252,7 +228,7 @@ export function DevenirPartenaireView() {
 
       <Field.Text
         name="email"
-        label="Adresse email"
+        label={t('email')}
         slotProps={{
           input: {
             startAdornment: (
@@ -266,7 +242,7 @@ export function DevenirPartenaireView() {
 
       <Field.Text
         name="password"
-        label="Mot de passe"
+        label={t('password')}
         type="password"
         slotProps={{
           input: {
@@ -286,7 +262,7 @@ export function DevenirPartenaireView() {
         endIcon={<Iconify icon="eva:arrow-forward-fill" />}
         sx={{ alignSelf: 'flex-end', minWidth: 200 }}
       >
-        Suivant
+        {t('next')}
       </Button>
     </Stack>
   );
@@ -294,7 +270,7 @@ export function DevenirPartenaireView() {
   const renderInstituteStep = () => (
     <Stack spacing={3} sx={{ display: activeStep === 1 ? 'flex' : 'none' }}>
       <Typography variant="h6" sx={{ fontWeight: 700 }}>
-        Informations de l&apos;institut
+        {t('institute_info')}
       </Typography>
 
       <Box
@@ -307,7 +283,7 @@ export function DevenirPartenaireView() {
       >
         <Field.Text
           name="instituteLabel"
-          label="Nom de l'institut"
+          label={t('institute_name')}
           sx={{ gridColumn: '1 / -1' }}
           slotProps={{
             input: {
@@ -319,12 +295,12 @@ export function DevenirPartenaireView() {
             },
           }}
         />
-        <Field.Text name="instituteEmail" label="Email de contact (institut)" />
-        <Field.Text name="instituteSiteweb" label="Site web" />
+        <Field.Text name="instituteEmail" label={t('institute_email')} />
+        <Field.Text name="instituteSiteweb" label={t('website')} />
       </Box>
 
       <Typography variant="subtitle2" sx={{ mt: 1, color: 'text.secondary' }}>
-        Adresse
+        {t('address_section')}
       </Typography>
 
       <Box
@@ -335,13 +311,13 @@ export function DevenirPartenaireView() {
           gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' },
         }}
       >
-        <Field.Text name="address1" label="Adresse" sx={{ gridColumn: '1 / -1' }} />
-        <Field.Text name="zipcode" label="Code postal" />
-        <Field.Text name="city" label="Ville" />
+        <Field.Text name="address1" label={t('address')} sx={{ gridColumn: '1 / -1' }} />
+        <Field.Text name="zipcode" label={t('zipcode')} />
+        <Field.Text name="city" label={t('city')} />
       </Box>
 
       <Typography variant="subtitle2" sx={{ mt: 1, color: 'text.secondary' }}>
-        Informations legales
+        {t('legal_info')}
       </Typography>
 
       <Box
@@ -352,11 +328,11 @@ export function DevenirPartenaireView() {
           gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' },
         }}
       >
-        <Field.Text name="legalForm" label="Forme juridique" />
-        <Field.Text name="siren" label="SIREN" slotProps={{ htmlInput: { maxLength: 9 } }} />
-        <Field.Text name="siret" label="SIRET" slotProps={{ htmlInput: { maxLength: 14 } }} />
-        <Field.Text name="vatNumber" label="Numero de TVA" />
-        <Field.Text name="rcsCity" label="Ville RCS" />
+        <Field.Text name="legalForm" label={t('legal_form')} />
+        <Field.Text name="siren" label={t('siren')} slotProps={{ htmlInput: { maxLength: 9 } }} />
+        <Field.Text name="siret" label={t('siret')} slotProps={{ htmlInput: { maxLength: 14 } }} />
+        <Field.Text name="vatNumber" label={t('vat_number')} />
+        <Field.Text name="rcsCity" label={t('rcs_city')} />
       </Box>
 
       <Stack direction="row" spacing={2} sx={{ justifyContent: 'space-between', pt: 1 }}>
@@ -366,7 +342,7 @@ export function DevenirPartenaireView() {
           onClick={handleBack}
           startIcon={<Iconify icon="eva:arrow-back-fill" />}
         >
-          Retour
+          {t('back')}
         </Button>
 
         <LoadingButton
@@ -377,7 +353,7 @@ export function DevenirPartenaireView() {
           endIcon={<Iconify icon="eva:checkmark-circle-2-fill" />}
           sx={{ minWidth: 200 }}
         >
-          Creer mon institut
+          {t('create_institute')}
         </LoadingButton>
       </Stack>
     </Stack>
@@ -400,14 +376,14 @@ export function DevenirPartenaireView() {
         variant="body2"
         sx={{ color: 'text.secondary', textAlign: 'center', mt: 4 }}
       >
-        Vous avez deja un compte ?{' '}
+        {t('already_account')}{' '}
         <Typography
           component="a"
           href={paths.auth.jwt.signIn}
           variant="subtitle2"
           sx={{ color: 'primary.main', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
         >
-          Se connecter
+          {t('sign_in')}
         </Typography>
       </Typography>
     </Container>

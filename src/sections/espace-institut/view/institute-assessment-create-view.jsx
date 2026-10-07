@@ -7,9 +7,9 @@ import { DashboardContent } from 'src/layouts/dashboard';
 import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import { useCurrentInstitute } from 'src/auth/hooks';
-
 import { AssessmentCreateEditForm } from 'src/sections/assessment/assessment-create-edit-form';
+
+import { useCurrentInstitute } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
@@ -23,11 +23,11 @@ export function InstituteAssessmentCreateView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Creer un assessment"
+        heading="Créer un test"
         links={[
           { name: 'Dashboard', href: paths.dashboard.root },
           { name: currentInstitute?.label || 'Institut' },
-          { name: 'Assessments', href: paths.dashboard.espaceInstitut.assessments },
+          { name: 'Tests', href: paths.dashboard.espaceInstitut.assessments },
           { name: 'Nouveau' },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}

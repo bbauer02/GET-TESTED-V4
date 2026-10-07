@@ -33,13 +33,39 @@ export function AuthProvider({ children }) {
 
         const isPlatformAdmin = userData.platformRole === 'ADMIN';
 
-        const adminInstitutes = (userData.memberships || [])
-          .filter((m) => m.role === 'ADMIN' || m.role === 'STAFF')
-          .map((m) => ({ id: m.institute?.id, iri: m.institute?.['@id'], label: m.institute?.label }))
-          .filter((inst, idx, arr) => arr.findIndex((i) => i.id === inst.id) === idx);
+        // Build institute list from active memberships only (ADMIN, STAFF, TEACHER) :
+        // une adhésion en attente ou archivée ne donne aucun accès à l'espace institut
+        const instituteMap = new Map();
+        (userData.memberships || [])
+          .filter((m) => (m.status ?? 'ACTIVE') === 'ACTIVE')
+          .filter((m) => m.role === 'ADMIN' || m.role === 'STAFF' || m.role === 'TEACHER')
+          .forEach((m) => {
+            const instId = m.institute?.id;
+            if (!instId) return;
+            const existing = instituteMap.get(instId);
+            // Keep the highest-privilege role per institute: ADMIN > STAFF > TEACHER
+            const priority = { ADMIN: 3, STAFF: 2, TEACHER: 1 };
+            if (!existing || (priority[m.role] || 0) > (priority[existing.membershipRole] || 0)) {
+              instituteMap.set(instId, {
+                id: instId,
+                iri: m.institute?.['@id'],
+                label: m.institute?.label,
+                membershipRole: m.role,
+              });
+            }
+          });
+        const userInstitutes = Array.from(instituteMap.values());
 
+        const currentInstitute = userInstitutes[0] || null;
+
+        // Rôles de l'institut courant (mêmes règles que les voters de l'API) :
+        // ADMIN = tout ; STAFF = gestion opérationnelle (sessions, inscrits, documents, résultats) ;
+        // TEACHER = ses épreuves (sessions où il est examinateur) et la banque de questions.
+        const INSTITUTE_ROLES = { ADMIN: 'institute_admin', STAFF: 'institute_staff', TEACHER: 'institute_teacher' };
         const roles = [userData.platformRole?.toLowerCase() ?? 'user'];
-        if (adminInstitutes.length > 0) roles.push('institute_admin');
+        if (currentInstitute && INSTITUTE_ROLES[currentInstitute.membershipRole]) {
+          roles.push(INSTITUTE_ROLES[currentInstitute.membershipRole]);
+        }
 
         const user = {
           ...userData,
@@ -47,8 +73,8 @@ export function AuthProvider({ children }) {
           photoURL: userData.avatar || null,
           role: roles[0],
           roles,
-          institutes: adminInstitutes,
-          currentInstitute: adminInstitutes[0] || null,
+          institutes: userInstitutes,
+          currentInstitute,
           accessToken,
         };
 

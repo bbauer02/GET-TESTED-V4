@@ -1,13 +1,14 @@
 'use client';
 
 import { z } from 'zod';
-import { useMemo, useState, useEffect } from 'react';
 import { mutate } from 'swr';
 import { useForm } from 'react-hook-form';
+import { useMemo, useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
+import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
@@ -15,31 +16,14 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
+import { useTranslate } from 'src/locales';
 import axios, { endpoints } from 'src/lib/axios';
+import { useGetInstituteAssessments } from 'src/actions/espace-institut';
 
 import { toast } from 'src/components/snackbar';
 import { Form, Field } from 'src/components/hook-form';
 
-import { useGetInstituteAssessments } from 'src/actions/espace-institut';
-
-// ----------------------------------------------------------------------
-
-const SessionSchema = z
-  .object({
-    assessment: z.string().min(1, { message: "L'assessment est requis !" }),
-    level: z.string().nullable(),
-    start: z.any().refine((val) => val !== null && val !== '', { message: 'La date de debut est requise !' }),
-    end: z.any().refine((val) => val !== null && val !== '', { message: 'La date de fin est requise !' }),
-    limitDateSubscribe: z.any().nullable(),
-    placesAvailable: z.any().nullable(),
-  })
-  .refine(
-    (data) => {
-      if (!data.limitDateSubscribe || !data.start) return true;
-      return new Date(data.limitDateSubscribe) < new Date(data.start);
-    },
-    { message: "La date limite d'inscription doit etre avant la date de debut", path: ['limitDateSubscribe'] }
-  );
+import { getErrorMessage } from 'src/auth/utils';
 
 // ----------------------------------------------------------------------
 
@@ -55,15 +39,48 @@ function getLevelIri(level) {
   return level['@id'] || `/api/levels/${level.id}`;
 }
 
+const isFilled = (val) => val !== null && val !== undefined && val !== '';
+
 // ----------------------------------------------------------------------
 
 export function SessionCreateEditForm({ currentSession, instituteId }) {
   const router = useRouter();
+  const { t } = useTranslate('session_management');
   const isEdit = !!currentSession;
+
+  // Règles de l'API : en OPEN, dates de début/fin figées et places uniquement en hausse ;
+  // le test et le niveau ne se modifient pas après création.
+  const isOpen = currentSession?.status === 'OPEN';
+  const minPlaces = isOpen ? currentSession?.placesAvailable ?? 0 : 0;
 
   const { assessments } = useGetInstituteAssessments(instituteId);
 
-  // Build level options from the selected assessment
+  const SessionSchema = useMemo(
+    () =>
+      z
+        .object({
+          assessment: z.string().min(1, { message: t('form_assessment_required') }),
+          level: z.string().nullable(),
+          start: z.any().refine(isFilled, { message: t('form_start_required') }),
+          end: z.any().refine(isFilled, { message: t('form_end_required') }),
+          limitDateSubscribe: z.any().refine(isFilled, { message: t('form_limit_date_required') }),
+          placesAvailable: z.any().nullable(),
+        })
+        .refine((data) => !data.start || !data.end || new Date(data.end) > new Date(data.start), {
+          message: t('form_end_after_start'),
+          path: ['end'],
+        })
+        .refine(
+          (data) => !data.limitDateSubscribe || !data.start || new Date(data.limitDateSubscribe) < new Date(data.start),
+          { message: t('form_limit_before_start'), path: ['limitDateSubscribe'] }
+        )
+        .refine((data) => !isFilled(data.placesAvailable) || Number(data.placesAvailable) >= minPlaces, {
+          message: t('form_places_only_increase', { count: minPlaces }),
+          path: ['placesAvailable'],
+        }),
+    [t, minPlaces]
+  );
+
   const defaultValues = useMemo(
     () => ({
       assessment: getAssessmentIri(currentSession?.assessment) || '',
@@ -91,6 +108,7 @@ export function SessionCreateEditForm({ currentSession, instituteId }) {
   } = methods;
 
   const watchAssessment = watch('assessment');
+  const watchStart = watch('start');
 
   // Get levels for the selected assessment
   const selectedAssessment = useMemo(
@@ -105,7 +123,7 @@ export function SessionCreateEditForm({ currentSession, instituteId }) {
     const levels = selectedAssessment?.levels;
     if (!Array.isArray(levels) || levels.length === 0) {
       setLevelOptions([]);
-      return;
+      return undefined;
     }
 
     // If already objects with label, use directly
@@ -116,7 +134,7 @@ export function SessionCreateEditForm({ currentSession, instituteId }) {
           label: l.label || '',
         }))
       );
-      return;
+      return undefined;
     }
 
     // Resolve IRI strings
@@ -137,7 +155,9 @@ export function SessionCreateEditForm({ currentSession, instituteId }) {
         if (!cancelled) setLevelOptions([]);
       });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [selectedAssessment]);
 
   // ------ Submit ------
@@ -152,28 +172,34 @@ export function SessionCreateEditForm({ currentSession, instituteId }) {
         limitDateSubscribe: data.limitDateSubscribe
           ? new Date(data.limitDateSubscribe).toISOString()
           : null,
-        placesAvailable: data.placesAvailable ? Number(data.placesAvailable) : null,
+        placesAvailable: isFilled(data.placesAvailable) ? Number(data.placesAvailable) : null,
       };
+
+      let sessionId = currentSession?.id;
 
       if (isEdit) {
         await axios.patch(`/api/sessions/${currentSession.id}`, payload, {
           headers: { 'Content-Type': 'application/merge-patch+json' },
         });
-        toast.success('Session modifiee avec succes !');
+        toast.success(t('form_update_success'));
       } else {
-        await axios.post(endpoints.institute.sessions(instituteId), payload);
-        toast.success('Session creee avec succes !');
+        const response = await axios.post(endpoints.institute.sessions(instituteId), payload);
+        sessionId = response.data?.id;
+        toast.success(t('form_create_success'));
       }
 
-      await mutate(endpoints.institute.sessions(instituteId), undefined, { revalidate: false });
+      await Promise.all([
+        mutate(endpoints.institute.sessions(instituteId)),
+        sessionId ? mutate(endpoints.session.details(sessionId)) : null,
+      ]);
 
-      router.push(paths.dashboard.espaceInstitut.sessions);
+      // Après création, l'étape suivante (planifier les épreuves) se fait sur le détail de la session
+      router.push(
+        sessionId ? paths.dashboard.espaceInstitut.sessionView(sessionId) : paths.dashboard.espaceInstitut.sessions
+      );
     } catch (error) {
       console.error(error);
-      toast.error(
-        error?.message ||
-          `Erreur lors de ${isEdit ? 'la modification' : 'la creation'} de la session`
-      );
+      toast.error(getErrorMessage(error));
     }
   });
 
@@ -183,8 +209,14 @@ export function SessionCreateEditForm({ currentSession, instituteId }) {
     <Form methods={methods} onSubmit={onSubmit}>
       <Card sx={{ p: 3 }}>
         <Typography variant="subtitle1" sx={{ mb: 2 }}>
-          Informations de la session
+          {t('form_section_title')}
         </Typography>
+
+        {isOpen && (
+          <Alert severity="info" sx={{ mb: 3 }}>
+            {t('form_open_restrictions')}
+          </Alert>
+        )}
 
         <Box
           sx={{
@@ -196,44 +228,57 @@ export function SessionCreateEditForm({ currentSession, instituteId }) {
         >
           <Field.Autocomplete
             name="assessment"
-            label="Assessment"
+            label={t('form_assessment')}
+            disabled={isEdit}
             options={assessments.map((a) => getAssessmentIri(a))}
             getOptionLabel={(option) => {
               const found = assessments.find((a) => getAssessmentIri(a) === option);
-              return found?.label ?? '';
+              return found?.label ?? currentSession?.assessment?.label ?? '';
             }}
             isOptionEqualToValue={(option, value) => option === value}
             sx={{ gridColumn: '1 / -1' }}
           />
 
-          {levelOptions.length > 0 && (
+          {(levelOptions.length > 0 || (isEdit && currentSession?.level)) && (
             <Field.Autocomplete
               name="level"
-              label="Niveau"
+              label={t('form_level')}
+              disabled={isEdit}
               options={levelOptions.map((l) => l.iri)}
               getOptionLabel={(option) => {
                 const found = levelOptions.find((l) => l.iri === option);
-                return found?.label ?? '';
+                return found?.label ?? currentSession?.level?.label ?? '';
               }}
               isOptionEqualToValue={(option, value) => option === value}
               sx={{ gridColumn: '1 / -1' }}
             />
           )}
 
-          <Field.DatePicker name="start" label="Date de debut" />
-          <Field.DatePicker name="end" label="Date de fin" />
-          <Field.DatePicker name="limitDateSubscribe" label="Date limite d'inscription" />
+          <Field.DateTimePicker name="start" label={t('form_start')} disabled={isOpen} disablePast={!isEdit} />
+          <Field.DateTimePicker
+            name="end"
+            label={t('form_end')}
+            disabled={isOpen}
+            minDateTime={watchStart ? new Date(watchStart) : undefined}
+          />
+          <Field.DateTimePicker
+            name="limitDateSubscribe"
+            label={t('form_limit_date')}
+            maxDateTime={watchStart ? new Date(watchStart) : undefined}
+            slotProps={{ textField: { helperText: t('form_limit_date_hint') } }}
+          />
           <Field.Text
             name="placesAvailable"
-            label="Places disponibles"
+            label={t('form_places')}
             type="number"
-            slotProps={{ htmlInput: { min: 0 } }}
+            helperText={t('form_places_hint')}
+            slotProps={{ htmlInput: { min: minPlaces } }}
           />
         </Box>
 
         <Stack alignItems="flex-end" sx={{ mt: 3 }}>
           <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-            {isEdit ? 'Modifier la session' : 'Creer la session'}
+            {isEdit ? t('form_submit_update') : t('form_submit_create')}
           </LoadingButton>
         </Stack>
       </Card>

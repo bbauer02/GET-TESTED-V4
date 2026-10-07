@@ -13,45 +13,42 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 
 import { fCurrency } from 'src/utils/format-number';
 
+import { useTranslate } from 'src/locales';
+
 import { Iconify } from 'src/components/iconify';
 
-// ----------------------------------------------------------------------
-
-function getExamPrice(scheduledExam) {
-  const institutePrice = scheduledExam.examPricing?.price?.amount
-    ?? scheduledExam.exam_pricing?.price?.amount;
-  const defaultPrice = scheduledExam.exam?.price?.amount;
-  return institutePrice ?? defaultPrice ?? 0;
-}
+import { getExamPricing, getExamsTotals } from './utils/pricing';
 
 // ----------------------------------------------------------------------
 
 export function EnrollmentStepExams({ session, selectedExamIds, onToggleExam, onNext }) {
+  const { t } = useTranslate('sessions');
   const scheduledExams = session?.scheduledExams || session?.scheduled_exams || [];
 
   const mandatoryExams = scheduledExams.filter((se) => !se.exam?.isOption);
   const optionalExams = scheduledExams.filter((se) => se.exam?.isOption);
 
-  const total = [...mandatoryExams, ...scheduledExams.filter((se) =>
-    se.exam?.isOption && selectedExamIds.includes(se.id || se['@id'])
-  )].reduce((sum, se) => sum + getExamPrice(se), 0);
+  const total = getExamsTotals([
+    ...mandatoryExams,
+    ...optionalExams.filter((se) => selectedExamIds.includes(se.id || se['@id'])),
+  ]).ttc;
 
   return (
     <Stack spacing={3}>
       {/* Mandatory exams */}
       <Box>
         <Typography variant="h6" sx={{ mb: 2 }}>
-          Examens obligatoires
+          {t('mandatory_exams')}
         </Typography>
 
         <Stack spacing={1.5}>
           {mandatoryExams.map((se) => (
-            <ExamRow key={se.id || se['@id']} scheduledExam={se} mandatory />
+            <ExamRow key={se.id || se['@id']} scheduledExam={se} mandatory t={t} />
           ))}
 
           {mandatoryExams.length === 0 && (
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              Aucun examen obligatoire pour cette session.
+              {t('no_mandatory_exams')}
             </Typography>
           )}
         </Stack>
@@ -61,7 +58,7 @@ export function EnrollmentStepExams({ session, selectedExamIds, onToggleExam, on
       {optionalExams.length > 0 && (
         <Box>
           <Typography variant="h6" sx={{ mb: 2 }}>
-            Examens optionnels
+            {t('optional_exams')}
           </Typography>
 
           <Stack spacing={1.5}>
@@ -75,6 +72,7 @@ export function EnrollmentStepExams({ session, selectedExamIds, onToggleExam, on
                   scheduledExam={se}
                   selected={isSelected}
                   onToggle={() => onToggleExam(examId)}
+                  t={t}
                 />
               );
             })}
@@ -91,7 +89,7 @@ export function EnrollmentStepExams({ session, selectedExamIds, onToggleExam, on
       >
         <CardContent>
           <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <Typography variant="h6">Total</Typography>
+            <Typography variant="h6">{t('total')}</Typography>
             <Typography variant="h4" color="primary">
               {fCurrency(total)}
             </Typography>
@@ -107,7 +105,7 @@ export function EnrollmentStepExams({ session, selectedExamIds, onToggleExam, on
           endIcon={<Iconify icon="eva:arrow-forward-fill" />}
           onClick={onNext}
         >
-          Continuer
+          {t('continue')}
         </Button>
       </Box>
     </Stack>
@@ -116,9 +114,9 @@ export function EnrollmentStepExams({ session, selectedExamIds, onToggleExam, on
 
 // ----------------------------------------------------------------------
 
-function ExamRow({ scheduledExam, mandatory, selected, onToggle }) {
+function ExamRow({ scheduledExam, mandatory, selected, onToggle, t }) {
   const exam = scheduledExam.exam || {};
-  const price = getExamPrice(scheduledExam);
+  const price = getExamPricing(scheduledExam).ttc;
 
   return (
     <Card variant="outlined">
@@ -144,14 +142,14 @@ function ExamRow({ scheduledExam, mandatory, selected, onToggle }) {
 
           <Box>
             <Typography variant="subtitle2">
-              {exam.label || 'Examen'}
+              {exam.label || t('exam_label')}
               {mandatory && (
                 <Typography
                   component="span"
                   variant="caption"
                   sx={{ ml: 1, color: 'text.secondary' }}
                 >
-                  (obligatoire)
+                  {t('mandatory')}
                 </Typography>
               )}
             </Typography>
@@ -166,7 +164,7 @@ function ExamRow({ scheduledExam, mandatory, selected, onToggle }) {
               {exam.isWritten !== undefined && (
                 <Typography variant="caption" sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center', gap: 0.5 }}>
                   <Iconify icon={exam.isWritten ? 'eva:edit-outline' : 'eva:mic-outline'} width={14} />
-                  {exam.isWritten ? 'Ecrit' : 'Oral'}
+                  {exam.isWritten ? t('written') : t('oral')}
                 </Typography>
               )}
             </Stack>

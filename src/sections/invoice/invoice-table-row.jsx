@@ -1,4 +1,5 @@
-import { usePopover } from 'minimal-shared/hooks';
+'use client';
+
 
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
@@ -10,24 +11,30 @@ import ListItemText from '@mui/material/ListItemText';
 
 import { RouterLink } from 'src/routes/components';
 
-import { fCurrency } from 'src/utils/format-number';
 import { fDate } from 'src/utils/format-time';
+import { fCurrency } from 'src/utils/format-number';
+
+import { useTranslate } from 'src/locales';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
-const STATUS_MAP = {
-  DRAFT: { label: 'Brouillon', color: 'default' },
-  ISSUED: { label: 'Émise', color: 'warning' },
-  PAID: { label: 'Payée', color: 'success' },
-  CANCELLED: { label: 'Annulée', color: 'error' },
-};
+// STATUS_MAP moved inside component for i18n
 
 // ----------------------------------------------------------------------
 
 export function InvoiceTableRow({ row, detailsHref, showSeller, hideType }) {
+  const { t } = useTranslate('invoice');
+
+  const STATUS_MAP = {
+    DRAFT: { label: t('status_draft'), color: 'default' },
+    ISSUED: { label: t('status_issued'), color: 'warning' },
+    PAID: { label: t('status_paid'), color: 'success' },
+    CANCELLED: { label: t('status_cancelled'), color: 'error' },
+  };
+
   const statusInfo = STATUS_MAP[row.status] || { label: row.status, color: 'default' };
 
   const displayName = showSeller ? (row.seller?.name || '-') : (row.buyer?.name || '-');
@@ -42,7 +49,7 @@ export function InvoiceTableRow({ row, detailsHref, showSeller, hideType }) {
             primary={displayName}
             secondary={
               <Link component={RouterLink} href={detailsHref} color="inherit">
-                {row.invoiceNumber || 'Brouillon'}
+                {row.invoiceNumber || t('status_draft')}
               </Link>
             }
             slotProps={{
@@ -75,7 +82,7 @@ export function InvoiceTableRow({ row, detailsHref, showSeller, hideType }) {
       {!hideType && (
         <TableCell>
           <Label variant="soft" color={row.businessType === 'PLATFORM_COMMISSION' ? 'info' : 'default'}>
-            {row.businessType === 'PLATFORM_COMMISSION' ? 'Commission' : 'Inscription'}
+            {row.businessType === 'PLATFORM_COMMISSION' ? t('type_commission') : t('type_enrollment')}
           </Label>
         </TableCell>
       )}

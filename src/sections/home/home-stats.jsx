@@ -10,46 +10,38 @@ import Container from '@mui/material/Container';
 import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 
+import { useTranslate } from 'src/locales';
+import { useGetPublicStats } from 'src/actions/public-stats';
+
 import { Iconify } from 'src/components/iconify';
 import { varFade, AnimateCountUp, MotionViewport } from 'src/components/animate';
 
 // ----------------------------------------------------------------------
 
-const STATS = [
-  {
-    value: 500,
-    unit: '+',
-    label: 'Sessions organisees',
-    icon: 'solar:calendar-check-bold-duotone',
-    color: 'primary',
-  },
-  {
-    value: 2000,
-    unit: '+',
-    label: 'Candidats inscrits',
-    icon: 'solar:users-group-rounded-bold-duotone',
-    color: 'info',
-  },
-  {
-    value: 15,
-    unit: '',
-    label: 'Certifications proposees',
-    icon: 'solar:diploma-verified-bold-duotone',
-    color: 'warning',
-  },
-  {
-    value: 98,
-    unit: '%',
-    label: 'Taux de satisfaction',
-    icon: 'solar:like-bold-duotone',
-    color: 'success',
-  },
+// Chiffres réels fournis par l'API (GET /api/public/stats)
+const STAT_CONFIGS = [
+  { field: 'sessions', icon: 'solar:calendar-check-bold-duotone', key: 1 },
+  { field: 'candidates', icon: 'solar:users-group-rounded-bold-duotone', key: 2 },
+  { field: 'tests', icon: 'solar:diploma-verified-bold-duotone', key: 3 },
+  { field: 'institutes', icon: 'solar:buildings-2-bold-duotone', key: 4 },
 ];
 
 // ----------------------------------------------------------------------
 
 export function HomeStats() {
   const theme = useTheme();
+  const { t } = useTranslate('home');
+  const { stats: publicStats } = useGetPublicStats();
+
+  const stats = STAT_CONFIGS.map((cfg) => ({
+    ...cfg,
+    value: publicStats?.[cfg.field] ?? 0,
+    label: t(`stat_${cfg.key}_label`),
+  })).filter((stat) => stat.value > 0);
+
+  if (!stats.length) {
+    return null;
+  }
 
   return (
     <Box
@@ -76,8 +68,8 @@ export function HomeStats() {
       <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
         <MotionViewport>
           <Grid container spacing={4}>
-            {STATS.map((stat) => (
-              <Grid key={stat.label} size={{ xs: 6, md: 3 }}>
+            {stats.map((stat) => (
+              <Grid key={stat.key} size={{ xs: 6, md: 12 / stats.length }}>
                 <m.div variants={varFade('inUp', { distance: 24 })}>
                   <StatItem stat={stat} />
                 </m.div>

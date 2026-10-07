@@ -3,9 +3,11 @@
 import { z } from 'zod';
 import dayjs from 'dayjs';
 import { mutate } from 'swr';
-import { useMemo, useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
+import { useBoolean } from 'minimal-shared/hooks';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useMemo, useState, useCallback } from 'react';
+import { parsePhoneNumber } from 'react-phone-number-input/input';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -14,52 +16,57 @@ import Stack from '@mui/material/Stack';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Switch from '@mui/material/Switch';
+import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import InputAdornment from '@mui/material/InputAdornment';
-
-import { parsePhoneNumber } from 'react-phone-number-input/input';
+import FormControlLabel from '@mui/material/FormControlLabel';
 
 import { fData } from 'src/utils/format-number';
 
+import { useTranslate } from 'src/locales';
 import axios, { endpoints } from 'src/lib/axios';
+
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
+import { FlagIcon } from 'src/components/flag-icon';
+import { Form, Field, schemaUtils } from 'src/components/hook-form';
 
 import { useAuthContext } from 'src/auth/hooks';
 import { getErrorMessage } from 'src/auth/utils/error-message';
 
-import { Label } from 'src/components/label';
-import { FlagIcon } from 'src/components/flag-icon';
-import { Form, Field, schemaUtils } from 'src/components/hook-form';
-
+import { ProfilePhoneVerifyDialog } from './profile-phone-verify-dialog';
 import { COUNTRIES, LANGUAGES, GENDER_OPTIONS, CIVILITY_OPTIONS } from './utils/countries';
 
 // ----------------------------------------------------------------------
 
-const ProfileSchema = z.object({
-  avatar: z.any().nullable(),
-  civility: z.string(),
-  gender: z.string(),
-  firstname: z.string().min(1, { error: 'Le prenom est requis !' }),
-  lastname: z.string().min(1, { error: 'Le nom est requis !' }),
-  email: z.string(),
-  phone: z.string(),
-  birthday: schemaUtils.date({ error: { required: 'La date de naissance est requise !' } }),
-  firstlanguage: z.string().nullable(),
-  address1: z.string(),
-  zipcode: z.string(),
-  city: z.string(),
-  countryCode: z.string().nullable(),
-  nativeCountry: z.string().nullable(),
-  nationality: z.string().nullable(),
-});
-
-// ----------------------------------------------------------------------
-
 export function ProfileEditForm() {
+  const { t } = useTranslate('profile');
   const { user, checkUserSession } = useAuthContext();
   const [alertState, setAlertState] = useState(null);
+
+  const phoneVerifyDialog = useBoolean();
+  const isPhoneVerified = !!user?.phoneVerifiedAt;
+  const hasSavedPhone = !!user?.phone;
+
+  const ProfileSchema = z.object({
+    avatar: z.any().nullable(),
+    civility: z.string(),
+    gender: z.string(),
+    firstname: z.string().min(1, { error: t('validation_firstname_required') }),
+    lastname: z.string().min(1, { error: t('validation_lastname_required') }),
+    email: z.string(),
+    phone: z.string(),
+    birthday: schemaUtils.date({ error: { required: t('validation_birthday_required') } }),
+    firstlanguage: z.string().nullable(),
+    address1: z.string(),
+    zipcode: z.string(),
+    city: z.string(),
+    countryCode: z.string().nullable(),
+    nativeCountry: z.string().nullable(),
+    nationality: z.string().nullable(),
+  });
 
   const defaultValues = useMemo(
     () => ({
@@ -107,15 +114,15 @@ export function ProfileEditForm() {
     if (isTooLarge) {
       setAlertState({
         severity: 'error',
-        message: `Le fichier est trop volumineux (${fData(rejection.file.size)}). Taille maximum autorisee : ${fData(5242880)}.`,
+        message: t('file_too_large', { fileSize: fData(rejection.file.size), maxSize: fData(5242880) }),
       });
     } else {
       setAlertState({
         severity: 'error',
-        message: `Fichier refuse : ${rejection.errors.map((e) => e.message).join(', ')}`,
+        message: t('file_rejected', { errors: rejection.errors.map((e) => e.message).join(', ') }),
       });
     }
-  }, []);
+  }, [t]);
 
   const watchLang = watch('firstlanguage');
   const watchCountry = watch('countryCode');
@@ -157,7 +164,7 @@ export function ProfileEditForm() {
       await checkUserSession();
       // Clear the user list cache so it re-fetches on next mount
       await mutate(endpoints.user.list, undefined, { revalidate: false });
-      setAlertState({ severity: 'success', message: 'Profil mis a jour avec succes !' });
+      setAlertState({ severity: 'success', message: t('profile_updated') });
     } catch (error) {
       setAlertState({ severity: 'error', message: getErrorMessage(error) });
     }
@@ -169,7 +176,7 @@ export function ProfileEditForm() {
         color={user?.active ? 'success' : 'error'}
         sx={{ position: 'absolute', top: 24, right: 24 }}
       >
-        {user?.active ? 'Actif' : 'Inactif'}
+        {user?.active ? t('active') : t('inactive')}
       </Label>
 
       <Box sx={{ mb: 5 }}>
@@ -188,8 +195,8 @@ export function ProfileEditForm() {
                 color: 'text.disabled',
               }}
             >
-              Formats : *.jpeg, *.jpg, *.png, *.gif
-              <br /> Taille max : {fData(5242880)}
+              {t('avatar_formats')}
+              <br /> {t('avatar_max_size', { size: fData(5242880) })}
             </Typography>
           }
         />
@@ -201,10 +208,10 @@ export function ProfileEditForm() {
         label={
           <>
             <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-              Email verifie
+              {t('email_verified')}
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              Le compte a ete verifie par email
+              {t('email_verified_desc')}
             </Typography>
           </>
         }
@@ -213,7 +220,7 @@ export function ProfileEditForm() {
 
       <Stack sx={{ alignItems: 'center' }}>
         <Button variant="soft" color="error" disabled>
-          Supprimer le compte
+          {t('delete_account')}
         </Button>
       </Stack>
     </Card>
@@ -222,7 +229,7 @@ export function ProfileEditForm() {
   const renderPersonalInfo = () => (
     <>
       <Typography variant="subtitle1" sx={{ mb: 2 }}>
-        Informations personnelles
+        {t('personal_info')}
       </Typography>
 
       <Box
@@ -233,7 +240,7 @@ export function ProfileEditForm() {
           gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' },
         }}
       >
-        <Field.Select name="civility" label="Civilite">
+        <Field.Select name="civility" label={t('civility')}>
           {CIVILITY_OPTIONS.map((option) => (
             <MenuItem key={option.value} value={option.value}>
               {option.label}
@@ -241,7 +248,7 @@ export function ProfileEditForm() {
           ))}
         </Field.Select>
 
-        <Field.Select name="gender" label="Genre">
+        <Field.Select name="gender" label={t('gender')}>
           {GENDER_OPTIONS.map((option) => (
             <MenuItem key={option.value} value={option.value}>
               {option.label}
@@ -249,18 +256,47 @@ export function ProfileEditForm() {
           ))}
         </Field.Select>
 
-        <Field.Text name="firstname" label="Prenom" />
-        <Field.Text name="lastname" label="Nom" />
+        <Field.Text name="firstname" label={t('firstname')} />
+        <Field.Text name="lastname" label={t('lastname')} />
 
-        <Field.Text name="email" label="Email" disabled />
+        <Field.Text name="email" label={t('email')} disabled />
 
-        <Field.Phone name="phone" label="Telephone" defaultCountry="FR" />
+        <Stack spacing={1}>
+          <Field.Phone name="phone" label={t('phone')} defaultCountry="FR" />
 
-        <Field.DatePicker name="birthday" label="Date de naissance" />
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ pl: 0.5 }}>
+            {isPhoneVerified ? (
+              <Label variant="soft" color="success" startIcon={<Iconify icon="solar:verified-check-bold" />}>
+                {t('phone_verified')}
+              </Label>
+            ) : (
+              <>
+                <Label variant="soft" color="warning">
+                  {t('phone_not_verified')}
+                </Label>
+                <Tooltip title={hasSavedPhone ? '' : t('phone_verify_hint')}>
+                  <span>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      disabled={!hasSavedPhone}
+                      onClick={phoneVerifyDialog.onTrue}
+                      startIcon={<Iconify icon="solar:shield-check-bold" />}
+                    >
+                      {t('phone_verify_button')}
+                    </Button>
+                  </span>
+                </Tooltip>
+              </>
+            )}
+          </Stack>
+        </Stack>
+
+        <Field.DatePicker name="birthday" label={t('birthday')} />
 
         <Field.Autocomplete
           name="firstlanguage"
-          label="Langue maternelle"
+          label={t('native_language')}
           options={LANGUAGES.map((lang) => lang.code)}
           getOptionLabel={(option) => LANGUAGES.find((l) => l.code === option)?.label ?? ''}
           isOptionEqualToValue={(option, value) => option === value}
@@ -294,7 +330,7 @@ export function ProfileEditForm() {
   const renderAddress = () => (
     <>
       <Typography variant="subtitle1" sx={{ mb: 2, mt: 4 }}>
-        Adresse
+        {t('address_section')}
       </Typography>
 
       <Box
@@ -305,13 +341,13 @@ export function ProfileEditForm() {
           gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' },
         }}
       >
-        <Field.Text name="address1" label="Adresse" sx={{ gridColumn: '1 / -1' }} />
-        <Field.Text name="zipcode" label="Code postal" />
-        <Field.Text name="city" label="Ville" />
+        <Field.Text name="address1" label={t('address')} sx={{ gridColumn: '1 / -1' }} />
+        <Field.Text name="zipcode" label={t('zipcode')} />
+        <Field.Text name="city" label={t('city')} />
 
         <Field.Autocomplete
           name="countryCode"
-          label="Pays"
+          label={t('country')}
           options={COUNTRIES.map((c) => c.code)}
           getOptionLabel={(option) => COUNTRIES.find((c) => c.code === option)?.label ?? ''}
           isOptionEqualToValue={(option, value) => option === value}
@@ -342,7 +378,7 @@ export function ProfileEditForm() {
   const renderNationality = () => (
     <>
       <Typography variant="subtitle1" sx={{ mb: 2, mt: 4 }}>
-        Nationalite et origine
+        {t('nationality_section')}
       </Typography>
 
       <Box
@@ -355,7 +391,7 @@ export function ProfileEditForm() {
       >
         <Field.Autocomplete
           name="nativeCountry"
-          label="Pays de naissance"
+          label={t('native_country')}
           options={COUNTRIES.map((c) => c.code)}
           getOptionLabel={(option) => COUNTRIES.find((c) => c.code === option)?.label ?? ''}
           isOptionEqualToValue={(option, value) => option === value}
@@ -382,7 +418,7 @@ export function ProfileEditForm() {
 
         <Field.Autocomplete
           name="nationality"
-          label="Nationalite"
+          label={t('nationality')}
           options={COUNTRIES.map((c) => c.code)}
           getOptionLabel={(option) => COUNTRIES.find((c) => c.code === option)?.label ?? ''}
           isOptionEqualToValue={(option, value) => option === value}
@@ -412,6 +448,13 @@ export function ProfileEditForm() {
 
   return (
     <Form methods={methods} onSubmit={onSubmit}>
+      <ProfilePhoneVerifyDialog
+        open={phoneVerifyDialog.value}
+        onClose={phoneVerifyDialog.onFalse}
+        phone={defaultValues.phone}
+        onVerified={checkUserSession}
+      />
+
       {alertState && (
         <Alert severity={alertState.severity} sx={{ mb: 3 }} onClose={() => setAlertState(null)}>
           {alertState.message}
@@ -429,7 +472,7 @@ export function ProfileEditForm() {
 
             <Stack alignItems="flex-end" sx={{ mt: 3 }}>
               <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-                Enregistrer
+                {t('save')}
               </LoadingButton>
             </Stack>
           </Card>

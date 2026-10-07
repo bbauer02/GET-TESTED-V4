@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-unresolved
 import https from 'node:https';
 import { NextResponse } from 'next/server';
 

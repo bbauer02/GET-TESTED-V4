@@ -6,6 +6,8 @@ import { useBoolean } from 'minimal-shared/hooks';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import Box from '@mui/material/Box';
+import Link from '@mui/material/Link';
+import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
@@ -13,26 +15,16 @@ import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import InputAdornment from '@mui/material/InputAdornment';
 
+import { paths } from 'src/routes/paths';
+import { usePathname } from 'src/routes/hooks';
+import { RouterLink } from 'src/routes/components';
+
+import { useTranslate } from 'src/locales';
+
 import { Iconify } from 'src/components/iconify';
 import { Form, Field } from 'src/components/hook-form';
 
 // ----------------------------------------------------------------------
-
-const RegisterSchema = z.object({
-  civility: z.string().min(1, { message: 'Civilite requise' }),
-  firstname: z.string().min(1, { message: 'Prenom requis' }),
-  lastname: z.string().min(1, { message: 'Nom requis' }),
-  email: z.string().min(1, { message: 'Email requis' }).email({ message: 'Email invalide' }),
-  password: z.string().min(8, { message: '8 caracteres minimum' }),
-  phone: z.string().optional(),
-  gender: z.string().min(1, { message: 'Genre requis' }),
-  // Address
-  address1: z.string().min(1, { message: 'Adresse requise' }),
-  address2: z.string().optional(),
-  zipcode: z.string().min(1, { message: 'Code postal requis' }),
-  city: z.string().min(1, { message: 'Ville requise' }),
-  countryCode: z.string().min(1, { message: 'Pays requis' }),
-});
 
 // TODO: remove dev defaults before production
 const DEV_DEFAULTS = {
@@ -50,7 +42,7 @@ const DEV_DEFAULTS = {
   countryCode: 'FR',
 };
 
-const defaultValues = process.env.NODE_ENV === 'development' ? DEV_DEFAULTS : {
+const prodDefaults = {
   civility: '',
   gender: '',
   firstname: '',
@@ -68,7 +60,30 @@ const defaultValues = process.env.NODE_ENV === 'development' ? DEV_DEFAULTS : {
 // ----------------------------------------------------------------------
 
 export function EnrollmentStepRegister({ registrationData, onNext, onBack }) {
+  const { t } = useTranslate('sessions');
   const showPassword = useBoolean();
+  const pathname = usePathname();
+
+  // Après connexion, le GuestGuard renvoie sur cette session (le candidat reprend le tunnel connecté)
+  const signInHref = `${paths.auth.jwt.signIn}?${new URLSearchParams({ returnTo: pathname })}`;
+
+  const RegisterSchema = z.object({
+    civility: z.string().min(1, { message: t('validation_civility_required') }),
+    firstname: z.string().min(1, { message: t('validation_firstname_required') }),
+    lastname: z.string().min(1, { message: t('validation_lastname_required') }),
+    email: z.string().min(1, { message: t('validation_email_required') }).email({ message: t('validation_email_invalid') }),
+    password: z.string().min(8, { message: t('validation_password_min') }),
+    phone: z.string().optional(),
+    gender: z.string().min(1, { message: t('validation_gender_required') }),
+    // Address
+    address1: z.string().min(1, { message: t('validation_address_required') }),
+    address2: z.string().optional(),
+    zipcode: z.string().min(1, { message: t('validation_zipcode_required') }),
+    city: z.string().min(1, { message: t('validation_city_required') }),
+    countryCode: z.string().min(1, { message: t('validation_country_required') }),
+  });
+
+  const defaultValues = process.env.NODE_ENV === 'development' ? DEV_DEFAULTS : prodDefaults;
 
   const methods = useForm({
     mode: 'onSubmit',
@@ -85,34 +100,41 @@ export function EnrollmentStepRegister({ registrationData, onNext, onBack }) {
   return (
     <Form methods={methods} onSubmit={onSubmit}>
       <Stack spacing={3}>
-        <Typography variant="h6">Creer votre compte</Typography>
+        <Alert severity="info" icon={<Iconify icon="solar:user-check-bold" />}>
+          {t('already_have_account')}{' '}
+          <Link component={RouterLink} href={signInHref} underline="always" sx={{ fontWeight: 600 }}>
+            {t('sign_in_to_continue')}
+          </Link>
+        </Alert>
+
+        <Typography variant="h6">{t('create_account')}</Typography>
 
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-          <Field.Select name="civility" label="Civilite" fullWidth>
-            <MenuItem value="M">M.</MenuItem>
-            <MenuItem value="MME">Mme</MenuItem>
-            <MenuItem value="MLLE">Mlle</MenuItem>
-            <MenuItem value="AUTRE">Autre</MenuItem>
+          <Field.Select name="civility" label={t('civility')} fullWidth>
+            <MenuItem value="M">{t('mr')}</MenuItem>
+            <MenuItem value="MME">{t('mrs')}</MenuItem>
+            <MenuItem value="MLLE">{t('miss')}</MenuItem>
+            <MenuItem value="AUTRE">{t('other')}</MenuItem>
           </Field.Select>
 
-          <Field.Select name="gender" label="Genre" fullWidth>
-            <MenuItem value="MASCULIN">Homme</MenuItem>
-            <MenuItem value="FEMININ">Femme</MenuItem>
-            <MenuItem value="AUTRE">Autre</MenuItem>
-            <MenuItem value="NON_SPECIFIE">Non specifie</MenuItem>
+          <Field.Select name="gender" label={t('gender')} fullWidth>
+            <MenuItem value="MASCULIN">{t('male')}</MenuItem>
+            <MenuItem value="FEMININ">{t('female')}</MenuItem>
+            <MenuItem value="AUTRE">{t('other')}</MenuItem>
+            <MenuItem value="NON_SPECIFIE">{t('not_specified')}</MenuItem>
           </Field.Select>
         </Stack>
 
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-          <Field.Text name="firstname" label="Prenom" fullWidth />
-          <Field.Text name="lastname" label="Nom" fullWidth />
+          <Field.Text name="firstname" label={t('firstname')} fullWidth />
+          <Field.Text name="lastname" label={t('lastname')} fullWidth />
         </Stack>
 
-        <Field.Text name="email" label="Email" type="email" />
+        <Field.Text name="email" label={t('email')} type="email" />
 
         <Field.Text
           name="password"
-          label="Mot de passe"
+          label={t('password')}
           type={showPassword.value ? 'text' : 'password'}
           slotProps={{
             input: {
@@ -127,23 +149,23 @@ export function EnrollmentStepRegister({ registrationData, onNext, onBack }) {
           }}
         />
 
-        <Field.Text name="phone" label="Telephone (optionnel)" />
+        <Field.Text name="phone" label={t('phone_optional')} />
 
         {/* Address section */}
         <Typography variant="subtitle1" sx={{ pt: 1 }}>
-          Adresse
+          {t('address')}
         </Typography>
 
-        <Field.Text name="address1" label="Adresse" />
+        <Field.Text name="address1" label={t('address')} />
 
-        <Field.Text name="address2" label="Complement d'adresse (optionnel)" />
+        <Field.Text name="address2" label={t('address_complement')} />
 
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-          <Field.Text name="zipcode" label="Code postal" sx={{ maxWidth: { sm: 200 } }} />
-          <Field.Text name="city" label="Ville" fullWidth />
+          <Field.Text name="zipcode" label={t('zipcode')} sx={{ maxWidth: { sm: 200 } }} />
+          <Field.Text name="city" label={t('city')} fullWidth />
         </Stack>
 
-        <Field.CountrySelect name="countryCode" label="Pays" displayValue="code" />
+        <Field.CountrySelect name="countryCode" label={t('country')} displayValue="code" />
 
         {/* Actions */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', pt: 1 }}>
@@ -152,7 +174,7 @@ export function EnrollmentStepRegister({ registrationData, onNext, onBack }) {
             startIcon={<Iconify icon="eva:arrow-back-fill" />}
             onClick={onBack}
           >
-            Retour
+            {t('back')}
           </Button>
 
           <Button
@@ -161,7 +183,7 @@ export function EnrollmentStepRegister({ registrationData, onNext, onBack }) {
             size="large"
             endIcon={<Iconify icon="eva:arrow-forward-fill" />}
           >
-            Continuer
+            {t('continue')}
           </Button>
         </Box>
       </Stack>

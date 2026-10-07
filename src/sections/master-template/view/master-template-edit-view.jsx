@@ -1,13 +1,13 @@
 'use client';
 
-import { useParams } from 'src/routes/hooks';
 import { paths } from 'src/routes/paths';
+import { useParams } from 'src/routes/hooks';
 
 import { DashboardContent } from 'src/layouts/dashboard';
+import { useGetDocumentTemplate } from 'src/actions/document-template';
+
 import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-
-import { useGetDocumentTemplate } from 'src/actions/document-template';
 
 import { MasterTemplateCreateEditForm } from '../master-template-create-edit-form';
 
