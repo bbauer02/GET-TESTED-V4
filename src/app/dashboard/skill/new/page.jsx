@@ -1,6 +1,6 @@
 import { SkillCreateView } from 'src/sections/skill/view';
 
-export const metadata = { title: 'Dashboard: Nouveau Skill' };
+export const metadata = { title: 'Nouvelle compétence' };
 
 export default function Page() {
   return <SkillCreateView />;

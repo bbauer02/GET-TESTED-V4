@@ -27,9 +27,9 @@ export function DocumentTemplateEditView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Modifier le modele"
+        heading="Modifier le modèle"
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
           { name: 'Documents', href: paths.dashboard.espaceInstitut.documents },
           { name: template?.label || 'Modifier' },
         ]}

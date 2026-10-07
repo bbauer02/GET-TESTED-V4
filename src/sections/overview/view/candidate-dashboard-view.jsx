@@ -23,6 +23,7 @@ import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
 
 import { fDate } from 'src/utils/format-time';
+import { SESSION_STATUS_COLORS } from 'src/utils/status';
 
 import { useTranslate } from 'src/locales';
 import { DashboardContent } from 'src/layouts/dashboard';
@@ -38,20 +39,13 @@ import { useAuthContext } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
-const STATUS_COLORS = {
-  DRAFT: 'default',
-  OPEN: 'success',
-  LOCKED: 'default',
-  VALIDATED: 'info',
-  CANCELLED: 'error',
-};
-
 // ----------------------------------------------------------------------
 
 export function CandidateDashboardView() {
   const theme = useTheme();
   const { user } = useAuthContext();
   const { t } = useTranslate('dashboard');
+  const { t: tc } = useTranslate('common');
   const { enrollments, enrollmentsLoading } = useGetMyEnrollments();
 
   const stats = useMemo(() => {
@@ -206,8 +200,8 @@ export function CandidateDashboardView() {
                       </TableCell>
                       <TableCell>{session.start ? fDate(session.start) : '—'}</TableCell>
                       <TableCell>
-                        <Label variant="soft" color={STATUS_COLORS[session.status] || 'default'}>
-                          {session.status || '—'}
+                        <Label variant="soft" color={SESSION_STATUS_COLORS[session.status] || 'default'}>
+                          {session.status ? tc(`session_status_${session.status}`) : '—'}
                         </Label>
                       </TableCell>
                     </TableRow>

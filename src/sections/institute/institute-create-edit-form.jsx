@@ -41,8 +41,8 @@ const InstituteSchema = z.object({
   }),
   legalForm: z.string(),
   shareCapital: z.string(),
-  siren: z.string().max(9, { error: '9 caracteres maximum !' }),
-  siret: z.string().max(14, { error: '14 caracteres maximum !' }),
+  siren: z.string().max(9, { error: '9 caractères maximum !' }),
+  siret: z.string().max(14, { error: '14 caractères maximum !' }),
   vatNumber: z.string(),
   rcsCity: z.string(),
   socialNetworks: z.object({
@@ -68,7 +68,7 @@ export function InstituteCreateEditForm({ currentInstitute }) {
       siteweb: currentInstitute?.siteweb || 'https://www.institut-test.fr',
       address: {
         address1: currentInstitute?.address?.address1 || '15 Rue de la Paix',
-        address2: currentInstitute?.address?.address2 || 'Batiment B',
+        address2: currentInstitute?.address?.address2 || 'Bâtiment B',
         zipcode: currentInstitute?.address?.zipcode || '75002',
         city: currentInstitute?.address?.city || 'Paris',
         countryCode: currentInstitute?.address?.countryCode || 'FR',

@@ -14,10 +14,10 @@ export function MasterTemplateCreateView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Nouveau modele maitre"
+        heading="Nouveau modèle maître"
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Modeles maitre', href: paths.dashboard.masterTemplate.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
+          { name: 'Modèles maîtres', href: paths.dashboard.masterTemplate.root },
           { name: 'Nouveau' },
         ]}
       />

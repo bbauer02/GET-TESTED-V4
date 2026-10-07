@@ -34,11 +34,11 @@ import { COUNTRIES, LANGUAGES, GENDER_OPTIONS, CIVILITY_OPTIONS } from '../profi
 
 const UserCreateSchema = z.object({
   avatar: z.any().nullable(),
-  firstname: z.string().min(1, { error: 'Le prenom est requis !' }),
+  firstname: z.string().min(1, { error: 'Le prénom est requis !' }),
   lastname: z.string().min(1, { error: 'Le nom est requis !' }),
   email: schemaUtils.email({ error: 'Email invalide !' }),
-  password: z.string().min(8, { error: 'Le mot de passe doit faire au moins 8 caracteres !' }),
-  civility: z.string().min(1, { error: 'La civilite est requise !' }),
+  password: z.string().min(8, { error: 'Le mot de passe doit faire au moins 8 caractères !' }),
+  civility: z.string().min(1, { error: 'La civilité est requise !' }),
   platformRole: z.string(),
   phone: z.string(),
   gender: z.string(),

@@ -2,7 +2,7 @@ import { SimpleLayout } from 'src/layouts/simple';
 
 // ----------------------------------------------------------------------
 
-export const metadata = { title: 'Sessions de test' };
+export const metadata = { title: 'Trouver une session' };
 
 export default function Layout({ children }) {
   return <SimpleLayout>{children}</SimpleLayout>;

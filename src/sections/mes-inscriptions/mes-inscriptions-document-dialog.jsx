@@ -1,8 +1,9 @@
 'use client';
 
 import useSWR from 'swr';
-import { useMemo } from 'react';
+import { useRef, useMemo, useState } from 'react';
 
+import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import IconButton from '@mui/material/IconButton';
@@ -10,9 +11,12 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 
+import { toPdfFilename, downloadElementAsPdf } from 'src/utils/html-to-pdf';
+
 import { useTranslate } from 'src/locales';
 import { fetcher, endpoints, extractMembers } from 'src/lib/axios';
 
+import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { EmptyContent } from 'src/components/empty-content';
 import { LoadingScreen } from 'src/components/loading-screen';
@@ -74,8 +78,27 @@ export function MesInscriptionsDocumentDialog({
     [template, enrollment, session, institute]
   );
 
+  const previewRef = useRef(null);
+  const [downloading, setDownloading] = useState(false);
+
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      const candidate = enrollment?.user;
+      await downloadElementAsPdf(
+        previewRef.current,
+        toPdfFilename(documentType?.label, candidate?.lastname, candidate?.firstname)
+      );
+    } catch (error) {
+      console.error(error);
+      toast.error(t('download_error'));
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
@@ -115,7 +138,9 @@ export function MesInscriptionsDocumentDialog({
             sx={{ py: 5 }}
           />
         ) : (
-          <DocumentTemplatePreview htmlContent={mergedHtml} />
+          <Box ref={previewRef}>
+            <DocumentTemplatePreview htmlContent={mergedHtml} />
+          </Box>
         )}
       </DialogContent>
 
@@ -124,13 +149,24 @@ export function MesInscriptionsDocumentDialog({
           {t('close')}
         </Button>
         {template && (
-          <Button
-            variant="contained"
-            startIcon={<Iconify icon="solar:printer-bold" />}
-            onClick={handlePrint}
-          >
-            {t('print_pdf')}
-          </Button>
+          <>
+            <Button
+              variant="outlined"
+              color="inherit"
+              startIcon={<Iconify icon="solar:printer-bold" />}
+              onClick={handlePrint}
+            >
+              {t('print')}
+            </Button>
+            <Button
+              variant="contained"
+              loading={downloading}
+              startIcon={<Iconify icon="solar:download-minimalistic-bold" />}
+              onClick={handleDownload}
+            >
+              {t('download_pdf')}
+            </Button>
+          </>
         )}
       </DialogActions>
     </Dialog>

@@ -61,7 +61,7 @@ export function MesInscriptionsListView() {
       <CustomBreadcrumbs
         heading={t('my_enrollments')}
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
           { name: t('my_enrollments') },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}

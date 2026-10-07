@@ -55,7 +55,7 @@ export function MasterTemplateListView() {
     async (id) => {
       try {
         await axiosInstance.delete(`/api/document-templates/${id}`);
-        toast.success('Modele supprime !');
+        toast.success('Modèle supprimé !');
         templatesMutate();
       } catch (error) {
         toast.error(getErrorMessage(error));
@@ -76,10 +76,10 @@ export function MasterTemplateListView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Modeles maitre"
+        heading="Modèles maîtres"
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Modeles maitre' },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
+          { name: 'Modèles maîtres' },
         ]}
         action={
           <Button
@@ -88,7 +88,7 @@ export function MasterTemplateListView() {
             variant="contained"
             startIcon={<Iconify icon="mingcute:add-line" />}
           >
-            Nouveau modele
+            Nouveau modèle
           </Button>
         }
       />
@@ -96,8 +96,8 @@ export function MasterTemplateListView() {
       <Card>
         {templatesEmpty ? (
           <EmptyContent
-            title="Aucun modele maitre"
-            description="Les modeles maitre sont automatiquement copies aux nouveaux instituts."
+            title="Aucun modèle maître"
+            description="Les modèles maître sont automatiquement copiés aux nouveaux instituts."
             sx={{ py: 10 }}
           />
         ) : (

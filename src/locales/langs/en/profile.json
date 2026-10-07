@@ -25,7 +25,7 @@
   "avatar_formats": "Formats: *.jpeg, *.jpg, *.png, *.gif",
   "avatar_max_size": "Max size: {{size}}",
   "email_verified": "Email verified",
-  "email_verified_desc": "The account has been verified by email",
+  "email_verified_desc": "Your email address has been confirmed.",
   "delete_account": "Delete account",
   "profile_updated": "Profile updated successfully!",
   "file_too_large": "The file is too large ({{fileSize}}). Maximum allowed size: {{maxSize}}.",
@@ -60,5 +60,8 @@
   "phone_verify_send_error": "Unable to send the verification code",
   "phone_verify_error": "Invalid or expired code",
   "validation_code_required": "Code is required",
-  "validation_code_format": "Code must be 6 digits"
+  "validation_code_format": "Code must be 6 digits",
+  "email_label_status": "Email address",
+  "email_not_verified": "Not verified",
+  "email_not_verified_desc": "Click the link sent to you by email when you signed up to confirm your address."
 }

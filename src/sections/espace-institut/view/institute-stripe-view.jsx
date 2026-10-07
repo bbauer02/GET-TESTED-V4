@@ -39,7 +39,7 @@ export function InstituteStripeView() {
         <CustomBreadcrumbs
           heading="Stripe"
           links={[
-            { name: 'Dashboard', href: paths.dashboard.root },
+            { name: 'Tableau de bord', href: paths.dashboard.root },
             { name: institute?.label || 'Institut', href: paths.dashboard.espaceInstitut.root },
             { name: 'Stripe' },
           ]}
@@ -50,12 +50,12 @@ export function InstituteStripeView() {
           <Iconify icon="logos:stripe" width={80} sx={{ mb: 3 }} />
 
           <Typography variant="h4" sx={{ mb: 1 }}>
-            Connectez votre institut a Stripe
+            Connectez votre institut à Stripe
           </Typography>
 
           <Typography variant="body1" sx={{ color: 'text.secondary', mb: 4, maxWidth: 480, mx: 'auto' }}>
             Activez les paiements en ligne pour votre institut. Vous pourrez recevoir des paiements,
-            gerer vos virements et suivre vos soldes directement depuis cette page.
+            gérer vos virements et suivre vos soldes directement depuis cette page.
           </Typography>
 
           <LoadingButton
@@ -77,7 +77,7 @@ export function InstituteStripeView() {
       <CustomBreadcrumbs
         heading="Stripe"
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
           { name: institute?.label || 'Institut', href: paths.dashboard.espaceInstitut.root },
           { name: 'Stripe' },
         ]}

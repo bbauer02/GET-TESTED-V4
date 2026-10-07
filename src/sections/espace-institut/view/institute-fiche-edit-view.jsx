@@ -337,7 +337,7 @@ export function InstituteFicheEditView() {
         heading="Modifier la fiche"
         backHref={paths.dashboard.espaceInstitut.fiche}
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
           { name: institute?.label || 'Institut' },
           { name: 'Fiche', href: paths.dashboard.espaceInstitut.fiche },
           { name: 'Modifier' },

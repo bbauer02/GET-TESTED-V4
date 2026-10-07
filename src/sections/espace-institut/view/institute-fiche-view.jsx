@@ -129,7 +129,7 @@ export function InstituteFicheView() {
       <CustomBreadcrumbs
         heading={t('fiche_title')}
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
           { name: institute.label },
           { name: t('fiche') },
         ]}

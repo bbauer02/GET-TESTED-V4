@@ -69,7 +69,7 @@ export function InstituteExamEditView() {
       <CustomBreadcrumbs
         heading="Modifier l'épreuve"
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
           { name: currentInstitute?.label || 'Institut' },
           { name: 'Tests', href: paths.dashboard.espaceInstitut.assessments },
           { name: assessment?.label || '', href: paths.dashboard.espaceInstitut.assessmentView(assessmentId) },

@@ -49,5 +49,9 @@
   "payment_pending_confirmation": "Paiement en cours de confirmation. Il apparaîtra dans quelques minutes.",
   "payment_cancelled": "Paiement annulé. Vous pouvez le relancer à tout moment.",
   "payment_to_pay_hint": "Votre inscription est enregistrée mais pas encore réglée.",
-  "exam_status_absent": "Absent"
+  "exam_status_absent": "Absent",
+  "print": "Imprimer",
+  "download_pdf": "Télécharger (PDF)",
+  "download_error": "Le téléchargement du document a échoué. Vous pouvez utiliser « Imprimer » puis « Enregistrer en PDF ».",
+  "document_available_hint": "Disponible — afficher, imprimer ou télécharger"
 }

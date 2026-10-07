@@ -56,7 +56,7 @@ export function DocumentTemplateTableRow({ row, onEdit, onGenerate }) {
             }}
           >
             <Iconify icon="solar:document-bold" />
-            Generer
+            Générer
           </MenuItem>
         </MenuList>
       </CustomPopover>

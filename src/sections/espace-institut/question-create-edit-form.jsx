@@ -33,12 +33,12 @@ import { useCurrentInstitute } from 'src/auth/hooks/use-current-institute';
 // ----------------------------------------------------------------------
 
 const QUESTION_TYPES = [
-  { value: 'scu', label: 'QCU', icon: 'mdi:radiobox-marked', description: 'Question a choix unique' },
-  { value: 'mcq', label: 'QCM', icon: 'mdi:checkbox-multiple-marked-outline', description: 'Question a choix multiples' },
-  { value: 'fill_blank', label: 'Texte a trous', icon: 'mdi:form-textbox', description: 'Completer les espaces vides' },
-  { value: 'highlight', label: 'Surlignage', icon: 'mdi:marker', description: 'Selectionner des zones de texte' },
+  { value: 'scu', label: 'QCU', icon: 'mdi:radiobox-marked', description: 'Question à choix unique' },
+  { value: 'mcq', label: 'QCM', icon: 'mdi:checkbox-multiple-marked-outline', description: 'Question à choix multiples' },
+  { value: 'fill_blank', label: 'Texte à trous', icon: 'mdi:form-textbox', description: 'Compléter les espaces vides' },
+  { value: 'highlight', label: 'Surlignage', icon: 'mdi:marker', description: 'Sélectionner des zones de texte' },
   { value: 'ordering', label: 'Ordonnancement', icon: 'mdi:sort-variant', description: 'Remettre dans le bon ordre' },
-  { value: 'matching', label: 'Appariement', icon: 'mdi:link-variant', description: 'Associer des elements entre eux' },
+  { value: 'matching', label: 'Appariement', icon: 'mdi:link-variant', description: 'Associer des éléments entre eux' },
 ];
 
 // ----------------------------------------------------------------------
@@ -52,19 +52,19 @@ const McqChoiceSchema = z.object({
 });
 
 const BlankSlotSchema = z.object({
-  acceptedAnswers: z.string().min(1, { message: 'Au moins une reponse acceptee est requise' }),
+  acceptedAnswers: z.string().min(1, { message: 'Au moins une réponse acceptée est requise' }),
   caseSensitive: z.boolean(),
   accentSensitive: z.boolean(),
 });
 
 const HighlightZoneSchema = z.object({
-  startIndex: z.number().min(0, { message: "L'index de debut est requis" }),
+  startIndex: z.number().min(0, { message: "L'index de début est requis" }),
   endIndex: z.number().min(1, { message: "L'index de fin est requis" }),
   isCorrect: z.boolean(),
 });
 
 const OrderingItemSchema = z.object({
-  text: z.string().min(1, { message: "Le texte de l'element est requis" }),
+  text: z.string().min(1, { message: "Le texte de l'élément est requis" }),
 });
 
 const MatchingPairSchema = z.object({
@@ -77,8 +77,8 @@ const BaseQuestionSchema = z.object({
   assessment: z.string().min(1, { message: 'Le test est requis' }),
   level: z.string().nullable(),
   skills: z.array(z.string()),
-  label: z.string().min(1, { message: "L'intitule est requis" }),
-  text: z.string().min(1, { message: "L'enonce est requis" }),
+  label: z.string().min(1, { message: "L'intitulé est requis" }),
+  text: z.string().min(1, { message: "L'énoncé est requis" }),
   instruction: z.string().optional(),
   duration: z.number().min(0).nullable(),
   maxPoints: z.number().min(0).nullable(),
@@ -112,7 +112,7 @@ const QuestionSchema = BaseQuestionSchema.superRefine((data, ctx) => {
     if (correct !== 1) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Un QCU doit avoir exactement une bonne reponse',
+        message: 'Un QCU doit avoir exactement une bonne réponse',
         path: ['choices'],
       });
     }
@@ -127,7 +127,7 @@ const QuestionSchema = BaseQuestionSchema.superRefine((data, ctx) => {
   if (data.type === 'ordering' && data.orderingItems.length < 2) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: 'Il faut au moins 2 elements a ordonner',
+      message: 'Il faut au moins 2 éléments à ordonner',
       path: ['orderingItems'],
     });
   }
@@ -466,18 +466,18 @@ export function QuestionCreateEditForm({ currentQuestion }) {
           break;
 
         default:
-          throw new Error('Type de question non supporte');
+          throw new Error('Type de question non supporté');
       }
 
       if (isEdit) {
         await axios.patch(endpoints.question.details(currentQuestion.id), payload, {
           headers: { 'Content-Type': 'application/merge-patch+json' },
         });
-        toast.success('Question modifiee avec succes !', { duration: 4000 });
+        toast.success('Question modifiée avec succès !', { duration: 4000 });
       } else {
         const endpoint = getEndpointForType(data.type);
         await axios.post(endpoint, payload);
-        toast.success('Question creee avec succes !', { duration: 4000 });
+        toast.success('Question créée avec succès !', { duration: 4000 });
       }
 
       router.push(paths.dashboard.espaceInstitut.questions);
@@ -556,7 +556,7 @@ export function QuestionCreateEditForm({ currentQuestion }) {
   const renderCommonFields = () => (
     <Card sx={{ p: 3, mb: 3 }}>
       <Typography variant="h6" sx={{ mb: 3 }}>
-        Informations generales
+        Informations générales
       </Typography>
 
       <Box
@@ -608,7 +608,7 @@ export function QuestionCreateEditForm({ currentQuestion }) {
 
         <Field.Autocomplete
           name="skills"
-          label="Competences"
+          label="Compétences"
           multiple
           options={skillOptions.map((s) => s.iri)}
           getOptionLabel={(option) => {
@@ -633,11 +633,11 @@ export function QuestionCreateEditForm({ currentQuestion }) {
           sx={{ gridColumn: '1 / -1' }}
         />
 
-        <Field.Text name="label" label="Intitule" sx={{ gridColumn: '1 / -1' }} />
+        <Field.Text name="label" label="Intitulé" sx={{ gridColumn: '1 / -1' }} />
 
         <Field.Text
           name="text"
-          label="Enonce de la question"
+          label="Énoncé de la question"
           multiline
           rows={4}
           sx={{ gridColumn: '1 / -1' }}
@@ -653,7 +653,7 @@ export function QuestionCreateEditForm({ currentQuestion }) {
 
         <Field.Text
           name="duration"
-          label="Duree (secondes)"
+          label="Durée (secondes)"
           type="number"
           slotProps={{ htmlInput: { min: 0 } }}
         />
@@ -721,7 +721,7 @@ export function QuestionCreateEditForm({ currentQuestion }) {
 
           <Stack alignItems="flex-end" sx={{ mt: 3 }}>
             <LoadingButton type="submit" variant="contained" size="large" loading={isSubmitting}>
-              {isEdit ? 'Modifier la question' : 'Creer la question'}
+              {isEdit ? 'Modifier la question' : 'Créer la question'}
             </LoadingButton>
           </Stack>
         </>
@@ -750,20 +750,20 @@ function McqFieldsSection() {
       </Typography>
 
       <Stack spacing={2} sx={{ mb: 3 }}>
-        {!isScu && <Field.Switch name="isMultipleAnswer" label="Reponses multiples" />}
-        <Field.Switch name="shuffleChoices" label="Melanger les choix" />
+        {!isScu && <Field.Switch name="isMultipleAnswer" label="Réponses multiples" />}
+        <Field.Switch name="shuffleChoices" label="Mélanger les choix" />
       </Stack>
 
       {isScu && (
         <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
-          Une seule bonne reponse : mettez le poids 1 sur la bonne reponse et 0 sur les autres.
+          Une seule bonne réponse : mettez le poids 1 sur la bonne réponse et 0 sur les autres.
         </Typography>
       )}
 
       <Divider sx={{ mb: 3 }} />
 
       <Typography variant="subtitle1" sx={{ mb: 2 }}>
-        Choix de reponse
+        Choix de réponse
       </Typography>
 
       <Stack spacing={2}>
@@ -851,19 +851,19 @@ function FillBlankFieldsSection() {
   return (
     <Card sx={{ p: 3, mb: 3 }}>
       <Typography variant="h6" sx={{ mb: 3 }}>
-        Options du texte a trous
+        Options du texte à trous
       </Typography>
 
       <Field.Text
         name="blankSymbol"
         label="Symbole de trou"
-        helperText={`Utilisez ce symbole dans l'enonce pour indiquer les trous. Trous detectes : ${blankCount}`}
+        helperText={`Utilisez ce symbole dans l'énoncé pour indiquer les trous. Trous détectés : ${blankCount}`}
         sx={{ mb: 3, maxWidth: 300 }}
       />
 
       {blankCount === 0 && (
         <Typography variant="body2" sx={{ color: 'warning.main', mb: 2 }}>
-          Aucun trou detecte dans l&apos;enonce. Ajoutez &quot;{blankSymbol}&quot; dans le texte de la question pour creer des trous.
+          Aucun trou détecté dans l&apos;énoncé. Ajoutez &quot;{blankSymbol}&quot; dans le texte de la question pour créer des trous.
         </Typography>
       )}
 
@@ -899,7 +899,7 @@ function FillBlankFieldsSection() {
                 >
                   <Field.Text
                     name={`blankSlots.${index}.acceptedAnswers`}
-                    label="Reponses acceptees (separees par des virgules)"
+                    label="Réponses acceptées (séparées par des virgules)"
                     size="small"
                   />
 
@@ -941,7 +941,7 @@ function HighlightFieldsSection() {
       </Typography>
 
       <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
-        Definissez les zones de surlignage en indiquant les indices de debut et de fin dans le texte de l&apos;enonce. Les indices commencent a 0.
+        Définissez les zones de surlignage en indiquant les indices de début et de fin dans le texte de l&apos;énoncé. Les indices commencent à 0.
       </Typography>
 
       <Stack spacing={2}>
@@ -964,7 +964,7 @@ function HighlightFieldsSection() {
 
             <Field.Text
               name={`highlightZones.${index}.startIndex`}
-              label="Index debut"
+              label="Index début"
               type="number"
               size="small"
               slotProps={{ htmlInput: { min: 0 } }}
@@ -1040,15 +1040,15 @@ function OrderingFieldsSection() {
         Options d&apos;ordonnancement
       </Typography>
 
-      <Field.Switch name="shuffleOnDisplay" label="Melanger a l'affichage" sx={{ mb: 3 }} />
+      <Field.Switch name="shuffleOnDisplay" label="Mélanger à l'affichage" sx={{ mb: 3 }} />
 
       <Divider sx={{ mb: 3 }} />
 
       <Typography variant="subtitle1" sx={{ mb: 1 }}>
-        Elements a ordonner
+        Éléments à ordonner
       </Typography>
       <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-        L&apos;ordre ci-dessous correspond a l&apos;ordre correct. Utilisez les fleches pour reordonner.
+        L&apos;ordre ci-dessous correspond à l&apos;ordre correct. Utilisez les flèches pour réordonner.
       </Typography>
 
       <Stack spacing={2}>
@@ -1083,7 +1083,7 @@ function OrderingFieldsSection() {
 
             <Field.Text
               name={`orderingItems.${index}.text`}
-              label={`Element ${index + 1}`}
+              label={`Élément ${index + 1}`}
               size="small"
               sx={{ flex: 1 }}
             />
@@ -1105,7 +1105,7 @@ function OrderingFieldsSection() {
         onClick={() => append({ text: '' })}
         sx={{ mt: 2 }}
       >
-        Ajouter un element
+        Ajouter un élément
       </Button>
     </Card>
   );
@@ -1129,7 +1129,7 @@ function MatchingFieldsSection() {
         Options d&apos;appariement
       </Typography>
 
-      <Field.Switch name="shuffleOnDisplay" label="Melanger a l'affichage" sx={{ mb: 3 }} />
+      <Field.Switch name="shuffleOnDisplay" label="Mélanger à l'affichage" sx={{ mb: 3 }} />
 
       <Divider sx={{ mb: 3 }} />
 
@@ -1157,7 +1157,7 @@ function MatchingFieldsSection() {
 
             <Field.Text
               name={`matchingPairs.${index}.leftText`}
-              label="Element gauche"
+              label="Élément gauche"
               size="small"
               sx={{ flex: 1 }}
             />
@@ -1167,7 +1167,7 @@ function MatchingFieldsSection() {
 
             <Field.Text
               name={`matchingPairs.${index}.rightText`}
-              label="Element droite"
+              label="Élément droite"
               size="small"
               sx={{ flex: 1 }}
             />

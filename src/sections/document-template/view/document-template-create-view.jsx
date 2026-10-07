@@ -18,9 +18,9 @@ export function DocumentTemplateCreateView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Nouveau modele"
+        heading="Nouveau modèle"
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
           { name: 'Documents', href: paths.dashboard.espaceInstitut.documents },
           { name: 'Nouveau' },
         ]}

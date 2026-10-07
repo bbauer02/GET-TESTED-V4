@@ -26,6 +26,11 @@ export const viewport = {
 };
 
 export const metadata = {
+  title: {
+    template: `%s · ${CONFIG.appName}`,
+    default: `${CONFIG.appName} · Tests de langue en ligne`,
+  },
+  description: 'Trouvez une session de test de langue près de chez vous, inscrivez-vous et payez en ligne.',
   icons: [
     {
       rel: 'icon',

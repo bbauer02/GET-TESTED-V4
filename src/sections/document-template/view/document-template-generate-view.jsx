@@ -80,11 +80,11 @@ export function DocumentTemplateGenerateView() {
   return (
     <DashboardContent maxWidth="lg">
       <CustomBreadcrumbs
-        heading="Generer un document"
+        heading="Générer un document"
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
           { name: 'Documents', href: paths.dashboard.espaceInstitut.documents },
-          { name: template?.label || 'Generer' },
+          { name: template?.label || 'Générer' },
         ]}
       />
 
@@ -139,7 +139,7 @@ export function DocumentTemplateGenerateView() {
                 onClick={handlePrint}
                 sx={{ ml: 'auto' }}
               >
-                Telecharger PDF
+                Télécharger PDF
               </Button>
             </Stack>
           )}

@@ -392,7 +392,7 @@ export function InstituteSessionDetailsView() {
       <CustomBreadcrumbs
         heading={t('session_details')}
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
           { name: currentInstitute?.label || 'Institut' },
           { name: t('sessions'), href: paths.dashboard.espaceInstitut.sessions },
           { name: session.assessment?.label || 'Session' },

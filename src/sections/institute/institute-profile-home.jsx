@@ -66,7 +66,7 @@ export function InstituteProfileHome({ institute, memberships, sessions, sx, ...
         { commissionPercent: commission === '' ? null : commission },
         { headers: { 'Content-Type': 'application/merge-patch+json' } }
       );
-      toast.success('Commission mise a jour !');
+      toast.success('Commission mise à jour !');
     } catch (error) {
       toast.error(error.message || 'Erreur');
     } finally {
@@ -256,7 +256,7 @@ export function InstituteProfileHome({ institute, memberships, sessions, sx, ...
 
   const renderTeam = () => (
     <Card>
-      <CardHeader title="Equipe" />
+      <CardHeader title="Équipe" />
 
       <Box sx={{ p: 3 }}>
         {renderMemberGroup('Administrateurs', admins)}
@@ -281,7 +281,7 @@ export function InstituteProfileHome({ institute, memberships, sessions, sx, ...
               <TableHead>
                 <TableRow>
                   <TableCell>Test</TableCell>
-                  <TableCell>Debut</TableCell>
+                  <TableCell>Début</TableCell>
                   <TableCell>Fin</TableCell>
                   <TableCell align="center">Places</TableCell>
                 </TableRow>
@@ -324,7 +324,7 @@ export function InstituteProfileHome({ institute, memberships, sessions, sx, ...
             <Box sx={{ gap: 1, display: 'flex', alignItems: 'center' }}>
               <Iconify icon="mdi:alert-circle-outline" sx={{ color: 'text.disabled' }} />
               <Typography variant="body2" sx={{ color: 'text.disabled' }}>
-                Aucun compte Stripe connecte
+                Aucun compte Stripe connecté
               </Typography>
             </Box>
           ) : (
@@ -348,7 +348,7 @@ export function InstituteProfileHome({ institute, memberships, sessions, sx, ...
                   color={stripe.onboardingComplete ? 'success' : 'error'}
                   startIcon={<Iconify icon={stripe.onboardingComplete ? 'mdi:check-circle' : 'mdi:alert-circle'} width={16} />}
                 >
-                  {stripe.onboardingComplete ? 'Verifie' : 'Non verifie'}
+                  {stripe.onboardingComplete ? 'Vérifié' : 'Non vérifié'}
                 </Label>
               </Box>
 
@@ -361,7 +361,7 @@ export function InstituteProfileHome({ institute, memberships, sessions, sx, ...
                   size="small"
                   value={commission}
                   onChange={(e) => setCommission(e.target.value)}
-                  placeholder="Defaut (10%)"
+                  placeholder="Défaut (10%)"
                   slotProps={{
                     input: {
                       endAdornment: <InputAdornment position="end">%</InputAdornment>,
@@ -381,8 +381,8 @@ export function InstituteProfileHome({ institute, memberships, sessions, sx, ...
               </Stack>
 
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                Laissez vide pour utiliser le taux par defaut de la plateforme.
-                Taux actuel : {stripe.commissionPercent ? `${stripe.commissionPercent}%` : 'defaut (10%)'}
+                Laissez vide pour utiliser le taux par défaut de la plateforme.
+                Taux actuel : {stripe.commissionPercent ? `${stripe.commissionPercent}%` : 'défaut (10%)'}
               </Typography>
             </>
           )}

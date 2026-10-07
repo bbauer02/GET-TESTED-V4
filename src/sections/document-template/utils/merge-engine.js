@@ -45,6 +45,7 @@ export function buildMergeContext({ enrollment, session, institute, invoice }) {
       : '',
 
     // Inscription
+    'enrollment.referenceNumber': enrollment?.referenceNumber || '',
     'enrollment.registrationDate': enrollment?.registrationDate
       ? dayjs(enrollment.registrationDate).format('DD/MM/YYYY')
       : '',
@@ -54,9 +55,15 @@ export function buildMergeContext({ enrollment, session, institute, invoice }) {
       .join(', '),
     'enrollment.examsTable': buildExamsTable(enrollmentExams, institute),
 
-    // Facture
-    'invoice.number': invoice?.number || '',
-    'invoice.totalTTC': invoice?.totalTTC != null ? `${(invoice.totalTTC / 100).toFixed(2)} €` : '',
+    // Facture (montants de l'API en euros)
+    'invoice.number': invoice?.invoiceNumber || invoice?.number || '',
+    'invoice.totalTTC':
+      invoice?.totalTTC != null
+        ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: invoice.currency || 'EUR' }).format(invoice.totalTTC)
+        : '',
+
+    // Document
+    'document.date': dayjs().format('DD/MM/YYYY'),
   };
 }
 
@@ -66,7 +73,7 @@ export function buildMergeContext({ enrollment, session, institute, invoice }) {
  * Build an HTML table of exams grouped by location, BAC-style convocation.
  */
 function buildExamsTable(enrollmentExams, institute) {
-  if (!enrollmentExams?.length) return '<p><em>Aucune epreuve programmee</em></p>';
+  if (!enrollmentExams?.length) return '<p><em>Aucune épreuve programmée</em></p>';
 
   // Group exams by location (address key)
   const groups = new Map();

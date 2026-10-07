@@ -46,7 +46,7 @@ export function JwtSignUpView() {
     password: z
       .string()
       .min(1, { message: t('sign_up_password_required') })
-      .min(6, { message: t('sign_up_password_min') }),
+      .min(8, { message: t('sign_up_password_min') }),
   });
 
   const [errorMessage, setErrorMessage] = useState(null);

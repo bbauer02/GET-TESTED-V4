@@ -38,7 +38,7 @@ const UserQuickEditSchema = z.object({
   active: z.boolean(),
   verified: z.boolean(),
   avatar: z.any().nullable(),
-  firstname: z.string().min(1, { error: 'Le prenom est requis !' }),
+  firstname: z.string().min(1, { error: 'Le prénom est requis !' }),
   lastname: z.string().min(1, { error: 'Le nom est requis !' }),
   email: schemaUtils.email({ error: 'Email invalide !' }),
   civility: z.string(),

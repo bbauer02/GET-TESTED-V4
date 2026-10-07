@@ -15,13 +15,11 @@ import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
-import Switch from '@mui/material/Switch';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
 import InputAdornment from '@mui/material/InputAdornment';
-import FormControlLabel from '@mui/material/FormControlLabel';
 
 import { fData } from 'src/utils/format-number';
 
@@ -202,27 +200,20 @@ export function ProfileEditForm() {
         />
       </Box>
 
-      <FormControlLabel
-        labelPlacement="start"
-        control={<Switch checked={!!user?.verified} disabled />}
-        label={
-          <>
-            <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-              {t('email_verified')}
-            </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              {t('email_verified_desc')}
-            </Typography>
-          </>
-        }
-        sx={{ mx: 0, mb: 3, width: 1, justifyContent: 'space-between' }}
-      />
-
-      <Stack sx={{ alignItems: 'center' }}>
-        <Button variant="soft" color="error" disabled>
-          {t('delete_account')}
-        </Button>
-      </Stack>
+      {/* État de vérification de l'email (lecture seule) */}
+      <Box sx={{ mx: 0, mb: 1, width: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
+        <Box>
+          <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+            {t('email_label_status')}
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            {user?.verified ? t('email_verified_desc') : t('email_not_verified_desc')}
+          </Typography>
+        </Box>
+        <Label color={user?.verified ? 'success' : 'warning'} variant="soft">
+          {user?.verified ? t('email_verified') : t('email_not_verified')}
+        </Label>
+      </Box>
     </Card>
   );
 

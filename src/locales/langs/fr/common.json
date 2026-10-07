@@ -52,5 +52,17 @@
   "import": "Importer",
   "permission_denied_title": "Accès refusé",
   "permission_denied_description": "Votre rôle ne permet pas d'accéder à cette page.",
-  "back_to_dashboard": "Retour au tableau de bord"
+  "back_to_dashboard": "Retour au tableau de bord",
+  "nav_sessions": "Sessions",
+  "nav_my_space": "Mon espace",
+  "nav_sign_in": "Connexion",
+  "session_status_DRAFT": "Brouillon",
+  "session_status_OPEN": "Ouverte",
+  "session_status_LOCKED": "Verrouillée",
+  "session_status_VALIDATED": "Validée",
+  "session_status_CANCELLED": "Annulée",
+  "invoice_status_DRAFT": "Brouillon",
+  "invoice_status_ISSUED": "À payer",
+  "invoice_status_PAID": "Payée",
+  "invoice_status_CANCELLED": "Annulée"
 }

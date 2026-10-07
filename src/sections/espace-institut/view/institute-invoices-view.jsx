@@ -168,7 +168,7 @@ export function InstituteInvoicesView() {
       <CustomBreadcrumbs
         heading="Factures"
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
           { name: currentInstitute?.label || 'Institut', href: paths.dashboard.espaceInstitut.root },
           { name: 'Factures' },
         ]}

@@ -52,5 +52,17 @@
   "import": "Import",
   "permission_denied_title": "Access denied",
   "permission_denied_description": "Your role does not allow access to this page.",
-  "back_to_dashboard": "Back to dashboard"
+  "back_to_dashboard": "Back to dashboard",
+  "nav_sessions": "Sessions",
+  "nav_my_space": "My space",
+  "nav_sign_in": "Sign in",
+  "session_status_DRAFT": "Draft",
+  "session_status_OPEN": "Open",
+  "session_status_LOCKED": "Locked",
+  "session_status_VALIDATED": "Validated",
+  "session_status_CANCELLED": "Cancelled",
+  "invoice_status_DRAFT": "Draft",
+  "invoice_status_ISSUED": "To pay",
+  "invoice_status_PAID": "Paid",
+  "invoice_status_CANCELLED": "Cancelled"
 }

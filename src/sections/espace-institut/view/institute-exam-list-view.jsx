@@ -39,10 +39,10 @@ import { useCurrentInstitute } from 'src/auth/hooks';
 const TABLE_HEAD = [
   { id: 'label', label: 'Label' },
   { id: 'level', label: 'Niveau', width: 160 },
-  { id: 'isWritten', label: 'Ecrit', width: 80 },
+  { id: 'isWritten', label: 'Écrit', width: 80 },
   { id: 'isOption', label: 'Option', width: 80 },
   { id: 'coeff', label: 'Coeff', width: 80 },
-  { id: 'duration', label: 'Duree', width: 100 },
+  { id: 'duration', label: 'Durée', width: 100 },
   { id: 'price', label: 'Prix', width: 120 },
   { id: '', width: 60 },
 ];
@@ -98,7 +98,7 @@ export function InstituteExamListView() {
       <CustomBreadcrumbs
         heading={`Épreuves — ${assessment?.label || ''}`}
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
           { name: currentInstitute?.label || 'Institut' },
           { name: 'Tests', href: paths.dashboard.espaceInstitut.assessments },
           { name: assessment?.label || '', href: paths.dashboard.espaceInstitut.assessmentView(assessmentId) },
@@ -127,7 +127,7 @@ export function InstituteExamListView() {
                 {examsEmpty ? (
                   <TableRow>
                     <TableCell colSpan={TABLE_HEAD.length}>
-                      <EmptyContent title="Aucun exam" />
+                      <EmptyContent title="Aucune épreuve" />
                     </TableCell>
                   </TableRow>
                 ) : (

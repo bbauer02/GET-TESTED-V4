@@ -20,7 +20,7 @@ export function InstituteQuestionImportView() {
       <CustomBreadcrumbs
         heading="Import de questions"
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
           { name: currentInstitute?.label || 'Institut' },
           { name: 'Banque de questions', href: paths.dashboard.espaceInstitut.questions },
           { name: 'Import' },

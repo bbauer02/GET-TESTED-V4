@@ -62,6 +62,7 @@
     "dayjs": "^1.11.19",
     "es-toolkit": "^1.43.0",
     "framer-motion": "^12.23.26",
+    "html2pdf.js": "^0.10.3",
     "i18next": "^26.0.4",
     "i18next-browser-languagedetector": "^8.2.1",
     "i18next-resources-to-backend": "^1.2.1",

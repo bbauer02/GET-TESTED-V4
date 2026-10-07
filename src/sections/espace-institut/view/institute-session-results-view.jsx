@@ -184,7 +184,7 @@ export function InstituteSessionResultsView() {
       <CustomBreadcrumbs
         heading="Saisie des résultats"
         links={[
-          { name: 'Dashboard', href: paths.dashboard.espaceInstitut.root },
+          { name: 'Tableau de bord', href: paths.dashboard.espaceInstitut.root },
           { name: 'Sessions', href: paths.dashboard.espaceInstitut.sessions },
           { name: session.assessment?.label || 'Session', href: paths.dashboard.espaceInstitut.sessionView(id) },
           { name: 'Résultats' },

@@ -1,6 +1,6 @@
 import { MasterTemplateEditView } from 'src/sections/master-template/view';
 
-export const metadata = { title: 'Dashboard: Modifier modele maitre' };
+export const metadata = { title: 'Modifier le modèle maître' };
 
 export default function Page() {
   return <MasterTemplateEditView />;

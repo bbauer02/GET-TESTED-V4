@@ -117,7 +117,7 @@ export function InstituteAssessmentsView() {
       <CustomBreadcrumbs
         heading={t('assessments')}
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
           { name: currentInstitute?.label || 'Institut' },
           { name: t('assessments') },
         ]}

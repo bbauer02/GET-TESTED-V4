@@ -37,7 +37,7 @@ import {
 
 // ----------------------------------------------------------------------
 
-export function InstituteFicheTeam({ memberships, instituteId, title, sx, ...other }) {
+export function InstituteFicheTeam({ memberships, instituteId, title, hideTitle = false, sx, ...other }) {
   const { t } = useTranslate('institute_space');
 
   const inviteDialog = useBoolean();
@@ -88,11 +88,11 @@ export function InstituteFicheTeam({ memberships, instituteId, title, sx, ...oth
         gap: 2,
         display: 'flex',
         alignItems: { sm: 'center' },
-        justifyContent: 'space-between',
+        justifyContent: hideTitle ? 'flex-end' : 'space-between',
         flexDirection: { xs: 'column', sm: 'row' },
       }}
     >
-      <Typography variant="h4">{title || t('team_title')}</Typography>
+      {!hideTitle && <Typography variant="h4">{title || t('team_title')}</Typography>}
 
       <Button
         variant="contained"

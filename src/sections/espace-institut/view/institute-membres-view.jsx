@@ -33,13 +33,14 @@ export function InstituteMembresView() {
       <CustomBreadcrumbs
         heading={t('team_title')}
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
           { name: currentInstitute?.label || 'Institut' },
           { name: t('team_title') },
         ]}
       />
 
-      <InstituteFicheTeam memberships={membres} instituteId={currentInstitute?.id} sx={{ my: 3 }} />
+      {/* Le titre est déjà porté par le fil d'Ariane */}
+      <InstituteFicheTeam memberships={membres} instituteId={currentInstitute?.id} hideTitle sx={{ my: 3 }} />
     </DashboardContent>
   );
 }

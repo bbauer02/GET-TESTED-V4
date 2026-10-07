@@ -22,6 +22,8 @@ import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
 
 import { fDate } from 'src/utils/format-time';
+import { fCurrency } from 'src/utils/format-number';
+import { SESSION_STATUS_COLORS, INVOICE_STATUS_COLORS } from 'src/utils/status';
 
 import { useTranslate } from 'src/locales';
 import { useGetUsers } from 'src/actions/user';
@@ -39,28 +41,13 @@ import { useAuthContext } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
-const SESSION_STATUS_COLORS = {
-  DRAFT: 'default',
-  OPEN: 'success',
-  LOCKED: 'default',
-  VALIDATED: 'info',
-  CANCELLED: 'error',
-};
-
-const INVOICE_STATUS_COLORS = {
-  DRAFT: 'default',
-  PENDING: 'warning',
-  PAID: 'success',
-  CANCELLED: 'error',
-  REFUNDED: 'info',
-};
-
 // ----------------------------------------------------------------------
 
 export function AdminDashboardView() {
   const theme = useTheme();
   const { user } = useAuthContext();
   const { t } = useTranslate('dashboard');
+  const { t: tc } = useTranslate('common');
 
   const { users, usersLoading } = useGetUsers();
   const { institutes, institutesLoading } = useGetInstitutes();
@@ -221,7 +208,7 @@ export function AdminDashboardView() {
                     <TableCell>{session.start ? fDate(session.start) : '—'}</TableCell>
                     <TableCell>
                       <Label variant="soft" color={SESSION_STATUS_COLORS[session.status] || 'default'}>
-                        {session.status || '—'}
+                        {session.status ? tc(`session_status_${session.status}`) : '—'}
                       </Label>
                     </TableCell>
                   </TableRow>
@@ -280,11 +267,11 @@ export function AdminDashboardView() {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      {invoice.totalAmount != null ? `${(invoice.totalAmount / 100).toFixed(2)} €` : '—'}
+                      {invoice.totalTTC != null ? fCurrency(invoice.totalTTC) : '—'}
                     </TableCell>
                     <TableCell>
                       <Label variant="soft" color={INVOICE_STATUS_COLORS[invoice.status] || 'default'}>
-                        {invoice.status || '—'}
+                        {invoice.status ? tc(`invoice_status_${invoice.status}`) : '—'}
                       </Label>
                     </TableCell>
                   </TableRow>

@@ -49,5 +49,9 @@
   "payment_pending_confirmation": "Payment is being confirmed. It will appear in a few minutes.",
   "payment_cancelled": "Payment cancelled. You can retry at any time.",
   "payment_to_pay_hint": "Your enrollment is saved but not paid yet.",
-  "exam_status_absent": "Absent"
+  "exam_status_absent": "Absent",
+  "print": "Print",
+  "download_pdf": "Download (PDF)",
+  "download_error": "The document download failed. You can use “Print” then “Save as PDF”.",
+  "document_available_hint": "Available — view, print or download"
 }

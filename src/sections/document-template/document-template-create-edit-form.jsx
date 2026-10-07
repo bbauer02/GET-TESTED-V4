@@ -82,10 +82,10 @@ export function DocumentTemplateCreateEditForm({ currentTemplate, instituteId })
         await axiosInstance.patch(`${endpoints.documentTemplate.details}/${currentTemplate.id}`, data, {
           headers: { 'Content-Type': 'application/merge-patch+json' },
         });
-        toast.success('Modele mis a jour !');
+        toast.success('Modèle mis à jour !');
       } else {
         await axiosInstance.post(endpoints.documentTemplate.create(instituteId), data);
-        toast.success('Modele cree !');
+        toast.success('Modèle créé !');
       }
       router.push(paths.dashboard.espaceInstitut.documents);
     } catch (error) {
@@ -101,7 +101,7 @@ export function DocumentTemplateCreateEditForm({ currentTemplate, instituteId })
     <Form methods={methods} onSubmit={onSubmit}>
       <Card sx={{ p: 3 }}>
         <Stack spacing={3}>
-          <Field.Text name="label" label="Nom du modele" />
+          <Field.Text name="label" label="Nom du modèle" />
 
           <Field.Select name="documentType" label="Type de document">
             {documentTypes.map((dt) => (
@@ -116,12 +116,12 @@ export function DocumentTemplateCreateEditForm({ currentTemplate, instituteId })
             fullItem
             extraExtensions={[MergeField]}
             extraToolbarContent={renderMergeFieldDropdown}
-            placeholder="Redigez votre modele de document ici..."
+            placeholder="Rédigez votre modèle de document ici..."
           />
 
           <Stack direction="row" justifyContent="flex-end">
             <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-              {isEdit ? 'Enregistrer' : 'Creer le modele'}
+              {isEdit ? 'Enregistrer' : 'Créer le modèle'}
             </LoadingButton>
           </Stack>
         </Stack>

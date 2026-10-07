@@ -29,7 +29,7 @@ export function InstituteSessionEditView() {
       <CustomBreadcrumbs
         heading="Modifier la session"
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
           { name: currentInstitute?.label || 'Institut' },
           { name: 'Sessions', href: paths.dashboard.espaceInstitut.sessions },
           { name: 'Modifier' },

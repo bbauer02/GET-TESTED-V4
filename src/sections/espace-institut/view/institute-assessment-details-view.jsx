@@ -498,7 +498,7 @@ export function InstituteAssessmentDetailsView() {
                     (option?.id || option?.['@id']) === (value?.id || value?.['@id'])
                   }
                   renderInput={(params) => (
-                    <TextField {...params} label="Competence parente (optionnel)" size="small" />
+                    <TextField {...params} label="Compétence parente (optionnel)" size="small" />
                   )}
                   size="small"
                 />
@@ -561,7 +561,7 @@ export function InstituteAssessmentDetailsView() {
       <CustomBreadcrumbs
         heading={assessment.label}
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
           { name: currentInstitute?.label || 'Institut' },
           { name: t('assessments'), href: paths.dashboard.espaceInstitut.assessments },
           { name: assessment.label },

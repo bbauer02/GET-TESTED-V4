@@ -1,6 +1,6 @@
 import { DocumentTemplateListView } from 'src/sections/document-template/view';
 
-export const metadata = { title: 'Espace Institut: Documents' };
+export const metadata = { title: 'Documents' };
 
 export default function Page() {
   return <DocumentTemplateListView />;

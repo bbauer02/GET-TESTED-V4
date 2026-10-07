@@ -25,7 +25,7 @@
   "avatar_formats": "Formats : *.jpeg, *.jpg, *.png, *.gif",
   "avatar_max_size": "Taille max : {{size}}",
   "email_verified": "Email vérifié",
-  "email_verified_desc": "Le compte a été vérifié par email",
+  "email_verified_desc": "Votre adresse email a été confirmée.",
   "delete_account": "Supprimer le compte",
   "profile_updated": "Profil mis à jour avec succès !",
   "file_too_large": "Le fichier est trop volumineux ({{fileSize}}). Taille maximum autorisée : {{maxSize}}.",
@@ -60,5 +60,8 @@
   "phone_verify_send_error": "Impossible d'envoyer le code de vérification",
   "phone_verify_error": "Code invalide ou expiré",
   "validation_code_required": "Le code est requis",
-  "validation_code_format": "Le code doit contenir 6 chiffres"
+  "validation_code_format": "Le code doit contenir 6 chiffres",
+  "email_label_status": "Adresse email",
+  "email_not_verified": "Non vérifié",
+  "email_not_verified_desc": "Cliquez sur le lien reçu par email lors de votre inscription pour confirmer votre adresse."
 }

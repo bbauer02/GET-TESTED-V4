@@ -168,7 +168,8 @@ export function useGetEnrollmentDocuments(enrollmentId) {
   const { data, isLoading, error, isValidating, mutate } = useSWR(url, fetcher, swrOptions);
 
   const memoizedValue = useMemo(() => {
-    const documents = Array.isArray(data) ? data : extractMembers(data);
+    // L'API renvoie { items: [...] } (EnrollmentDocuments)
+    const documents = Array.isArray(data) ? data : data?.items || extractMembers(data);
     return {
       documents,
       documentsLoading: isLoading,

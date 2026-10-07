@@ -24,7 +24,7 @@ export function InstituteQuestionEditView() {
       <CustomBreadcrumbs
         heading="Modifier la question"
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
           { name: 'Espace Institut', href: paths.dashboard.espaceInstitut.root },
           { name: 'Banque de questions', href: paths.dashboard.espaceInstitut.questions },
           { name: question?.label || '...' },

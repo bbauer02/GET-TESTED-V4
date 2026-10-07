@@ -69,9 +69,9 @@ export function DocumentTemplateListView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Modeles de documents"
+        heading="Modèles de documents"
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
           { name: 'Espace Institut', href: paths.dashboard.espaceInstitut.root },
           { name: 'Documents' },
         ]}
@@ -82,7 +82,7 @@ export function DocumentTemplateListView() {
             variant="contained"
             startIcon={<Iconify icon="mingcute:add-line" />}
           >
-            Nouveau modele
+            Nouveau modèle
           </Button>
         }
       />
@@ -90,8 +90,8 @@ export function DocumentTemplateListView() {
       <Card>
         {templatesEmpty ? (
           <EmptyContent
-            title="Aucun modele"
-            description="Creez votre premier modele de document pour generer des convocations, attestations, etc."
+            title="Aucun modèle"
+            description="Créez votre premier modèle de document pour générer des convocations, attestations, etc."
             sx={{ py: 10 }}
           />
         ) : (

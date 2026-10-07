@@ -31,9 +31,10 @@ function processInput(inputValue) {
 
 export function fData(inputValue) {
   const number = processInput(inputValue);
-  if (number === null || number === 0) return '0 bytes';
+  if (number === null || number === 0) return '0 octet';
 
-  const units = ['bytes', 'Kb', 'Mb', 'Gb', 'Tb', 'Pb', 'Eb', 'Zb', 'Yb'];
+  // Unités françaises (octets)
+  const units = ['octets', 'Ko', 'Mo', 'Go', 'To', 'Po', 'Eo', 'Zo', 'Yo'];
   const decimal = 2;
   const baseValue = 1024;
 

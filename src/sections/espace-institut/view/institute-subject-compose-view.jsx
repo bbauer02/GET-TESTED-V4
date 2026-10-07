@@ -64,13 +64,13 @@ const STATUS_COLORS = {
 
 const STATUS_LABELS = {
   DRAFT: 'Brouillon',
-  LOCKED: 'Verrouille',
-  ARCHIVED: 'Archive',
+  LOCKED: 'Verrouillé',
+  ARCHIVED: 'Archivé',
 };
 
 const QUESTION_TYPE_LABELS = {
   mcq: 'QCM',
-  fill_blank: 'Texte a trous',
+  fill_blank: 'Texte à trous',
   highlight: 'Surlignage',
   ordering: 'Ordonnancement',
   matching: 'Appariement',
@@ -164,7 +164,7 @@ export function InstituteSubjectComposeView() {
         scheduledExam: `/api/scheduled-exams/${scheduledExamId}`,
         titre: 'Nouveau sujet',
       });
-      toast.success('Sujet cree avec succes');
+      toast.success('Sujet créé avec succès');
       subjectMutate();
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -187,7 +187,7 @@ export function InstituteSubjectComposeView() {
         },
         { headers: { 'Content-Type': 'application/merge-patch+json' } }
       );
-      toast.success('Sujet mis a jour');
+      toast.success('Sujet mis à jour');
       setTitleDirty(false);
       subjectMutate();
     } catch (error) {
@@ -202,7 +202,7 @@ export function InstituteSubjectComposeView() {
     async (subjectQuestionId) => {
       try {
         await axiosInstance.delete(`/api/subject-questions/${subjectQuestionId}`);
-        toast.success('Question retiree du sujet');
+        toast.success('Question retirée du sujet');
         subjectMutate();
       } catch (error) {
         toast.error(getErrorMessage(error));
@@ -273,7 +273,7 @@ export function InstituteSubjectComposeView() {
     setLocking(true);
     try {
       await axiosInstance.post(endpoints.subject.lock(subject.id), {});
-      toast.success('Sujet verrouille avec succes');
+      toast.success('Sujet verrouillé avec succès');
       lockDialog.onFalse();
       subjectMutate();
     } catch (error) {
@@ -304,7 +304,7 @@ export function InstituteSubjectComposeView() {
         <CustomBreadcrumbs
           heading="Composition du sujet"
           links={[
-            { name: 'Dashboard', href: paths.dashboard.root },
+            { name: 'Tableau de bord', href: paths.dashboard.root },
             { name: currentInstitute?.label || 'Institut', href: paths.dashboard.espaceInstitut.root },
             { name: 'Composition du sujet' },
           ]}
@@ -312,8 +312,8 @@ export function InstituteSubjectComposeView() {
         />
 
         <EmptyContent
-          title="Aucun sujet pour cette epreuve"
-          description="Creez un sujet pour commencer a composer les questions de l'examen."
+          title="Aucun sujet pour cette épreuve"
+          description="Créez un sujet pour commencer à composer les questions de l'examen."
           action={
             <LoadingButton
               variant="contained"
@@ -322,7 +322,7 @@ export function InstituteSubjectComposeView() {
               onClick={handleCreateSubject}
               sx={{ mt: 2 }}
             >
-              Creer le sujet
+              Créer le sujet
             </LoadingButton>
           }
         />
@@ -469,7 +469,7 @@ export function InstituteSubjectComposeView() {
           />
           <StatRow
             icon="solar:clock-circle-bold"
-            label="Duree estimee"
+            label="Durée estimée"
             value={stats.totalDuration > 0 ? `${stats.totalDuration} min` : '—'}
           />
         </Stack>
@@ -607,7 +607,7 @@ export function InstituteSubjectComposeView() {
 
                 {/* Seed toggle */}
                 {isDraft && (
-                  <Tooltip title={isSeed ? 'Desactiver seed' : 'Activer seed'}>
+                  <Tooltip title={isSeed ? 'Désactiver seed' : 'Activer seed'}>
                     <Switch
                       size="small"
                       checked={!!isSeed}
@@ -639,7 +639,7 @@ export function InstituteSubjectComposeView() {
       <CustomBreadcrumbs
         heading="Composition du sujet"
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
           { name: currentInstitute?.label || 'Institut', href: paths.dashboard.espaceInstitut.root },
           { name: 'Sessions', href: paths.dashboard.espaceInstitut.sessions },
           { name: 'Composition du sujet' },
@@ -675,7 +675,7 @@ export function InstituteSubjectComposeView() {
         open={lockDialog.value}
         onClose={lockDialog.onFalse}
         title="Verrouiller le sujet"
-        content="Une fois verrouille, le sujet ne pourra plus etre modifie. Les questions seront figees. Voulez-vous continuer ?"
+        content="Une fois verrouillé, le sujet ne pourra plus être modifié. Les questions seront figées. Voulez-vous continuer ?"
         action={
           <LoadingButton
             variant="contained"
@@ -714,7 +714,7 @@ const ADD_TABLE_HEAD = [
   { id: 'type', label: 'Type', width: 140 },
   { id: 'level', label: 'Niveau', width: 120 },
   { id: 'points', label: 'Points', width: 80 },
-  { id: 'duration', label: 'Duree', width: 80 },
+  { id: 'duration', label: 'Durée', width: 80 },
   { id: '', width: 56 },
 ];
 
@@ -816,7 +816,7 @@ function AddQuestionDialog({ open, onClose, subject, subjectQuestions, institute
         await axiosInstance.post(endpoints.subject.questions(subject.id), {
           question: `/api/questions/${questionId}`,
         });
-        toast.success('Question ajoutee au sujet');
+        toast.success('Question ajoutée au sujet');
         onSuccess();
       } catch (error) {
         toast.error(getErrorMessage(error));
@@ -893,7 +893,7 @@ function AddQuestionDialog({ open, onClose, subject, subjectQuestions, institute
             >
               <MenuItem value="all">Tous</MenuItem>
               <MenuItem value="mcq">QCM</MenuItem>
-              <MenuItem value="fill_blank">Texte a trous</MenuItem>
+              <MenuItem value="fill_blank">Texte à trous</MenuItem>
               <MenuItem value="highlight">Surlignage</MenuItem>
               <MenuItem value="ordering">Ordonnancement</MenuItem>
               <MenuItem value="matching">Appariement</MenuItem>

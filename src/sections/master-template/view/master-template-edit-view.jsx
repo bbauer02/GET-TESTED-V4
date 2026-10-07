@@ -24,10 +24,10 @@ export function MasterTemplateEditView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Modifier le modele maitre"
+        heading="Modifier le modèle maître"
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'Modeles maitre', href: paths.dashboard.masterTemplate.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
+          { name: 'Modèles maîtres', href: paths.dashboard.masterTemplate.root },
           { name: template?.label || 'Modifier' },
         ]}
       />

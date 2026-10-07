@@ -159,9 +159,6 @@ export function SessionDocumentPublications({ session, onMutate }) {
                       <Typography variant="subtitle2" noWrap>
                         {dt.label}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                        {dt.code}
-                      </Typography>
                     </Box>
                   </Stack>
 

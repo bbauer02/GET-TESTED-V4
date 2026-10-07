@@ -105,6 +105,7 @@ export function SessionCard({ session, basePath, sx, ...other }) {
         {level && (
           <Label
             color="warning"
+            variant="filled"
             sx={{ position: 'absolute', top: 12, right: 12 }}
           >
             {t('level_label', { label: level.label || level.ref })}
@@ -197,7 +198,7 @@ export function SessionCard({ session, basePath, sx, ...other }) {
               : paths.sessions.details(session.id || session['@id']?.split('/').pop())
           }
           variant="contained"
-          size="small"
+          size="medium"
           disabled={placesLeft !== null && placesLeft <= 0}
         >
           {placesLeft !== null && placesLeft <= 0 ? t('full') : t('register')}

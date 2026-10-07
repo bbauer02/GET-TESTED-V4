@@ -9,7 +9,6 @@ import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import { iconButtonClasses } from '@mui/material/IconButton';
 
-import { _contacts } from 'src/_mock';
 import { allLangs, useTranslate } from 'src/locales';
 import { useNotifications } from 'src/actions/notifications';
 
@@ -31,7 +30,6 @@ import { AccountDrawer } from '../components/account-drawer';
 import { SettingsButton } from '../components/settings-button';
 import { navData as getNavData } from '../nav-config-dashboard';
 import { LanguagePopover } from '../components/language-popover';
-import { ContactsPopover } from '../components/contacts-popover';
 import { dashboardLayoutVars, dashboardNavColorVars } from './css-vars';
 import { NotificationsDrawer } from '../components/notifications-drawer';
 import { MainSection, layoutClasses, HeaderSection, LayoutSection } from '../core';
@@ -155,9 +153,6 @@ export function DashboardLayout({ sx, cssVars, children, slotProps, layoutQuery 
 
           {/** @slot Notifications popover */}
           <NotificationsDrawer data={smartNotifications} />
-
-          {/** @slot Contacts popover */}
-          <ContactsPopover data={_contacts} />
 
           {/** @slot Settings button */}
           <SettingsButton />

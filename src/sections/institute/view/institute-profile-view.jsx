@@ -42,7 +42,7 @@ export function InstituteProfileView() {
       <CustomBreadcrumbs
         heading={institute.label}
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
           { name: 'Instituts', href: paths.dashboard.institute.root },
           { name: institute.label },
         ]}

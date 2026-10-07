@@ -33,10 +33,10 @@ import {
 const TABLE_HEAD = [
   { id: 'label', label: 'Label' },
   { id: 'level', label: 'Niveau', width: 160 },
-  { id: 'isWritten', label: 'Ecrit', width: 80 },
+  { id: 'isWritten', label: 'Écrit', width: 80 },
   { id: 'isOption', label: 'Option', width: 80 },
   { id: 'coeff', label: 'Coeff', width: 80 },
-  { id: 'duration', label: 'Duree', width: 100 },
+  { id: 'duration', label: 'Durée', width: 100 },
   { id: 'price', label: 'Prix', width: 120 },
   { id: '', width: 60 },
 ];
@@ -106,7 +106,7 @@ export function AssessmentExamList({ assessmentId, canEdit }) {
                 <TableRow>
                   <TableCell colSpan={TABLE_HEAD.length}>
                     <EmptyContent
-                      title="Aucun exam"
+                      title="Aucune épreuve"
                       description="Ajoutez des épreuves pour définir ce test."
                       action={
                         canEdit ? (
@@ -117,7 +117,7 @@ export function AssessmentExamList({ assessmentId, canEdit }) {
                             startIcon={<Iconify icon="mingcute:add-line" />}
                             sx={{ mt: 2 }}
                           >
-                            Creer un exam
+                            Créer une épreuve
                           </Button>
                         ) : null
                       }

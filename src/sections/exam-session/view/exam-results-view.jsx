@@ -92,7 +92,7 @@ export function ExamResultsView({ enrollmentExamId }) {
         </Box>
 
         <Chip
-          label={passed ? 'REUSSI' : 'NON REUSSI'}
+          label={passed ? 'RÉUSSI' : 'NON RÉUSSI'}
           color={passed ? 'success' : 'error'}
           size="medium"
           sx={{ mb: 2, fontSize: '1rem', fontWeight: 'bold', px: 2, py: 0.5 }}

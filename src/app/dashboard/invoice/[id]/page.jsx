@@ -2,7 +2,7 @@ import { InvoiceDetailsView } from 'src/sections/invoice/view';
 
 // ----------------------------------------------------------------------
 
-export const metadata = { title: 'Dashboard: Détail facture' };
+export const metadata = { title: 'Détail facture' };
 
 export default function Page({ params }) {
   const { id } = params;

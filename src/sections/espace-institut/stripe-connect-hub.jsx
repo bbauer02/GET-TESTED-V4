@@ -98,7 +98,7 @@ export function StripeConnectHub({ instituteId, status }) {
                 />
               }
             >
-              {status?.onboardingComplete ? 'Verification terminee' : 'Verification requise'}
+              {status?.onboardingComplete ? 'Vérification terminée' : 'Vérification requise'}
             </Label>
           </Stack>
         </Card>
@@ -106,7 +106,7 @@ export function StripeConnectHub({ instituteId, status }) {
         {/* Alert if onboarding not complete */}
         {!status?.onboardingComplete && (
           <Alert severity="warning" variant="outlined">
-            Votre compte Stripe necessite une verification. Completez l&apos;onboarding ci-dessous
+            Votre compte Stripe nécessite une vérification. Complétez l&apos;onboarding ci-dessous
             pour activer les paiements et virements.
           </Alert>
         )}

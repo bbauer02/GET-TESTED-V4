@@ -4,7 +4,6 @@ import { varAlpha } from 'minimal-shared/utils';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 
@@ -13,8 +12,8 @@ import { RouterLink } from 'src/routes/components';
 
 import { Logo } from 'src/components/logo';
 
-import { SettingsButton } from '../components/settings-button';
 import { MainSection, LayoutSection, HeaderSection } from '../core';
+import { PublicHeaderActions } from '../components/public-header-actions';
 
 // ----------------------------------------------------------------------
 
@@ -22,34 +21,7 @@ export function MainLayout({ children, sx }) {
   const renderHeader = () => {
     const headerSlots = {
       leftArea: <Logo isSingle={false} />,
-      rightArea: (
-        <Stack direction="row" spacing={1} alignItems="center">
-          <Button
-            component={RouterLink}
-            href={paths.sessions.root}
-            size="small"
-            sx={{
-              fontWeight: 600,
-              color: 'text.primary',
-              display: { xs: 'none', sm: 'inline-flex' },
-            }}
-          >
-            Sessions
-          </Button>
-
-          <SettingsButton />
-
-          <Button
-            component={RouterLink}
-            href={paths.auth.jwt.signIn}
-            variant="outlined"
-            size="small"
-            sx={{ fontWeight: 600 }}
-          >
-            Connexion
-          </Button>
-        </Stack>
-      ),
+      rightArea: <PublicHeaderActions />,
     };
 
     return <HeaderSection layoutQuery="sm" slots={headerSlots} />;
@@ -97,7 +69,7 @@ export function MainLayout({ children, sx }) {
           </Stack>
 
           <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-            &copy; {new Date().getFullYear()} GetTested. Tous droits reserves.
+            &copy; {new Date().getFullYear()} GetTested. Tous droits réservés.
           </Typography>
         </Stack>
       </Container>

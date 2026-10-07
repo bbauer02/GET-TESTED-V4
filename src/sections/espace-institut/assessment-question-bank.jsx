@@ -57,7 +57,7 @@ const TABLE_HEAD = [
   { id: 'status', label: 'Statut', width: 120 },
   { id: 'points', label: 'Points', width: 80 },
   { id: 'timesAdministered', label: 'Passages', width: 100 },
-  { id: 'successRate', label: 'Taux reussite', width: 120 },
+  { id: 'successRate', label: 'Taux réussite', width: 120 },
   { id: '', width: 56 },
 ];
 
@@ -65,14 +65,14 @@ const STATUS_OPTIONS = [
   { value: 'all', label: 'Tous' },
   { value: 'DRAFT', label: 'Brouillon' },
   { value: 'PRETESTING', label: 'Pre-test' },
-  { value: 'CALIBRATED', label: 'Calibree' },
-  { value: 'RETIRED', label: 'Retiree' },
+  { value: 'CALIBRATED', label: 'Calibrée' },
+  { value: 'RETIRED', label: 'Retirée' },
 ];
 
 const TYPE_OPTIONS = [
   { value: 'all', label: 'Tous' },
   { value: 'mcq', label: 'QCM' },
-  { value: 'fill_blank', label: 'Texte a trous' },
+  { value: 'fill_blank', label: 'Texte à trous' },
   { value: 'highlight', label: 'Surlignage' },
   { value: 'ordering', label: 'Ordonnancement' },
   { value: 'matching', label: 'Appariement' },
@@ -209,7 +209,7 @@ export function AssessmentQuestionBank({ assessmentId, assessmentLevels }) {
     try {
       const qId = selectedQuestion.id || selectedQuestion['@id']?.split('/').pop();
       await axiosInstance.patch(`/api/questions/${qId}`, { status: 'RETIRED' });
-      toast.success('Question retiree avec succes');
+      toast.success('Question retirée avec succès');
       questionsMutate();
     } catch (error) {
       toast.error(error.message || 'Erreur lors du retrait');
@@ -224,7 +224,7 @@ export function AssessmentQuestionBank({ assessmentId, assessmentLevels }) {
     try {
       const qId = selectedQuestion.id || selectedQuestion['@id']?.split('/').pop();
       await axiosInstance.delete(`/api/questions/${qId}`);
-      toast.success('Question supprimee avec succes');
+      toast.success('Question supprimée avec succès');
       questionsMutate();
     } catch (error) {
       toast.error(error.message || 'Erreur lors de la suppression');
@@ -282,7 +282,7 @@ export function AssessmentQuestionBank({ assessmentId, assessmentLevels }) {
             size="small"
           />
           <Chip
-            label={`${levelStats.CALIBRATED} calibrees`}
+            label={`${levelStats.CALIBRATED} calibrées`}
             size="small"
             color="success"
             variant="soft"
@@ -301,7 +301,7 @@ export function AssessmentQuestionBank({ assessmentId, assessmentLevels }) {
           />
           {levelStats.RETIRED > 0 && (
             <Chip
-              label={`${levelStats.RETIRED} retirees`}
+              label={`${levelStats.RETIRED} retirées`}
               size="small"
               color="error"
               variant="soft"
@@ -396,7 +396,7 @@ export function AssessmentQuestionBank({ assessmentId, assessmentLevels }) {
                               startIcon={<Iconify icon="mingcute:add-line" />}
                               sx={{ mt: 2 }}
                             >
-                              Creer une question
+                              Créer une question
                             </Button>
                           ) : null
                         }
@@ -445,7 +445,7 @@ export function AssessmentQuestionBank({ assessmentId, assessmentLevels }) {
         open={confirmRetire.value}
         onClose={confirmRetire.onFalse}
         title="Retirer la question"
-        content={`Voulez-vous vraiment retirer la question "${selectedQuestion?.label || ''}" ? Elle ne sera plus utilisee dans les futurs sujets.`}
+        content={`Voulez-vous vraiment retirer la question "${selectedQuestion?.label || ''}" ? Elle ne sera plus utilisée dans les futurs sujets.`}
         action={
           <Button variant="contained" color="warning" onClick={handleRetire}>
             Retirer
@@ -458,7 +458,7 @@ export function AssessmentQuestionBank({ assessmentId, assessmentLevels }) {
         open={confirmDelete.value}
         onClose={confirmDelete.onFalse}
         title="Supprimer la question"
-        content={`Voulez-vous vraiment supprimer la question "${selectedQuestion?.label || ''}" ? Cette action est irreversible.`}
+        content={`Voulez-vous vraiment supprimer la question "${selectedQuestion?.label || ''}" ? Cette action est irréversible.`}
         action={
           <Button variant="contained" color="error" onClick={handleDelete}>
             Supprimer
@@ -514,7 +514,7 @@ function parseCsv(text) {
     .filter(Boolean);
 
   if (lines.length < 2) {
-    return { rows: [], errors: ["Le fichier est vide ou ne contient que l'en-tete"] };
+    return { rows: [], errors: ["Le fichier est vide ou ne contient que l'en-tête"] };
   }
 
   const header = parseCSVLine(lines[0]);
@@ -664,7 +664,7 @@ matching,"Exemple Appariement","Associez chaque pays a sa capitale","Reliez les 
 
 const TYPE_LABELS_MAP = {
   mcq: 'QCM',
-  fill_blank: 'Texte a trous',
+  fill_blank: 'Texte à trous',
   highlight: 'Surlignage',
   ordering: 'Ordonnancement',
   matching: 'Appariement',
@@ -717,13 +717,13 @@ function ImportCsvDialog({ open, onClose, assessmentId, assessmentLevels, onSucc
     setImportErrors(errs);
 
     if (errs.length === 0) {
-      toast.success(`${parsed.length} questions importees avec succes`);
+      toast.success(`${parsed.length} questions importées avec succès`);
       onSuccess();
       handleReset();
       onClose();
     } else {
       toast.warning(
-        `${parsed.length - errs.length}/${parsed.length} importees. ${errs.length} erreur(s).`
+        `${parsed.length - errs.length}/${parsed.length} importées. ${errs.length} erreur(s).`
       );
       onSuccess();
     }
@@ -759,7 +759,7 @@ function ImportCsvDialog({ open, onClose, assessmentId, assessmentLevels, onSucc
             startIcon={<Iconify icon="mdi:download" />}
             onClick={downloadTemplate}
           >
-            Telecharger le modele CSV
+            Télécharger le modèle CSV
           </Button>
         </Stack>
       </DialogTitle>
@@ -788,14 +788,14 @@ function ImportCsvDialog({ open, onClose, assessmentId, assessmentLevels, onSucc
             <Typography variant="body2" component="div">
               Colonnes : <code>type, label, text, instruction, duration, maxPoints, level, skills, answer_data</code>
               <br />
-              Types supportes : <code>mcq</code>, <code>fill_blank</code>, <code>highlight</code>,{' '}
+              Types supportés : <code>mcq</code>, <code>fill_blank</code>, <code>highlight</code>,{' '}
               <code>ordering</code>, <code>matching</code>
               <br />
               Format answer_data par type :
               <br />
               - QCM : <code>choix1:1;choix2:0;choix3:0</code> (texte:poids)
               <br />
-              - Texte a trous : <code>reponse1|alternative1;reponse2</code> (pipe = alternatives, point-virgule = trous)
+              - Texte à trous : <code>reponse1|alternative1;reponse2</code> (pipe = alternatives, point-virgule = trous)
               <br />
               - Ordonnancement : <code>item1;item2;item3</code> (dans l&apos;ordre correct)
               <br />
@@ -850,8 +850,8 @@ function ImportCsvDialog({ open, onClose, assessmentId, assessmentLevels, onSucc
         {previewRows.length > 0 && (
           <Box>
             <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              Apercu ({parsed.length} question{parsed.length > 1 ? 's' : ''})
-              {parsed.length > 10 && ` - 10 premieres lignes affichees`}
+              Aperçu ({parsed.length} question{parsed.length > 1 ? 's' : ''})
+              {parsed.length > 10 && ` - 10 premières lignes affichées`}
             </Typography>
 
             <TableContainer sx={{ maxHeight: 400, border: 1, borderColor: 'divider', borderRadius: 1 }}>
@@ -899,7 +899,7 @@ function ImportCsvDialog({ open, onClose, assessmentId, assessmentLevels, onSucc
 
         {file && (
           <Button onClick={handleReset} disabled={importing} color="inherit">
-            Reinitialiser
+            Réinitialiser
           </Button>
         )}
 

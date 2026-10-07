@@ -106,7 +106,7 @@ export function TableBlock({ editor }) {
         }}
       >
         <ListSubheader sx={{ lineHeight: '32px', fontWeight: 700 }}>
-          Inserer un tableau
+          Insérer un tableau
         </ListSubheader>
 
         <GridPicker onSelect={handleGridSelect} />

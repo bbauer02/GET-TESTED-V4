@@ -207,7 +207,7 @@ export function MesInscriptionsDetailsView() {
       <CustomBreadcrumbs
         heading={t('enrollment_details')}
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
           { name: t('my_enrollments'), href: paths.dashboard.mesInscriptions.root },
           { name: session.assessment?.label || t('enrollment_details') },
         ]}
@@ -304,7 +304,7 @@ export function MesInscriptionsDetailsView() {
                       ? tm('available_from', { date: fDate(doc.availableFrom) })
                       : '';
                     const secondary = doc.available
-                      ? docType.code
+                      ? t('document_available_hint')
                       : [tm('availability_unavailable'), reason, availableFrom]
                           .filter(Boolean)
                           .join(' — ');
@@ -337,7 +337,7 @@ export function MesInscriptionsDetailsView() {
                               }}
                             />
                             <Iconify
-                              icon={doc.available ? 'solar:eye-bold' : 'solar:clock-circle-bold'}
+                              icon={doc.available ? 'solar:download-minimalistic-bold' : 'solar:clock-circle-bold'}
                               width={20}
                               sx={{ color: doc.available ? 'text.secondary' : 'text.disabled' }}
                             />

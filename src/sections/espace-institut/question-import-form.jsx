@@ -37,7 +37,7 @@ import { useCurrentInstitute } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
-const STEPS = ['Telechargement du fichier', 'Verification et preview', 'Import'];
+const STEPS = ['Téléchargement du fichier', 'Vérification et preview', 'Import'];
 
 const TYPE_ENDPOINTS = {
   mcq: endpoints.question.createMcq,
@@ -112,7 +112,7 @@ function validateRow(row, index, assessmentMap, levelMap) {
   const rowNum = index + 2; // +2 because header = row 1, index starts at 0
 
   if (!row.type || !SUPPORTED_TYPES.includes(row.type.trim().toLowerCase())) {
-    errors.push(`Ligne ${rowNum}: Type "${row.type}" invalide. Types supportes: ${SUPPORTED_TYPES.join(', ')}`);
+    errors.push(`Ligne ${rowNum}: Type "${row.type}" invalide. Types supportés: ${SUPPORTED_TYPES.join(', ')}`);
   }
 
   if (!row.assessment_ref?.trim()) {
@@ -155,7 +155,7 @@ function validateRow(row, index, assessmentMap, levelMap) {
   if (type === 'fill_blank') {
     const slots = parseBlankSlots(row);
     if (slots.length === 0) {
-      errors.push(`Ligne ${rowNum}: Texte a trous doit avoir au moins un blank_1_answers`);
+      errors.push(`Ligne ${rowNum}: Texte à trous doit avoir au moins un blank_1_answers`);
     }
   }
 
@@ -300,7 +300,7 @@ export function QuestionImportForm() {
           const missingCols = BASE_COLUMNS.filter((c) => !headers.includes(c));
           if (missingCols.length > 0) {
             setValidationErrors([
-              `Colonnes manquantes: ${missingCols.join(', ')}. Colonnes trouvees: ${headers.join(', ')}`,
+              `Colonnes manquantes: ${missingCols.join(', ')}. Colonnes trouvées: ${headers.join(', ')}`,
             ]);
             setParsedRows([]);
             return;
@@ -362,9 +362,9 @@ export function QuestionImportForm() {
     globalMutate((key) => typeof key === 'string' && key.includes('/api/questions'), undefined, { revalidate: true });
 
     if (results.errors.length === 0) {
-      toast.success(`${results.success} questions importees avec succes !`);
+      toast.success(`${results.success} questions importées avec succès !`);
     } else {
-      toast.warning(`${results.success} importees, ${results.errors.length} erreurs`);
+      toast.warning(`${results.success} importées, ${results.errors.length} erreurs`);
     }
   }, [parsedRows, assessmentMap, levelMap]);
 
@@ -374,19 +374,19 @@ export function QuestionImportForm() {
     <Card>
       <CardContent>
         <Stack spacing={3}>
-          <Typography variant="h6">Telecharger un fichier CSV</Typography>
+          <Typography variant="h6">Télécharger un fichier CSV</Typography>
 
           <Alert severity="info" sx={{ whiteSpace: 'pre-line' }}>
-            {`Format attendu : fichier CSV (separateur virgule ou point-virgule, encodage UTF-8).
+            {`Format attendu : fichier CSV (séparateur virgule ou point-virgule, encodage UTF-8).
 
 Colonnes obligatoires : type, assessment_ref, level_label, label, text
 Colonnes optionnelles : instruction, duration, max_points
 
-Pour les QCM : choice_1, choice_1_weight, choice_1_feedback, choice_2, choice_2_weight, ... (jusqu'a 10)
-  - weight = 1 pour reponse correcte, 0 pour incorrecte, 0.5 pour partielle
+Pour les QCM : choice_1, choice_1_weight, choice_1_feedback, choice_2, choice_2_weight, ... (jusqu'à 10)
+  - weight = 1 pour réponse correcte, 0 pour incorrecte, 0.5 pour partielle
   - is_multiple_answer (true/false), shuffle_choices (true/false)
 
-Pour Texte a trous : blank_symbol, blank_1_answers (separees par |), blank_1_case_sensitive, blank_1_accent_sensitive
+Pour Texte à trous : blank_symbol, blank_1_answers (séparées par |), blank_1_case_sensitive, blank_1_accent_sensitive
 
 Pour Ordonnancement : item_1, item_2, ... (l'ordre dans le CSV = ordre correct)
   - shuffle_on_display (true/false)
@@ -415,7 +415,7 @@ Pour Appariement : pair_1_left, pair_1_right, pair_2_left, pair_2_right, ...
               startIcon={<Iconify icon="mingcute:download-2-line" />}
               onClick={() => downloadTemplate()}
             >
-              Telecharger le modele CSV
+              Télécharger le modèle CSV
             </Button>
 
             {fileName && (
@@ -447,7 +447,7 @@ Pour Appariement : pair_1_left, pair_1_right, pair_2_left, pair_2_right, ...
             )}
             {Object.keys(levelMap).length === 0 && assessments.length > 0 && (
               <Alert severity="warning" sx={{ mt: 1 }}>
-                Aucun niveau detecte sur vos assessments. La colonne level_label sera ignoree.
+                Aucun niveau détecté sur vos assessments. La colonne level_label sera ignorée.
               </Alert>
             )}
           </Alert>
@@ -462,7 +462,7 @@ Pour Appariement : pair_1_left, pair_1_right, pair_2_left, pair_2_right, ...
         <Stack spacing={3}>
           <Stack direction="row" alignItems="center" justifyContent="space-between">
             <Typography variant="h6">
-              Preview — {parsedRows.length} question{parsedRows.length > 1 ? 's' : ''} detectee{parsedRows.length > 1 ? 's' : ''}
+              Preview — {parsedRows.length} question{parsedRows.length > 1 ? 's' : ''} détectée{parsedRows.length > 1 ? 's' : ''}
             </Typography>
 
             <Stack direction="row" spacing={1}>
@@ -517,7 +517,7 @@ Pour Appariement : pair_1_left, pair_1_right, pair_2_left, pair_2_right, ...
                     <TableCell>Test</TableCell>
                     <TableCell>Niveau</TableCell>
                     <TableCell>Label</TableCell>
-                    <TableCell>Details</TableCell>
+                    <TableCell>Détails</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -564,7 +564,7 @@ Pour Appariement : pair_1_left, pair_1_right, pair_2_left, pair_2_right, ...
       <CardContent>
         <Stack spacing={3}>
           <Typography variant="h6">
-            {importing ? 'Import en cours...' : 'Import termine'}
+            {importing ? 'Import en cours...' : 'Import terminé'}
           </Typography>
 
           <Box>
@@ -574,14 +574,14 @@ Pour Appariement : pair_1_left, pair_1_right, pair_2_left, pair_2_right, ...
               sx={{ height: 10, borderRadius: 1 }}
             />
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              {importProgress}% — {importing ? 'Veuillez patienter...' : 'Termine'}
+              {importProgress}% — {importing ? 'Veuillez patienter...' : 'Terminé'}
             </Typography>
           </Box>
 
           {importResults && (
             <>
               <Alert severity={importResults.errors.length === 0 ? 'success' : 'warning'}>
-                {importResults.success} question{importResults.success > 1 ? 's' : ''} importee{importResults.success > 1 ? 's' : ''} avec succes
+                {importResults.success} question{importResults.success > 1 ? 's' : ''} importée{importResults.success > 1 ? 's' : ''} avec succès
                 {importResults.errors.length > 0 &&
                   `, ${importResults.errors.length} erreur${importResults.errors.length > 1 ? 's' : ''}`}
               </Alert>

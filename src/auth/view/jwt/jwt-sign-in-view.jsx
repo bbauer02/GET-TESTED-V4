@@ -54,8 +54,7 @@ export function JwtSignInView() {
     email: schemaUtils.email(),
     password: z
       .string()
-      .min(1, { message: t('sign_in_password_required') })
-      .min(6, { message: t('sign_in_password_min') }),
+      .min(1, { message: t('sign_in_password_required') }),
   });
 
   const [errorMessage, setErrorMessage] = useState(null);
@@ -84,8 +83,9 @@ export function JwtSignInView() {
       router.refresh();
     } catch (error) {
       console.error(error);
+      // L'API renvoie « Invalid credentials. » pour un couple email / mot de passe inconnu
       const feedbackMessage = getErrorMessage(error);
-      setErrorMessage(feedbackMessage);
+      setErrorMessage(/invalid credentials/i.test(feedbackMessage) ? t('sign_in_invalid_credentials') : feedbackMessage);
     }
   });
 

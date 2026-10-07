@@ -17,5 +17,8 @@
   "role_candidate": "Candidate",
   "upgrade_discount": "35% OFF",
   "upgrade_text": "Power up Productivity!",
-  "upgrade_button": "Upgrade to Pro"
+  "upgrade_button": "Upgrade to Pro",
+  "my_profile": "My profile",
+  "my_enrollments": "My enrollments",
+  "institute_space": "Institute space"
 }

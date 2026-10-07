@@ -17,5 +17,8 @@
   "role_candidate": "Candidat",
   "upgrade_discount": "-35 %",
   "upgrade_text": "Boostez votre productivité !",
-  "upgrade_button": "Passer à Pro"
+  "upgrade_button": "Passer à Pro",
+  "my_profile": "Mon profil",
+  "my_enrollments": "Mes inscriptions",
+  "institute_space": "Espace institut"
 }

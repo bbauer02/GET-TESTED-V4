@@ -43,9 +43,9 @@ export function useCreateStripeAccount(instituteId) {
     setCreating(true);
     try {
       await axiosInstance.post(endpoints.institute.stripeConnect(instituteId));
-      toast.success('Compte Stripe cree avec succes !');
+      toast.success('Compte Stripe créé avec succès !');
     } catch (error) {
-      toast.error(error.message || 'Erreur lors de la creation du compte Stripe');
+      toast.error(error.message || 'Erreur lors de la création du compte Stripe');
       throw error;
     } finally {
       setCreating(false);

@@ -84,10 +84,10 @@ export function MasterTemplateCreateEditForm({ currentTemplate }) {
           data,
           { headers: { 'Content-Type': 'application/merge-patch+json' } }
         );
-        toast.success('Modele maitre mis a jour !');
+        toast.success('Modèle maître mis à jour !');
       } else {
         await axiosInstance.post(endpoints.documentTemplate.masterCreate, data);
-        toast.success('Modele maitre cree !');
+        toast.success('Modèle maître créé !');
       }
       router.push(paths.dashboard.masterTemplate.root);
     } catch (error) {
@@ -103,7 +103,7 @@ export function MasterTemplateCreateEditForm({ currentTemplate }) {
     <Form methods={methods} onSubmit={onSubmit}>
       <Card sx={{ p: 3 }}>
         <Stack spacing={3}>
-          <Field.Text name="label" label="Nom du modele" />
+          <Field.Text name="label" label="Nom du modèle" />
 
           <Field.Select name="documentType" label="Type de document">
             {documentTypes.map((dt) => (
@@ -118,12 +118,12 @@ export function MasterTemplateCreateEditForm({ currentTemplate }) {
             fullItem
             extraExtensions={[MergeField]}
             extraToolbarContent={renderMergeFieldDropdown}
-            placeholder="Redigez votre modele de document ici..."
+            placeholder="Rédigez votre modèle de document ici..."
           />
 
           <Stack direction="row" justifyContent="flex-end">
             <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-              {isEdit ? 'Enregistrer' : 'Creer le modele'}
+              {isEdit ? 'Enregistrer' : 'Créer le modèle'}
             </LoadingButton>
           </Stack>
         </Stack>

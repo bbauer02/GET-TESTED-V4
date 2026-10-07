@@ -56,7 +56,7 @@ export function SkillCreateEditForm({ currentSkill }) {
   const defaultValues = useMemo(
     () => ({
       label: currentSkill?.label || 'Communication orale',
-      description: currentSkill?.description || 'Capacite a communiquer efficacement a l\'oral dans un contexte professionnel.',
+      description: currentSkill?.description || 'Capacité à communiquer efficacement à l\'oral dans un contexte professionnel.',
       parent: getSkillIri(currentSkill?.parent) || null,
     }),
     [currentSkill]

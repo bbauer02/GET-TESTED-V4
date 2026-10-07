@@ -198,7 +198,7 @@ export function InstituteSessionsView() {
       <CustomBreadcrumbs
         heading={t('sessions')}
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
           { name: currentInstitute?.label || 'Institut' },
           { name: t('sessions') },
         ]}

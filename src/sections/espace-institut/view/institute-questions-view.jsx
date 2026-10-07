@@ -52,7 +52,7 @@ const TABLE_HEAD = [
   { id: 'status', label: 'Statut', width: 120 },
   { id: 'points', label: 'Points', width: 80 },
   { id: 'timesAdministered', label: 'Passages', width: 100 },
-  { id: 'successRate', label: 'Taux reussite', width: 120 },
+  { id: 'successRate', label: 'Taux réussite', width: 120 },
   { id: '', width: 56 },
 ];
 
@@ -60,14 +60,14 @@ const STATUS_OPTIONS = [
   { value: 'all', label: 'Toutes' },
   { value: 'DRAFT', label: 'Brouillon' },
   { value: 'PRETESTING', label: 'Pre-test' },
-  { value: 'CALIBRATED', label: 'Calibree' },
-  { value: 'RETIRED', label: 'Retiree' },
+  { value: 'CALIBRATED', label: 'Calibrée' },
+  { value: 'RETIRED', label: 'Retirée' },
 ];
 
 const TYPE_OPTIONS = [
   { value: 'all', label: 'Tous' },
   { value: 'mcq', label: 'QCM' },
-  { value: 'fill_blank', label: 'Texte a trous' },
+  { value: 'fill_blank', label: 'Texte à trous' },
   { value: 'highlight', label: 'Surlignage' },
   { value: 'ordering', label: 'Ordonnancement' },
   { value: 'matching', label: 'Appariement' },
@@ -235,7 +235,7 @@ export function InstituteQuestionsView() {
       try {
         const id = selectedQuestion.id || selectedQuestion['@id']?.split('/').pop();
         await axiosInstance.patch(`/api/questions/${id}`, { status: 'RETIRED' });
-        toast.success('Question retiree avec succes');
+        toast.success('Question retirée avec succès');
         questionsMutate();
       } catch (error) {
         toast.error(error.message || 'Erreur lors du retrait');
@@ -253,7 +253,7 @@ export function InstituteQuestionsView() {
       try {
         const id = selectedQuestion.id || selectedQuestion['@id']?.split('/').pop();
         await axiosInstance.delete(`/api/questions/${id}`);
-        toast.success('Question supprimee avec succes');
+        toast.success('Question supprimée avec succès');
         questionsMutate();
       } catch (error) {
         toast.error(error.message || 'Erreur lors de la suppression');
@@ -279,7 +279,7 @@ export function InstituteQuestionsView() {
       <CustomBreadcrumbs
         heading="Banque de questions"
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
           { name: currentInstitute?.label || 'Institut' },
           { name: 'Banque de questions' },
         ]}
@@ -417,7 +417,7 @@ export function InstituteQuestionsView() {
                               startIcon={<Iconify icon="mingcute:add-line" />}
                               sx={{ mt: 2 }}
                             >
-                              Creer une question
+                              Créer une question
                             </Button>
                           ) : null
                         }
@@ -466,7 +466,7 @@ export function InstituteQuestionsView() {
         open={confirmRetire.value}
         onClose={confirmRetire.onFalse}
         title="Retirer la question"
-        content={`Voulez-vous vraiment retirer la question "${selectedQuestion?.label || ''}" ? Elle ne sera plus utilisee dans les futurs sujets.`}
+        content={`Voulez-vous vraiment retirer la question "${selectedQuestion?.label || ''}" ? Elle ne sera plus utilisée dans les futurs sujets.`}
         action={
           <Button variant="contained" color="warning" onClick={handleRetire}>
             Retirer
@@ -479,7 +479,7 @@ export function InstituteQuestionsView() {
         open={confirmDelete.value}
         onClose={confirmDelete.onFalse}
         title="Supprimer la question"
-        content={`Voulez-vous vraiment supprimer la question "${selectedQuestion?.label || ''}" ? Cette action est irreversible.`}
+        content={`Voulez-vous vraiment supprimer la question "${selectedQuestion?.label || ''}" ? Cette action est irréversible.`}
         action={
           <Button variant="contained" color="error" onClick={handleDelete}>
             Supprimer

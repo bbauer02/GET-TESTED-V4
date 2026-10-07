@@ -1,10 +1,8 @@
-import { CONFIG } from 'src/global-config';
-
 import { UserCreateView } from 'src/sections/user/view';
 
 // ----------------------------------------------------------------------
 
-export const metadata = { title: `Create user - ${CONFIG.appName}` };
+export const metadata = { title: 'Nouvel utilisateur' };
 
 export default function Page() {
   return <UserCreateView />;

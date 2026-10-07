@@ -70,7 +70,7 @@ export function TableContextMenu({ editor }) {
         sx={{ fontSize: '0.875rem', pl: 3 }}
       >
         <Iconify icon="mdi:table-row-plus-before" sx={{ mr: 1.5, flexShrink: 0 }} />
-        Inserer au-dessus
+        Insérer au-dessus
       </MenuItem>
 
       <MenuItem
@@ -78,7 +78,7 @@ export function TableContextMenu({ editor }) {
         sx={{ fontSize: '0.875rem', pl: 3 }}
       >
         <Iconify icon="mdi:table-row-plus-after" sx={{ mr: 1.5, flexShrink: 0 }} />
-        Inserer en-dessous
+        Insérer en-dessous
       </MenuItem>
 
       <MenuItem
@@ -101,7 +101,7 @@ export function TableContextMenu({ editor }) {
         sx={{ fontSize: '0.875rem', pl: 3 }}
       >
         <Iconify icon="mdi:table-column-plus-before" sx={{ mr: 1.5, flexShrink: 0 }} />
-        Inserer avant
+        Insérer avant
       </MenuItem>
 
       <MenuItem
@@ -109,7 +109,7 @@ export function TableContextMenu({ editor }) {
         sx={{ fontSize: '0.875rem', pl: 3 }}
       >
         <Iconify icon="mdi:table-column-plus-after" sx={{ mr: 1.5, flexShrink: 0 }} />
-        Inserer apres
+        Insérer après
       </MenuItem>
 
       <MenuItem
@@ -151,7 +151,7 @@ export function TableContextMenu({ editor }) {
         sx={{ fontSize: '0.875rem', pl: 3 }}
       >
         <Iconify icon="mdi:table-header-row" sx={{ mr: 1.5, flexShrink: 0 }} />
-        Ligne d&apos;en-tete
+        Ligne d&apos;en-tête
       </MenuItem>
 
       <MenuItem
@@ -159,7 +159,7 @@ export function TableContextMenu({ editor }) {
         sx={{ fontSize: '0.875rem', pl: 3 }}
       >
         <Iconify icon="mdi:table-header-column" sx={{ mr: 1.5, flexShrink: 0 }} />
-        Colonne d&apos;en-tete
+        Colonne d&apos;en-tête
       </MenuItem>
 
       <Divider />

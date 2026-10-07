@@ -69,7 +69,7 @@ export function MasterTemplateTableRow({ row, onEdit, onDelete }) {
         open={confirm.value}
         onClose={confirm.onFalse}
         title="Supprimer"
-        content="Etes-vous sur de vouloir supprimer ce modele maitre ?"
+        content="Êtes-vous sûr de vouloir supprimer ce modèle maître ?"
         action={
           <Button
             variant="contained"

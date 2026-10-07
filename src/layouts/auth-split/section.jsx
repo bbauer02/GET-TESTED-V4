@@ -16,9 +16,9 @@ export function AuthSplitSection({
   method,
   methods,
   layoutQuery = 'md',
-  title = 'Manage the job',
+  title = 'Certifiez votre niveau de langue',
   imgUrl = `${CONFIG.assetsDir}/assets/illustrations/illustration-dashboard.webp`,
-  subtitle = 'More effectively with optimized workflows.',
+  subtitle = 'Trouvez une session près de chez vous, inscrivez-vous et retrouvez vos convocations et résultats en ligne.',
   ...other
 }) {
   return (
@@ -64,7 +64,7 @@ export function AuthSplitSection({
 
       <Box
         component="img"
-        alt="Dashboard illustration"
+        alt=""
         src={imgUrl}
         sx={{ width: 1, aspectRatio: '4/3', objectFit: 'cover' }}
       />

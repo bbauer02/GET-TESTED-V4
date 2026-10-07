@@ -198,7 +198,7 @@ export function InstituteCandidatsView() {
       <CustomBreadcrumbs
         heading="Candidats"
         links={[
-          { name: 'Dashboard', href: paths.dashboard.espaceInstitut.root },
+          { name: 'Tableau de bord', href: paths.dashboard.espaceInstitut.root },
           { name: 'Candidats' },
         ]}
         action={

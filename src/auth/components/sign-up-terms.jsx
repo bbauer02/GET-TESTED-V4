@@ -1,5 +1,4 @@
 import Box from '@mui/material/Box';
-import Link from '@mui/material/Link';
 
 // ----------------------------------------------------------------------
 
@@ -19,15 +18,8 @@ export function SignUpTerms({ sx, ...other }) {
       ]}
       {...other}
     >
-      {'By signing up, I agree to '}
-      <Link underline="always" color="text.primary">
-        Terms of service
-      </Link>
-      {' and '}
-      <Link underline="always" color="text.primary">
-        Privacy policy
-      </Link>
-      .
+      En créant un compte, vous acceptez les conditions d&apos;utilisation et la politique de
+      confidentialité de GetTested.
     </Box>
   );
 }

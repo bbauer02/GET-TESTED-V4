@@ -25,7 +25,7 @@ export function InstituteAssessmentCreateView() {
       <CustomBreadcrumbs
         heading="Créer un test"
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
+          { name: 'Tableau de bord', href: paths.dashboard.root },
           { name: currentInstitute?.label || 'Institut' },
           { name: 'Tests', href: paths.dashboard.espaceInstitut.assessments },
           { name: 'Nouveau' },

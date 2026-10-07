@@ -82,7 +82,7 @@ export function ExamCreateEditForm({ currentExam, fixedAssessmentIri, redirectPa
 
   const defaultValues = useMemo(
     () => ({
-      label: currentExam?.label || 'Examen de Francais B2',
+      label: currentExam?.label || 'Examen de Français B2',
       assessment: fixedAssessmentIri || getAssessmentIri(currentExam?.assessment) || '',
       level: getLevelIri(currentExam?.level) || null,
       isWritten: currentExam?.isWritten ?? true,
