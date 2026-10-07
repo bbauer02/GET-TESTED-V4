@@ -19,6 +19,8 @@ import axios, { endpoints } from 'src/lib/axios';
 import { Iconify } from 'src/components/iconify';
 import { Form, Field } from 'src/components/hook-form';
 
+import { setSession } from 'src/auth/context/jwt/utils';
+
 // ----------------------------------------------------------------------
 
 export function ChangePasswordForm() {
@@ -57,10 +59,15 @@ export function ChangePasswordForm() {
     try {
       setAlertState(null);
 
-      await axios.post(endpoints.user.changePassword, {
+      const res = await axios.post(endpoints.user.changePassword, {
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,
       });
+
+      // Les autres sessions sont fermées par l'API : cette session continue avec les nouveaux jetons
+      if (res.data?.access_token) {
+        await setSession(res.data.access_token, res.data.refresh_token);
+      }
 
       reset();
       setAlertState({ severity: 'success', message: t('password_changed') });

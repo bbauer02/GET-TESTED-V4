@@ -1,6 +1,6 @@
 'use client';
 
-import axios, { endpoints } from 'src/lib/axios';
+import axios, { endpoints, revokeRefreshToken } from 'src/lib/axios';
 
 import { setSession } from './utils';
 import { JWT_STORAGE_KEY } from './constant';
@@ -73,6 +73,9 @@ export const resetPassword = async (token, newPassword) => {
  *************************************** */
 export const signOut = async () => {
   try {
+    // Le jeton de renouvellement est supprimé côté serveur (sans bloquer la déconnexion)
+    await revokeRefreshToken();
+
     await setSession(null);
     try {
       // L'institut choisi appartient à l'utilisateur déconnecté

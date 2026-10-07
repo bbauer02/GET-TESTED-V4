@@ -65,6 +65,25 @@ export function refreshAccessToken() {
   return refreshPromise;
 }
 
+/**
+ * Déconnexion : supprime le refresh token côté serveur (client brut : ni jeton d'accès, ni renouvellement).
+ */
+export async function revokeRefreshToken() {
+  let refreshToken = null;
+  try {
+    refreshToken = sessionStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
+  } catch {
+    return;
+  }
+  if (!refreshToken) return;
+
+  try {
+    await rawAxios.post('/api/auth/logout', { refresh_token: refreshToken });
+  } catch {
+    // la déconnexion locale a lieu dans tous les cas
+  }
+}
+
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
