@@ -200,5 +200,9 @@
   "invite_email_invalid": "Adresse email invalide",
   "invite_firstname_required": "Le prénom est requis",
   "invite_lastname_required": "Le nom est requis",
-  "invite_email_required": "L'adresse email est requise"
+  "invite_email_required": "L'adresse email est requise",
+  "status_pending_title": "En attente de validation par la plateforme",
+  "status_pending_description": "Votre institut est en cours de vérification par l'équipe GETTESTED. Vous pouvez dès maintenant compléter votre fiche, inviter votre équipe et préparer vos sessions ; leur ouverture aux inscriptions sera possible dès la validation (vous serez prévenu par email).",
+  "status_suspended_title": "Institut suspendu",
+  "status_suspended_description": "Votre institut a été suspendu par la plateforme : vous ne pouvez plus ouvrir de nouvelle session aux inscriptions. Contactez support@gettested.fr pour plus d'informations."
 }

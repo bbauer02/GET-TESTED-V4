@@ -8,13 +8,20 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import { useAuthContext } from 'src/auth/hooks';
+
 import { InvoiceDetails } from '../invoice-details';
+import { InvoiceManagementActions } from '../invoice-management-actions';
 
 // ----------------------------------------------------------------------
 
-export function InvoiceDetailsView({ id, backHref, breadcrumbLinks }) {
+export function InvoiceDetailsView({ id, backHref, breadcrumbLinks, showManagementActions = false }) {
   const { t } = useTranslate('invoice');
-  const { invoice, invoiceLoading } = useGetInvoice(id);
+  const { user } = useAuthContext();
+  const { invoice, invoiceLoading, invoiceMutate } = useGetInvoice(id);
+
+  // Actions de gestion réservées au back-office plateforme
+  const canManage = showManagementActions && user?.role === 'admin';
 
   const defaultLinks = [
     { name: t('dashboard'), href: paths.dashboard.root },
@@ -30,6 +37,10 @@ export function InvoiceDetailsView({ id, backHref, breadcrumbLinks }) {
         links={breadcrumbLinks || defaultLinks}
         sx={{ mb: 3 }}
       />
+
+      {canManage && !invoiceLoading && invoice && (
+        <InvoiceManagementActions invoice={invoice} onUpdated={invoiceMutate} sx={{ mb: 3 }} />
+      )}
 
       <InvoiceDetails invoice={invoice} />
     </DashboardContent>

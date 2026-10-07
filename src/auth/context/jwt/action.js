@@ -74,6 +74,12 @@ export const resetPassword = async (token, newPassword) => {
 export const signOut = async () => {
   try {
     await setSession(null);
+    try {
+      // L'institut choisi appartient à l'utilisateur déconnecté
+      localStorage.removeItem('gettested-current-institute');
+    } catch {
+      // stockage indisponible
+    }
   } catch (error) {
     console.error('Error during sign out:', error);
     throw error;

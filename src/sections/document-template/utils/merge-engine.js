@@ -1,5 +1,7 @@
 import dayjs from 'dayjs';
 
+import { escapeHtml } from 'src/utils/escape-html';
+
 // ----------------------------------------------------------------------
 
 /**
@@ -11,7 +13,7 @@ export function buildMergeContext({ enrollment, session, institute, invoice }) {
 
   const enrollmentExams = enrollment?.enrollmentExams || enrollment?.exams || [];
 
-  return {
+  const context = {
     // Candidat
     'candidate.civility': candidate.civility?.value || candidate.civility || '',
     'candidate.firstname': candidate.firstname || candidate.firstName || '',
@@ -41,7 +43,7 @@ export function buildMergeContext({ enrollment, session, institute, invoice }) {
     'institute.shareCapital': institute?.shareCapital || '',
     'institute.rcsCity': institute?.rcsCity || '',
     'institute.logo': institute?.logo
-      ? `<img src="${institute.logo}" alt="Logo" style="max-height:60px;max-width:180px;" />`
+      ? `<img src="${escapeHtml(institute.logo)}" alt="Logo" style="max-height:60px;max-width:180px;" />`
       : '',
 
     // Inscription
@@ -65,6 +67,12 @@ export function buildMergeContext({ enrollment, session, institute, invoice }) {
     // Document
     'document.date': dayjs().format('DD/MM/YYYY'),
   };
+
+  // Les valeurs saisies par les utilisateurs sont échappées : seuls les blocs générés ici restent en HTML
+  const htmlFields = ['institute.logo', 'enrollment.examsTable'];
+  return Object.fromEntries(
+    Object.entries(context).map(([key, value]) => [key, htmlFields.includes(key) ? value : escapeHtml(value)])
+  );
 }
 
 // ----------------------------------------------------------------------
@@ -105,9 +113,9 @@ function buildExamsTable(enrollmentExams, institute) {
   groups.forEach((group) => {
     const rows = group.exams.map((ex) =>
       `<tr>
-        <td style="padding:6px 12px;">${ex.label}${ex.duration ? ` <span style="font-size:0.85em;color:#666;">(${ex.duration})</span>` : ''}</td>
+        <td style="padding:6px 12px;">${escapeHtml(ex.label)}${ex.duration ? ` <span style="font-size:0.85em;color:#666;">(${ex.duration})</span>` : ''}</td>
         <td style="padding:6px 12px;">${ex.date} — <strong>${ex.time}</strong></td>
-        <td style="padding:6px 12px;">${ex.room}</td>
+        <td style="padding:6px 12px;">${escapeHtml(ex.room)}</td>
       </tr>`
     ).join('');
 
@@ -115,8 +123,8 @@ function buildExamsTable(enrollmentExams, institute) {
       `<table style="width:100%;border-collapse:collapse;margin:16px 0;">
         <tr>
           <td colspan="3" style="padding:10px 12px;background-color:#f0f0f0;">
-            <strong>${group.label}</strong><br>
-            <span style="font-size:0.85em;color:#555;">${group.city}</span>
+            <strong>${escapeHtml(group.label)}</strong><br>
+            <span style="font-size:0.85em;color:#555;">${escapeHtml(group.city)}</span>
           </td>
         </tr>
         ${rows}

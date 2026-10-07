@@ -33,6 +33,7 @@ import { LanguagePopover } from '../components/language-popover';
 import { dashboardLayoutVars, dashboardNavColorVars } from './css-vars';
 import { NotificationsDrawer } from '../components/notifications-drawer';
 import { MainSection, layoutClasses, HeaderSection, LayoutSection } from '../core';
+import { InstituteSwitcher, useInstituteRoleConfig } from '../components/institute-switcher';
 
 // ----------------------------------------------------------------------
 
@@ -136,11 +137,17 @@ export function DashboardLayout({ sx, cssVars, children, slotProps, layoutQuery 
             <VerticalDivider sx={{ [theme.breakpoints.up(layoutQuery)]: { display: 'flex' } }} />
           )}
 
-          {/** @slot Institute / Role indicator */}
-          <InstituteIndicator
-            user={user}
-            sx={{ ...(isNavHorizontal && { color: 'var(--layout-nav-text-primary-color)' }) }}
-          />
+          {/** @slot Institute / Role indicator (sélecteur si plusieurs instituts) */}
+          {(user?.institutes?.length ?? 0) > 1 ? (
+            <InstituteSwitcher
+              sx={{ ...(isNavHorizontal && { color: 'var(--layout-nav-text-primary-color)' }) }}
+            />
+          ) : (
+            <InstituteIndicator
+              user={user}
+              sx={{ ...(isNavHorizontal && { color: 'var(--layout-nav-text-primary-color)' }) }}
+            />
+          )}
         </>
       ),
       rightArea: (
@@ -237,22 +244,14 @@ export function DashboardLayout({ sx, cssVars, children, slotProps, layoutQuery 
 
 function InstituteIndicator({ user, sx }) {
   const { t } = useTranslate('navbar');
+  const getRoleConfig = useInstituteRoleConfig();
   const institute = user?.currentInstitute;
-
-  const ROLE_CONFIG = {
-    ADMIN: { label: 'Admin', color: 'error', icon: 'solar:shield-star-bold' },
-    STAFF: { label: 'Staff', color: 'info', icon: 'solar:shield-user-bold' },
-    TEACHER: { label: t('examiner'), color: 'secondary', icon: 'solar:pen-new-square-bold' },
-  };
 
   if (!institute) {
     const isPlatformAdmin = user?.platformRole === 'ADMIN';
     return (
       <Box
-        sx={[
-          { display: 'flex', alignItems: 'center', gap: 1 },
-          ...(Array.isArray(sx) ? sx : [sx]),
-        ]}
+        sx={[{ display: 'flex', alignItems: 'center', gap: 1 }, ...(Array.isArray(sx) ? sx : [sx])]}
       >
         <Iconify
           icon={isPlatformAdmin ? 'solar:shield-star-bold' : 'solar:user-bold'}
@@ -266,14 +265,11 @@ function InstituteIndicator({ user, sx }) {
     );
   }
 
-  const config = ROLE_CONFIG[institute.membershipRole] || ROLE_CONFIG.ADMIN;
+  const config = getRoleConfig(institute.membershipRole);
 
   return (
     <Box
-      sx={[
-        { display: 'flex', alignItems: 'center', gap: 1 },
-        ...(Array.isArray(sx) ? sx : [sx]),
-      ]}
+      sx={[{ display: 'flex', alignItems: 'center', gap: 1 }, ...(Array.isArray(sx) ? sx : [sx])]}
     >
       <Iconify icon={config.icon} width={20} sx={{ color: `${config.color}.main` }} />
 

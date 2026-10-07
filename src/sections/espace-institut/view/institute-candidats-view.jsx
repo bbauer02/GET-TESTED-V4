@@ -62,13 +62,21 @@ const PAYMENT_LABELS = {
   to_pay: 'À payer',
   not_invoiced: 'Non facturé',
   cancelled: 'Facture annulée',
+  enrollment_cancelled: 'Inscription annulée',
 };
+
+const ROW_STATE_COLORS = { ...PAYMENT_STATE_COLORS, enrollment_cancelled: 'error' };
+
+// Une inscription annulée est conservée pour l'historique : elle a son propre onglet
+const getRowState = (enrollment) =>
+  enrollment.status === 'CANCELLED' ? 'enrollment_cancelled' : getEnrollmentPayment(enrollment).state;
 
 const STATUS_TABS = [
   { value: 'all', label: 'Tous' },
   { value: 'to_pay', label: 'À payer' },
   { value: 'paid', label: 'Payés' },
   { value: 'not_invoiced', label: 'Non facturés' },
+  { value: 'enrollment_cancelled', label: 'Annulées' },
 ];
 
 // ----------------------------------------------------------------------
@@ -138,7 +146,7 @@ export function InstituteCandidatsView() {
     let data = enrollments || [];
 
     if (statusFilter !== 'all') {
-      data = data.filter((e) => getEnrollmentPayment(e).state === statusFilter);
+      data = data.filter((e) => getRowState(e) === statusFilter);
     }
 
     if (sessionFilter !== 'all') {
@@ -181,7 +189,7 @@ export function InstituteCandidatsView() {
   const statusCounts = useMemo(() => {
     const counts = { all: (enrollments || []).length };
     (enrollments || []).forEach((e) => {
-      const { state } = getEnrollmentPayment(e);
+      const state = getRowState(e);
       counts[state] = (counts[state] || 0) + 1;
     });
     return counts;
@@ -226,7 +234,7 @@ export function InstituteCandidatsView() {
                   { key: (r) => r.user?.email || '', label: 'Email' },
                   { key: (r) => r.session?.assessment?.label || '', label: 'Test' },
                   { key: (r) => r.session?.start || '', label: 'Date session' },
-                  { key: (r) => PAYMENT_LABELS[getEnrollmentPayment(r).state], label: 'Paiement' },
+                  { key: (r) => PAYMENT_LABELS[getRowState(r)], label: 'Paiement' },
                   { key: (r) => r.registrationDate || '', label: "Date d'inscription" },
                 ],
                 'candidats'
@@ -258,7 +266,7 @@ export function InstituteCandidatsView() {
               icon={
                 <Label
                   variant={statusFilter === tab.value ? 'filled' : 'soft'}
-                  color={PAYMENT_STATE_COLORS[tab.value] || 'default'}
+                  color={ROW_STATE_COLORS[tab.value] || 'default'}
                 >
                   {statusCounts[tab.value] || 0}
                 </Label>
@@ -310,7 +318,7 @@ export function InstituteCandidatsView() {
                 {paginatedData.map((enrollment) => {
                   const user = enrollment.user || {};
                   const session = enrollment.session || {};
-                  const { state: paymentState } = getEnrollmentPayment(enrollment);
+                  const paymentState = getRowState(enrollment);
 
                   return (
                     <TableRow
@@ -362,7 +370,7 @@ export function InstituteCandidatsView() {
                       </TableCell>
 
                       <TableCell>
-                        <Label variant="soft" color={PAYMENT_STATE_COLORS[paymentState] || 'default'}>
+                        <Label variant="soft" color={ROW_STATE_COLORS[paymentState] || 'default'}>
                           {PAYMENT_LABELS[paymentState]}
                         </Label>
                       </TableCell>

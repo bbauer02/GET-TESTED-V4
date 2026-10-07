@@ -155,5 +155,6 @@
   "form_end_after_start": "End must be after start",
   "form_limit_before_start": "The enrollment deadline must be before the session starts",
   "form_places_only_increase": "Open session: seats can only increase (minimum {{count}})",
-  "form_open_restrictions": "Session open for enrollment: start and end dates are locked and seats can only increase."
+  "form_open_restrictions": "Session open for enrollment: start and end dates are locked and seats can only increase.",
+  "enrollment_cancelled": "Enrollment cancelled: kept for history (invoices, credit notes)."
 }

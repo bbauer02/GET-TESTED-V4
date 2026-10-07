@@ -1,9 +1,12 @@
 'use client';
 
 import { useMemo, useCallback } from 'react';
+import { varAlpha } from 'minimal-shared/utils';
 import { useBoolean, useDebounce, useSetState } from 'minimal-shared/hooks';
 
 import Box from '@mui/material/Box';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
 import Card from '@mui/material/Card';
 import Table from '@mui/material/Table';
 import Button from '@mui/material/Button';
@@ -18,9 +21,10 @@ import { usePaginatedCollection } from 'src/hooks/use-paginated-collection';
 
 import { endpoints } from 'src/lib/axios';
 import { useTranslate } from 'src/locales';
-import { deleteInstitute } from 'src/actions/institute';
 import { DashboardContent } from 'src/layouts/dashboard';
+import { deleteInstitute, updateInstituteStatus } from 'src/actions/institute';
 
+import { Label } from 'src/components/label';
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
@@ -42,6 +46,7 @@ import { getErrorMessage } from 'src/auth/utils';
 import { InstituteTableRow } from '../institute-table-row';
 import { InstituteTableToolbar } from '../institute-table-toolbar';
 import { InstituteTableFiltersResult } from '../institute-table-filters-result';
+import { INSTITUTE_STATUSES, INSTITUTE_STATUS_COLORS } from '../institute-status-label';
 
 // ----------------------------------------------------------------------
 
@@ -51,6 +56,12 @@ const SORT_FIELDS = {
   city: 'address.city',
 };
 
+// Compteurs des onglets : une requête légère par statut (totalItems seulement)
+const COUNT_OPTIONS = { rowsPerPage: 1 };
+const PENDING_FILTER = { status: 'PENDING_REVIEW' };
+const ACTIVE_FILTER = { status: 'ACTIVE' };
+const SUSPENDED_FILTER = { status: 'SUSPENDED' };
+
 // ----------------------------------------------------------------------
 
 export function InstituteListView() {
@@ -58,6 +69,7 @@ export function InstituteListView() {
 
   const TABLE_HEAD = [
     { id: 'label', label: t('table_name') },
+    { id: 'status', label: t('table_status'), width: 120, sortable: false },
     { id: 'city', label: t('table_city'), width: 180 },
     { id: 'siteweb', label: t('table_website'), width: 220, sortable: false },
     { id: 'siren', label: t('table_siren'), width: 140, sortable: false },
@@ -70,12 +82,15 @@ export function InstituteListView() {
 
   const confirmDialog = useBoolean();
 
-  const filters = useSetState({ name: '' });
-  const { state: currentFilters } = filters;
+  const filters = useSetState({ name: '', status: 'all' });
+  const { state: currentFilters, setState: updateFilters } = filters;
 
-  // Pagination, tri et recherche côté serveur (l'API pagine par 30)
+  // Pagination, tri, recherche et filtre de statut côté serveur (l'API pagine par 30)
   const debouncedSearch = useDebounce(currentFilters.name, 400);
-  const apiFilters = useMemo(() => ({ q: debouncedSearch }), [debouncedSearch]);
+  const apiFilters = useMemo(
+    () => ({ q: debouncedSearch, status: currentFilters.status }),
+    [debouncedSearch, currentFilters.status]
+  );
 
   const {
     items: institutes,
@@ -92,7 +107,38 @@ export function InstituteListView() {
     filters: apiFilters,
   });
 
-  const canReset = !!currentFilters.name;
+  const { totalItems: countAll, mutate: mutateCountAll } = usePaginatedCollection(
+    endpoints.institute.list,
+    COUNT_OPTIONS
+  );
+  const { totalItems: countPending, mutate: mutateCountPending } = usePaginatedCollection(
+    endpoints.institute.list,
+    { ...COUNT_OPTIONS, filters: PENDING_FILTER }
+  );
+  const { totalItems: countActive, mutate: mutateCountActive } = usePaginatedCollection(
+    endpoints.institute.list,
+    { ...COUNT_OPTIONS, filters: ACTIVE_FILTER }
+  );
+  const { totalItems: countSuspended, mutate: mutateCountSuspended } = usePaginatedCollection(
+    endpoints.institute.list,
+    { ...COUNT_OPTIONS, filters: SUSPENDED_FILTER }
+  );
+  const tabCounts = {
+    all: countAll,
+    PENDING_REVIEW: countPending,
+    ACTIVE: countActive,
+    SUSPENDED: countSuspended,
+  };
+
+  const refreshAll = useCallback(() => {
+    mutate();
+    mutateCountAll();
+    mutateCountPending();
+    mutateCountActive();
+    mutateCountSuspended();
+  }, [mutate, mutateCountAll, mutateCountPending, mutateCountActive, mutateCountSuspended]);
+
+  const canReset = !!currentFilters.name || currentFilters.status !== 'all';
 
   const notFound = !loading && !institutes.length;
 
@@ -145,12 +191,12 @@ export function InstituteListView() {
         await deleteInstitute(id);
         toast.success(t('delete_success'));
         table.onUpdatePageDeleteRow(institutes.length);
-        mutate();
+        refreshAll();
       } catch (deleteError) {
         toast.error(getErrorMessage(deleteError));
       }
     },
-    [institutes.length, mutate, table, t]
+    [institutes.length, refreshAll, table, t]
   );
 
   const handleDeleteRows = useCallback(async () => {
@@ -163,8 +209,58 @@ export function InstituteListView() {
       table.onUpdatePageDeleteRows(institutes.length, totalItems);
     }
     failures.forEach((failure) => toast.error(getErrorMessage(failure.reason)));
-    mutate();
-  }, [institutes.length, mutate, table, t, totalItems]);
+    refreshAll();
+  }, [institutes.length, refreshAll, table, t, totalItems]);
+
+  const handleChangeStatus = useCallback(
+    async (id, status) => {
+      try {
+        await updateInstituteStatus(id, status);
+        toast.success(t('status_update_success'));
+        refreshAll();
+      } catch (statusError) {
+        toast.error(getErrorMessage(statusError));
+      }
+    },
+    [refreshAll, t]
+  );
+
+  const handleFilterStatus = useCallback(
+    (event, newValue) => {
+      handleResetPage();
+      updateFilters({ status: newValue });
+    },
+    [handleResetPage, updateFilters]
+  );
+
+  const renderTabs = () => (
+    <Tabs
+      value={currentFilters.status}
+      onChange={handleFilterStatus}
+      sx={{
+        px: 2.5,
+        boxShadow: (theme) =>
+          `inset 0 -2px 0 0 ${varAlpha(theme.vars.palette.grey['500Channel'], 0.08)}`,
+      }}
+    >
+      {['all', ...INSTITUTE_STATUSES].map((value) => (
+        <Tab
+          key={value}
+          value={value}
+          iconPosition="end"
+          label={value === 'all' ? t('tab_all') : t(`status_${value}`)}
+          icon={
+            <Label
+              variant={currentFilters.status === value ? 'filled' : 'soft'}
+              color={INSTITUTE_STATUS_COLORS[value] || 'default'}
+            >
+              {tabCounts[value]}
+            </Label>
+          }
+        />
+      ))}
+    </Tabs>
+  );
 
   const renderConfirmDialog = () => (
     <ConfirmDialog
@@ -231,6 +327,7 @@ export function InstituteListView() {
                 selected={table.selected.includes(row.id)}
                 onSelectRow={() => table.onSelectRow(row.id)}
                 onDeleteRow={() => handleDeleteRow(row.id)}
+                onChangeStatus={(status) => handleChangeStatus(row.id, status)}
               />
             ))}
 
@@ -270,6 +367,8 @@ export function InstituteListView() {
         />
 
         <Card>
+          {renderTabs()}
+
           <InstituteTableToolbar filters={filters} onResetPage={handleResetPage} />
 
           {canReset && (

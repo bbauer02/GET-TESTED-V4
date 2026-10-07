@@ -1,6 +1,8 @@
 import dayjs from 'dayjs';
 import { useMemo } from 'react';
 
+import { escapeHtml } from 'src/utils/escape-html';
+
 import { useGetInstituteInvoices } from 'src/actions/invoice';
 import { useGetInstituteSessions } from 'src/actions/espace-institut';
 
@@ -36,7 +38,7 @@ export function useNotifications() {
           category: 'Session',
           isUnRead: daysUntil <= 2,
           createdAt: now.subtract(1, 'hour').toISOString(),
-          title: `<p>La session <strong>${session.assessment?.label || 'Assessment'}</strong> commence ${daysUntil === 0 ? "aujourd'hui" : `dans ${daysUntil} jour${daysUntil > 1 ? 's' : ''}`}</p>`,
+          title: `<p>La session <strong>${escapeHtml(session.assessment?.label || 'Assessment')}</strong> commence ${daysUntil === 0 ? "aujourd'hui" : `dans ${daysUntil} jour${daysUntil > 1 ? 's' : ''}`}</p>`,
           avatarUrl: null,
         });
       }
@@ -54,7 +56,7 @@ export function useNotifications() {
           category: 'Session',
           isUnRead: enrolled / capacity >= 0.9,
           createdAt: now.subtract(2, 'hour').toISOString(),
-          title: `<p>Session <strong>${session.assessment?.label || 'Assessment'}</strong> : ${enrolled}/${capacity} places occupées</p>`,
+          title: `<p>Session <strong>${escapeHtml(session.assessment?.label || 'Assessment')}</strong> : ${enrolled}/${capacity} places occupées</p>`,
           avatarUrl: null,
         });
       }
@@ -69,7 +71,7 @@ export function useNotifications() {
           category: 'Facture',
           isUnRead: true,
           createdAt: inv.invoiceDate || inv.createdAt || now.toISOString(),
-          title: `<p>Facture <strong>${inv.invoiceNumber || inv.reference || ''}</strong> en attente de paiement</p>`,
+          title: `<p>Facture <strong>${escapeHtml(inv.invoiceNumber || inv.reference || '')}</strong> en attente de paiement</p>`,
           avatarUrl: null,
         });
       }
@@ -81,7 +83,7 @@ export function useNotifications() {
           category: 'Facture',
           isUnRead: true,
           createdAt: inv.invoiceDate || inv.createdAt || now.toISOString(),
-          title: `<p>Facture <strong>${inv.invoiceNumber || inv.reference || ''}</strong> en retard de paiement</p>`,
+          title: `<p>Facture <strong>${escapeHtml(inv.invoiceNumber || inv.reference || '')}</strong> en retard de paiement</p>`,
           avatarUrl: null,
         });
       }

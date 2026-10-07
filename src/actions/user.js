@@ -1,7 +1,7 @@
 import useSWR from 'swr';
 import { useMemo } from 'react';
 
-import { fetcher, endpoints, extractMembers } from 'src/lib/axios';
+import axios, { fetcher, endpoints, extractMembers } from 'src/lib/axios';
 
 // ----------------------------------------------------------------------
 
@@ -53,4 +53,32 @@ export function useGetUser(userId) {
   );
 
   return memoizedValue;
+}
+
+// ----------------------------------------------------------------------
+
+/**
+ * Création d'un compte par l'admin plateforme : compte inactif + email d'invitation
+ * (définition du mot de passe). L'API répond 409 si l'email est déjà utilisé.
+ */
+export async function inviteUser({ firstname, lastname, email, platformRole, phone, phoneCountryCode }) {
+  const res = await axios.post(endpoints.user.invite, {
+    firstname,
+    lastname,
+    email,
+    platformRole,
+    phone: phone || null,
+    phoneCountryCode: phone ? phoneCountryCode : null,
+  });
+  return res.data;
+}
+
+/** Active / désactive un compte (admin plateforme). Un compte désactivé ne peut plus se connecter. */
+export async function setUserActive(userId, isActive) {
+  const res = await axios.patch(
+    `${endpoints.user.details}/${userId}`,
+    { isActive },
+    { headers: { 'Content-Type': 'application/merge-patch+json' } }
+  );
+  return res.data;
 }

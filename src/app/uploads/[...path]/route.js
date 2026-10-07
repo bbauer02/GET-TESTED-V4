@@ -6,7 +6,14 @@ const API_SERVER_URL = process.env.API_SERVER_URL || 'https://localhost';
 
 export async function GET(request, { params }) {
   const { path } = await params;
-  const targetPath = `/uploads/${path.join('/')}`;
+
+  // Uniquement des fichiers sous /uploads : aucun segment de remontée (« .. », y compris encodé)
+  const segments = path.map((segment) => decodeURIComponent(segment));
+  if (segments.some((segment) => segment === '..' || segment === '.' || /[\\/]/.test(segment))) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
+  const targetPath = `/uploads/${segments.map(encodeURIComponent).join('/')}`;
   const url = `${API_SERVER_URL}${targetPath}`;
 
   try {
@@ -42,7 +49,8 @@ export async function GET(request, { params }) {
       status,
       headers: {
         'content-type': contentType,
-        'cache-control': 'public, max-age=31536000, immutable',
+        // Seuls les fichiers trouvés sont mis en cache (jamais une erreur)
+        'cache-control': status === 200 ? 'public, max-age=31536000, immutable' : 'no-store',
       },
     });
   } catch (error) {

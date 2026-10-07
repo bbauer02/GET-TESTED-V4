@@ -27,5 +27,8 @@
   "admin_platform": "Admin Plateforme",
   "candidate": "Candidat",
   "examiner": "Examinateur",
+  "role_admin": "Admin",
+  "role_staff": "Staff",
+  "switch_institute": "Changer d'institut",
   "my_exams": "Mes épreuves"
 }

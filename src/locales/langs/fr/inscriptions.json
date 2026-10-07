@@ -67,5 +67,8 @@
   "cancel_preview_unavailable": "Le montant du remboursement n'a pas pu être calculé. Tout paiement effectué vous sera remboursé.",
   "cancel_deadline": "Annulation possible jusqu'au {{date}}.",
   "cancel_confirm": "Confirmer l'annulation",
-  "cancel_success": "Votre inscription est annulée. Un email de confirmation vous a été envoyé."
+  "cancel_success": "Votre inscription est annulée. Un email de confirmation vous a été envoyé.",
+  "enrollment_cancelled_label": "Inscription annulée",
+  "enrollment_cancelled": "Cette inscription a été annulée. Elle reste consultable pour votre historique.",
+  "enrollment_cancelled_on": "Inscription annulée le {{date}}. Elle reste consultable pour votre historique."
 }

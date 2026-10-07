@@ -195,10 +195,12 @@ export function JwtSetPasswordView() {
           <>
             {invitation?.firstname && (
               <>
-                {t('set_password_welcome', {
-                  firstname: invitation.firstname,
-                  institute: invitation.institute || '',
-                })}
+                {invitation.institute
+                  ? t('set_password_welcome', {
+                      firstname: invitation.firstname,
+                      institute: invitation.institute,
+                    })
+                  : t('set_password_welcome_platform', { firstname: invitation.firstname })}
                 <br />
               </>
             )}

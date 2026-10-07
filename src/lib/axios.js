@@ -160,6 +160,7 @@ export const endpoints = {
     list: '/api/users/',
     details: '/api/users',
     create: '/api/auth/register/',
+    invite: '/api/admin/users/invite',
     changePassword: '/api/me/change-password',
     uploadAvatar: '/api/users/me/avatar/',
     phoneSendCode: '/api/users/me/phone/send-code',
@@ -197,6 +198,7 @@ export const endpoints = {
   institute: {
     list: '/api/institutes',
     details: '/api/institutes',
+    status: (id) => `/api/institutes/${id}/status`,
     memberships: (id) => `/api/institutes/${id}/memberships`,
     membership: (membershipId) => `/api/institute-memberships/${membershipId}`,
     inviteMember: (id) => `/api/institutes/${id}/memberships/invite`,
@@ -257,7 +259,14 @@ export const endpoints = {
     details: (id) => `/api/invoices/${id}`,
     checkout: (id) => `/api/invoices/${id}/checkout`,
     verifyPayment: (id) => `/api/invoices/${id}/verify-payment`,
+    issue: (id) => `/api/invoices/${id}/issue`,
+    payments: (id) => `/api/invoices/${id}/payments`,
     instituteInvoices: (instituteId) => `/api/institutes/${instituteId}/invoices`,
+  },
+  payment: {
+    complete: (id) => `/api/payments/${id}/complete`,
+    fail: (id) => `/api/payments/${id}/fail`,
+    refund: (id) => `/api/payments/${id}/refund`,
   },
   documentTemplate: {
     list: (instituteId) => `/api/institutes/${instituteId}/document-templates`,

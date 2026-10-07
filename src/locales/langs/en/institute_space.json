@@ -200,5 +200,9 @@
   "invite_email_invalid": "Invalid email address",
   "invite_firstname_required": "First name is required",
   "invite_lastname_required": "Last name is required",
-  "invite_email_required": "Email address is required"
+  "invite_email_required": "Email address is required",
+  "status_pending_title": "Pending approval by the platform",
+  "status_pending_description": "Your institute is being reviewed by the GETTESTED team. You can already complete your profile, invite your team and prepare your sessions; you will be able to open them for registration once approved (you will be notified by email).",
+  "status_suspended_title": "Institute suspended",
+  "status_suspended_description": "Your institute has been suspended by the platform: you can no longer open new sessions for registration. Contact support@gettested.fr for more information."
 }

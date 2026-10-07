@@ -215,11 +215,15 @@ export function MesInscriptionsDetailsView() {
   const status = session.status || 'DRAFT';
   const enrollmentExams = enrollment.enrollmentExams || [];
 
+  const isCancelled = enrollment.status === 'CANCELLED';
   const { invoice: enrollmentInvoice, state: paymentState } = getEnrollmentPayment(enrollment);
-  const canPay = paymentState === 'to_pay' && ['OPEN', 'LOCKED', 'VALIDATED'].includes(status);
-  const examAccessAllowed = ['LOCKED', 'VALIDATED'].includes(status) && paymentState !== 'to_pay';
+  const canPay =
+    !isCancelled && paymentState === 'to_pay' && ['OPEN', 'LOCKED', 'VALIDATED'].includes(status);
+  const examAccessAllowed =
+    !isCancelled && ['LOCKED', 'VALIDATED'].includes(status) && paymentState !== 'to_pay';
   // Même règle que l'API : annulation possible tant que la session est ouverte et avant la date limite
   const canCancel =
+    !isCancelled &&
     status === 'OPEN' && (!session.limitDateSubscribe || new Date(session.limitDateSubscribe).getTime() > nowMs);
 
   return (
@@ -233,6 +237,14 @@ export function MesInscriptionsDetailsView() {
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />
+
+      {isCancelled && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {enrollment.cancelledAt
+            ? t('enrollment_cancelled_on', { date: fDate(enrollment.cancelledAt) })
+            : t('enrollment_cancelled')}
+        </Alert>
+      )}
 
       <Grid container spacing={3}>
         {/* ---- Session info ---- */}
@@ -323,7 +335,7 @@ export function MesInscriptionsDetailsView() {
             </Card>
 
             {/* ---- Documents ---- */}
-            {documents.length > 0 && (
+            {!isCancelled && documents.length > 0 && (
               <Card>
                 <CardHeader
                   title={t('my_documents')}

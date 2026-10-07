@@ -7,7 +7,9 @@ import Box from '@mui/material/Box';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Card from '@mui/material/Card';
+import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
+import AlertTitle from '@mui/material/AlertTitle';
 
 import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
@@ -147,6 +149,22 @@ export function InstituteFicheView() {
         }
         sx={{ mb: { xs: 3, md: 5 } }}
       />
+
+      {institute.status && institute.status !== 'ACTIVE' && (
+        <Alert
+          severity={institute.status === 'SUSPENDED' ? 'error' : 'info'}
+          sx={{ mb: 3 }}
+        >
+          <AlertTitle>
+            {institute.status === 'SUSPENDED'
+              ? t('status_suspended_title')
+              : t('status_pending_title')}
+          </AlertTitle>
+          {institute.status === 'SUSPENDED'
+            ? t('status_suspended_description')
+            : t('status_pending_description')}
+        </Alert>
+      )}
 
       <Card sx={{ height: 290 }}>
         <InstituteProfileCover

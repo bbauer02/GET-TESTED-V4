@@ -112,3 +112,33 @@ export async function deleteInstitute(instituteId) {
   await axios.delete(`${endpoints.institute.details}/${instituteId}`);
   await mutate(endpoints.institute.list);
 }
+
+// ----------------------------------------------------------------------
+
+/**
+ * Validation / suspension / réactivation d'un institut (admin plateforme).
+ * @param {'PENDING_REVIEW'|'ACTIVE'|'SUSPENDED'} status
+ */
+export async function updateInstituteStatus(instituteId, status) {
+  const res = await axios.patch(
+    endpoints.institute.status(instituteId),
+    { status },
+    { headers: { 'Content-Type': 'application/merge-patch+json' } }
+  );
+  await mutate(`${endpoints.institute.details}/${instituteId}`);
+  return res.data;
+}
+
+/**
+ * Désigne l'administrateur d'un institut par email : crée le compte si besoin
+ * et envoie l'invitation (lien de définition du mot de passe).
+ */
+export async function inviteInstituteAdmin(instituteId, { email, firstname, lastname }) {
+  const res = await axios.post(endpoints.institute.inviteMember(instituteId), {
+    email,
+    firstname,
+    lastname,
+    role: 'ADMIN',
+  });
+  return res.data;
+}

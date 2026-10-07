@@ -5,6 +5,7 @@ import { useBoolean } from 'minimal-shared/hooks';
 import { useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
+import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Drawer from '@mui/material/Drawer';
@@ -167,7 +168,11 @@ export function InstituteCandidateDetailsDrawer({
             <Box sx={{ p: 2.5, display: 'flex', flexDirection: 'column', gap: 3 }}>
               <CandidateHeader enrollment={enrollment} session={resolvedSession} t={t} />
 
-              {canManage && (
+              {enrollment.status === 'CANCELLED' && (
+                <Alert severity="error">{t('enrollment_cancelled')}</Alert>
+              )}
+
+              {canManage && enrollment.status !== 'CANCELLED' && (
                 <>
                   <Divider />
                   <ActionsSection

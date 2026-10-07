@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useBoolean, usePopover } from 'minimal-shared/hooks';
 
 import Box from '@mui/material/Box';
@@ -23,12 +24,52 @@ import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/custom-dialog';
 import { CustomPopover } from 'src/components/custom-popover';
 
+import { InstituteStatusLabel } from './institute-status-label';
+
 // ----------------------------------------------------------------------
 
-export function InstituteTableRow({ row, selected, onSelectRow, onDeleteRow }) {
+export function InstituteTableRow({ row, selected, onSelectRow, onDeleteRow, onChangeStatus }) {
   const { t } = useTranslate('institute');
   const menuActions = usePopover();
   const confirmDialog = useBoolean();
+
+  // Changement de statut en attente de confirmation
+  const [statusAction, setStatusAction] = useState(null);
+  const [statusSubmitting, setStatusSubmitting] = useState(false);
+
+  const status = row.status || 'ACTIVE';
+
+  const statusActions = [
+    status === 'PENDING_REVIEW' && {
+      key: 'validate',
+      status: 'ACTIVE',
+      icon: 'solar:check-circle-bold',
+      color: 'success.main',
+    },
+    status === 'SUSPENDED' && {
+      key: 'reactivate',
+      status: 'ACTIVE',
+      icon: 'solar:restart-bold',
+      color: 'success.main',
+    },
+    status !== 'SUSPENDED' && {
+      key: 'suspend',
+      status: 'SUSPENDED',
+      icon: 'solar:forbidden-circle-bold',
+      color: 'warning.main',
+    },
+  ].filter(Boolean);
+
+  const handleConfirmStatus = async () => {
+    if (!statusAction) return;
+    setStatusSubmitting(true);
+    try {
+      await onChangeStatus?.(statusAction.status);
+    } finally {
+      setStatusSubmitting(false);
+      setStatusAction(null);
+    }
+  };
 
   const renderMenuActions = () => (
     <CustomPopover
@@ -56,6 +97,21 @@ export function InstituteTableRow({ row, selected, onSelectRow, onDeleteRow }) {
           {t('menu_edit')}
         </MenuItem>
 
+        {onChangeStatus &&
+          statusActions.map((action) => (
+            <MenuItem
+              key={action.key}
+              onClick={() => {
+                setStatusAction(action);
+                menuActions.onClose();
+              }}
+              sx={{ color: action.color }}
+            >
+              <Iconify icon={action.icon} />
+              {t(`menu_${action.key}`)}
+            </MenuItem>
+          ))}
+
         <MenuItem
           onClick={() => {
             confirmDialog.onTrue();
@@ -79,6 +135,27 @@ export function InstituteTableRow({ row, selected, onSelectRow, onDeleteRow }) {
       action={
         <Button variant="contained" color="error" onClick={onDeleteRow}>
           {t('delete_button')}
+        </Button>
+      }
+    />
+  );
+
+  const renderStatusDialog = () => (
+    <ConfirmDialog
+      open={!!statusAction}
+      onClose={() => {
+        if (!statusSubmitting) setStatusAction(null);
+      }}
+      title={statusAction ? t(`${statusAction.key}_title`) : ''}
+      content={statusAction ? t(`${statusAction.key}_confirm`, { label: row.label, interpolation: { escapeValue: false } }) : ''}
+      action={
+        <Button
+          variant="contained"
+          color={statusAction?.key === 'suspend' ? 'warning' : 'success'}
+          loading={statusSubmitting}
+          onClick={handleConfirmStatus}
+        >
+          {statusAction ? t(`menu_${statusAction.key}`) : ''}
         </Button>
       }
     />
@@ -117,6 +194,10 @@ export function InstituteTableRow({ row, selected, onSelectRow, onDeleteRow }) {
               </Box>
             )}
           </Stack>
+        </TableCell>
+
+        <TableCell>
+          <InstituteStatusLabel status={status} />
         </TableCell>
 
         <TableCell sx={{ whiteSpace: 'nowrap' }}>
@@ -177,6 +258,7 @@ export function InstituteTableRow({ row, selected, onSelectRow, onDeleteRow }) {
 
       {renderMenuActions()}
       {renderConfirmDialog()}
+      {renderStatusDialog()}
     </>
   );
 }

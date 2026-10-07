@@ -19,6 +19,11 @@ export function InstituteTableFiltersResult({ filters, onResetPage, totalResults
     updateFilters({ name: '' });
   }, [onResetPage, updateFilters]);
 
+  const handleRemoveStatus = useCallback(() => {
+    onResetPage();
+    updateFilters({ status: 'all' });
+  }, [onResetPage, updateFilters]);
+
   const handleReset = useCallback(() => {
     onResetPage();
     resetFilters();
@@ -26,6 +31,17 @@ export function InstituteTableFiltersResult({ filters, onResetPage, totalResults
 
   return (
     <FiltersResult totalResults={totalResults} onReset={handleReset} sx={sx}>
+      <FiltersBlock
+        label={t('filter_status_label')}
+        isShow={!!currentFilters.status && currentFilters.status !== 'all'}
+      >
+        <Chip
+          {...chipProps}
+          label={t(`status_${currentFilters.status}`, { defaultValue: currentFilters.status })}
+          onDelete={handleRemoveStatus}
+        />
+      </FiltersBlock>
+
       <FiltersBlock label={t('filter_search_label')} isShow={!!currentFilters.name}>
         <Chip {...chipProps} label={currentFilters.name} onDelete={handleRemoveKeyword} />
       </FiltersBlock>

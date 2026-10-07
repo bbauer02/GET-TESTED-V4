@@ -27,5 +27,8 @@
   "admin_platform": "Platform Admin",
   "candidate": "Candidate",
   "examiner": "Examiner",
+  "role_admin": "Admin",
+  "role_staff": "Staff",
+  "switch_institute": "Switch institute",
   "my_exams": "My exams"
 }

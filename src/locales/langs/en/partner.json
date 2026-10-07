@@ -27,7 +27,7 @@
   "create_institute": "Create my institute",
   "already_account": "Already have an account?",
   "sign_in": "Sign in",
-  "success_toast": "Welcome! Your institute has been created successfully.",
+  "success_toast": "Welcome! Your institute has been created; it will soon be reviewed by the platform.",
   "error_toast": "Error during registration",
   "account_creation_error": "Error creating account",
   "validation_firstname_required": "First name is required",

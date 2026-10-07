@@ -67,5 +67,8 @@
   "cancel_preview_unavailable": "The refund amount could not be calculated. Any payment made will be refunded.",
   "cancel_deadline": "Cancellation possible until {{date}}.",
   "cancel_confirm": "Confirm cancellation",
-  "cancel_success": "Your enrollment is cancelled. A confirmation email has been sent."
+  "cancel_success": "Your enrollment is cancelled. A confirmation email has been sent.",
+  "enrollment_cancelled_label": "Enrollment cancelled",
+  "enrollment_cancelled": "This enrollment was cancelled. It remains visible in your history.",
+  "enrollment_cancelled_on": "Enrollment cancelled on {{date}}. It remains visible in your history."
 }

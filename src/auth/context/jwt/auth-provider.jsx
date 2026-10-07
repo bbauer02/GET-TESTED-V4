@@ -11,6 +11,48 @@ import { setSession, isValidToken } from './utils';
 
 // ----------------------------------------------------------------------
 
+/** Clé localStorage de l'institut courant choisi par l'utilisateur (multi-instituts). */
+export const CURRENT_INSTITUTE_STORAGE_KEY = 'gettested-current-institute';
+
+// Rôles de l'institut courant (mêmes règles que les voters de l'API) :
+// ADMIN = tout ; STAFF = gestion opérationnelle (sessions, inscrits, documents, résultats) ;
+// TEACHER = ses épreuves (sessions où il est examinateur) et la banque de questions.
+const INSTITUTE_ROLES = {
+  ADMIN: 'institute_admin',
+  STAFF: 'institute_staff',
+  TEACHER: 'institute_teacher',
+};
+
+function buildRoles(platformRole, currentInstitute) {
+  const roles = [platformRole?.toLowerCase() ?? 'user'];
+  if (currentInstitute && INSTITUTE_ROLES[currentInstitute.membershipRole]) {
+    roles.push(INSTITUTE_ROLES[currentInstitute.membershipRole]);
+  }
+  return roles;
+}
+
+function readStoredInstituteId() {
+  try {
+    return localStorage.getItem(CURRENT_INSTITUTE_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredInstituteId(instituteId) {
+  try {
+    if (instituteId == null) {
+      localStorage.removeItem(CURRENT_INSTITUTE_STORAGE_KEY);
+    } else {
+      localStorage.setItem(CURRENT_INSTITUTE_STORAGE_KEY, String(instituteId));
+    }
+  } catch {
+    // stockage indisponible (navigation privée, quota…) : sélection non persistée
+  }
+}
+
+// ----------------------------------------------------------------------
+
 /**
  * NOTE:
  * We only build demo at basic level.
@@ -36,8 +78,6 @@ export function AuthProvider({ children }) {
 
         const userData = res.data;
 
-        const isPlatformAdmin = userData.platformRole === 'ADMIN';
-
         // Build institute list from active memberships only (ADMIN, STAFF, TEACHER) :
         // une adhésion en attente ou archivée ne donne aucun accès à l'espace institut
         const instituteMap = new Map();
@@ -61,16 +101,15 @@ export function AuthProvider({ children }) {
           });
         const userInstitutes = Array.from(instituteMap.values());
 
-        const currentInstitute = userInstitutes[0] || null;
+        // Institut courant : celui choisi précédemment (s'il fait toujours partie des adhésions
+        // actives), sinon le premier
+        const storedInstituteId = readStoredInstituteId();
+        const currentInstitute =
+          userInstitutes.find((inst) => String(inst.id) === storedInstituteId) ||
+          userInstitutes[0] ||
+          null;
 
-        // Rôles de l'institut courant (mêmes règles que les voters de l'API) :
-        // ADMIN = tout ; STAFF = gestion opérationnelle (sessions, inscrits, documents, résultats) ;
-        // TEACHER = ses épreuves (sessions où il est examinateur) et la banque de questions.
-        const INSTITUTE_ROLES = { ADMIN: 'institute_admin', STAFF: 'institute_staff', TEACHER: 'institute_teacher' };
-        const roles = [userData.platformRole?.toLowerCase() ?? 'user'];
-        if (currentInstitute && INSTITUTE_ROLES[currentInstitute.membershipRole]) {
-          roles.push(INSTITUTE_ROLES[currentInstitute.membershipRole]);
-        }
+        const roles = buildRoles(userData.platformRole, currentInstitute);
 
         const user = {
           ...userData,
@@ -93,6 +132,32 @@ export function AuthProvider({ children }) {
     }
   }, [setState]);
 
+  /**
+   * Change l'institut courant (utilisateur membre de plusieurs instituts) : met à jour
+   * `currentInstitute` et recalcule `user.roles` localement, sans rappeler /users/me.
+   * Retourne true si le changement a été appliqué.
+   */
+  const switchInstitute = useCallback(
+    (instituteId) => {
+      const currentUser = state.user;
+      if (!currentUser) return false;
+
+      const target = (currentUser.institutes || []).find(
+        (inst) => String(inst.id) === String(instituteId)
+      );
+      if (!target) return false;
+
+      writeStoredInstituteId(target.id);
+
+      if (String(currentUser.currentInstitute?.id) === String(target.id)) return true;
+
+      const roles = buildRoles(currentUser.platformRole, target);
+      setState({ user: { ...currentUser, currentInstitute: target, role: roles[0], roles } });
+      return true;
+    },
+    [setState, state.user]
+  );
+
   useEffect(() => {
     checkUserSession();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -108,11 +173,12 @@ export function AuthProvider({ children }) {
     () => ({
       user: state.user ?? null,
       checkUserSession,
+      switchInstitute,
       loading: status === 'loading',
       authenticated: status === 'authenticated',
       unauthenticated: status === 'unauthenticated',
     }),
-    [checkUserSession, state.user, status]
+    [checkUserSession, switchInstitute, state.user, status]
   );
 
   return <AuthContext value={memoizedValue}>{children}</AuthContext>;

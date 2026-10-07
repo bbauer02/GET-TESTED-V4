@@ -108,6 +108,7 @@ export function MesInscriptionsListView() {
 function EnrollmentCard({ enrollment, onClick, t, statusLabels }) {
   const session = enrollment.session || {};
   const status = session.status || 'DRAFT';
+  const isCancelled = enrollment.status === 'CANCELLED';
   const enrollmentExams = enrollment.enrollmentExams || [];
   const { state: paymentState } = getEnrollmentPayment(enrollment);
 
@@ -115,7 +116,7 @@ function EnrollmentCard({ enrollment, onClick, t, statusLabels }) {
   const docCount = session.documentPublications?.length || 0;
 
   return (
-    <Card>
+    <Card sx={isCancelled ? { opacity: 0.72 } : undefined}>
       <CardActionArea onClick={onClick}>
         <CardContent>
           <Stack spacing={2}>
@@ -124,9 +125,15 @@ function EnrollmentCard({ enrollment, onClick, t, statusLabels }) {
               <Typography variant="subtitle1" noWrap sx={{ flexGrow: 1, mr: 1 }}>
                 {session.assessment?.label || t('session')}
               </Typography>
-              <Label color={STATUS_COLORS[status]} variant="soft">
-                {statusLabels[status] || status}
-              </Label>
+              {isCancelled ? (
+                <Label color="error" variant="soft">
+                  {t('enrollment_cancelled_label')}
+                </Label>
+              ) : (
+                <Label color={STATUS_COLORS[status]} variant="soft">
+                  {statusLabels[status] || status}
+                </Label>
+              )}
             </Stack>
 
             {/* Institute */}

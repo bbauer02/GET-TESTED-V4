@@ -27,7 +27,7 @@
   "create_institute": "Créer mon institut",
   "already_account": "Vous avez déjà un compte ?",
   "sign_in": "Se connecter",
-  "success_toast": "Bienvenue ! Votre institut a été créé avec succès.",
+  "success_toast": "Bienvenue ! Votre institut a été créé ; il sera validé prochainement par la plateforme.",
   "error_toast": "Erreur lors de l'inscription",
   "account_creation_error": "Erreur lors de la création du compte",
   "validation_firstname_required": "Le prénom est requis",

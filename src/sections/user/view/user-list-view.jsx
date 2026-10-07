@@ -33,15 +33,21 @@ import { usePaginatedCollection } from 'src/hooks/use-paginated-collection';
 
 import { endpoints } from 'src/lib/axios';
 import { useTranslate } from 'src/locales';
+import { setUserActive } from 'src/actions/user';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Label } from 'src/components/label';
+import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { FlagIcon } from 'src/components/flag-icon';
 import { Scrollbar } from 'src/components/scrollbar';
 import { LoadErrorContent } from 'src/components/load-error';
+import { ConfirmDialog } from 'src/components/custom-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useTable, TableNoData, TableHeadCustom, TablePaginationCustom } from 'src/components/table';
+
+import { useAuthContext } from 'src/auth/hooks';
+import { getErrorMessage } from 'src/auth/utils';
 
 import { UserQuickEditForm } from '../user-quick-edit-form';
 
@@ -63,6 +69,7 @@ const SORT_FIELDS = {
 const COUNT_OPTIONS = { rowsPerPage: 1 };
 const VERIFIED_FILTER = { isVerified: 'true' };
 const ACTIVE_FILTER = { isActive: 'true' };
+const INACTIVE_FILTER = { isActive: 'false' };
 
 function phoneCountry(user) {
   if (!user.phoneCountryCode) return '';
@@ -88,17 +95,24 @@ export function UserListView() {
   const [quickEditOpen, setQuickEditOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
+  // Activation / désactivation en attente de confirmation
+  const { user: authUser } = useAuthContext();
+  const [toggleUser, setToggleUser] = useState(null);
+  const [toggling, setToggling] = useState(false);
+
   const TABLE_HEAD = [
     { id: 'name', label: t('table_name') },
     { id: 'phone', label: t('table_phone'), width: 200, sortable: false },
     { id: 'platformRole', label: t('table_role'), width: 160 },
-    { id: '', width: 80, sortable: false },
+    { id: 'status', label: t('table_status'), width: 120, sortable: false },
+    { id: '', width: 112, sortable: false },
   ];
 
   const TAB_OPTIONS = [
     { value: 'all', label: t('tab_all'), color: 'default' },
     { value: 'verified', label: t('tab_verified'), color: 'info' },
     { value: 'active', label: t('tab_active'), color: 'success' },
+    { value: 'inactive', label: t('tab_inactive'), color: 'error' },
   ];
 
   // Pagination, tri, recherche et filtres côté serveur (l'API pagine par 30)
@@ -108,7 +122,7 @@ export function UserListView() {
       q: debouncedSearch,
       platformRole: roleFilter,
       isVerified: currentTab === 'verified' ? 'true' : undefined,
-      isActive: currentTab === 'active' ? 'true' : undefined,
+      isActive: { active: 'true', inactive: 'false' }[currentTab],
     }),
     [debouncedSearch, roleFilter, currentTab]
   );
@@ -127,11 +141,38 @@ export function UserListView() {
     ...COUNT_OPTIONS,
     filters: VERIFIED_FILTER,
   });
-  const { totalItems: countActive } = usePaginatedCollection(endpoints.user.list, {
-    ...COUNT_OPTIONS,
-    filters: ACTIVE_FILTER,
-  });
-  const tabCounts = { all: countAll, verified: countVerified, active: countActive };
+  const { totalItems: countActive, mutate: mutateCountActive } = usePaginatedCollection(
+    endpoints.user.list,
+    { ...COUNT_OPTIONS, filters: ACTIVE_FILTER }
+  );
+  const { totalItems: countInactive, mutate: mutateCountInactive } = usePaginatedCollection(
+    endpoints.user.list,
+    { ...COUNT_OPTIONS, filters: INACTIVE_FILTER }
+  );
+  const tabCounts = {
+    all: countAll,
+    verified: countVerified,
+    active: countActive,
+    inactive: countInactive,
+  };
+
+  const handleConfirmToggle = useCallback(async () => {
+    if (!toggleUser) return;
+    const activate = !toggleUser.active;
+    setToggling(true);
+    try {
+      await setUserActive(toggleUser.id, activate);
+      toast.success(activate ? t('activate_success') : t('deactivate_success'));
+      mutate();
+      mutateCountActive();
+      mutateCountInactive();
+    } catch (toggleError) {
+      toast.error(getErrorMessage(toggleError));
+    } finally {
+      setToggling(false);
+      setToggleUser(null);
+    }
+  }, [toggleUser, mutate, mutateCountActive, mutateCountInactive, t]);
 
   const { onResetPage } = table;
 
@@ -152,7 +193,9 @@ export function UserListView() {
     setQuickEditOpen(false);
     setSelectedUser(null);
     mutate();
-  }, [mutate]);
+    mutateCountActive();
+    mutateCountInactive();
+  }, [mutate, mutateCountActive, mutateCountInactive]);
 
   const renderTable = () => {
     if (error) {
@@ -209,7 +252,29 @@ export function UserListView() {
                         </Label>
                       </TableCell>
 
-                      <TableCell align="right">
+                      <TableCell>
+                        <Label variant="soft" color={user.active ? 'success' : 'error'}>
+                          {user.active ? t('status_active') : t('status_inactive')}
+                        </Label>
+                      </TableCell>
+
+                      <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
+                        {user.id !== authUser?.id && (
+                          <Tooltip
+                            title={user.active ? t('deactivate_tooltip') : t('activate_tooltip')}
+                          >
+                            <IconButton
+                              color={user.active ? 'default' : 'success'}
+                              onClick={() => setToggleUser(user)}
+                            >
+                              <Iconify
+                                icon={
+                                  user.active ? 'solar:forbidden-circle-bold' : 'solar:check-circle-bold'
+                                }
+                              />
+                            </IconButton>
+                          </Tooltip>
+                        )}
                         <Tooltip title={t('quick_edit_tooltip')}>
                           <IconButton onClick={() => handleEditRow(user)}>
                             <Iconify icon="solar:pen-bold" />
@@ -336,6 +401,34 @@ export function UserListView() {
       </Card>
 
       <UserQuickEditForm currentUser={selectedUser} open={quickEditOpen} onClose={handleCloseQuickEdit} />
+
+      <ConfirmDialog
+        open={!!toggleUser}
+        onClose={() => {
+          if (!toggling) setToggleUser(null);
+        }}
+        title={toggleUser?.active ? t('deactivate_title') : t('activate_title')}
+        content={
+          toggleUser
+            ? t(toggleUser.active ? 'deactivate_confirm' : 'activate_confirm', {
+                name:
+                  `${toggleUser.firstname ?? ''} ${toggleUser.lastname ?? ''}`.trim() ||
+                  toggleUser.email,
+                interpolation: { escapeValue: false },
+              })
+            : ''
+        }
+        action={
+          <Button
+            variant="contained"
+            color={toggleUser?.active ? 'error' : 'success'}
+            loading={toggling}
+            onClick={handleConfirmToggle}
+          >
+            {toggleUser?.active ? t('deactivate_button') : t('activate_button')}
+          </Button>
+        }
+      />
     </DashboardContent>
   );
 }

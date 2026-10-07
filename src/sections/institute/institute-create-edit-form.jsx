@@ -18,11 +18,14 @@ import { useRouter } from 'src/routes/hooks';
 
 import { useTranslate } from 'src/locales';
 import axios, { endpoints } from 'src/lib/axios';
+import { inviteInstituteAdmin } from 'src/actions/institute';
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { FlagIcon } from 'src/components/flag-icon';
 import { Form, Field } from 'src/components/hook-form';
+
+import { getErrorMessage } from 'src/auth/utils';
 
 import { COUNTRIES } from '../profile/utils/countries';
 
@@ -51,7 +54,15 @@ const InstituteSchema = z.object({
     instagram: z.string(),
     linkedin: z.string(),
   }),
+  // Administrateur de l'institut désigné à la création (facultatif, création uniquement)
+  admin: z.object({
+    firstname: z.string(),
+    lastname: z.string(),
+    email: z.string().email({ error: 'Email invalide !' }).or(z.literal('')),
+  }),
 });
+
+const hasAdmin = (admin) => !!(admin?.firstname || admin?.lastname || admin?.email);
 
 // ----------------------------------------------------------------------
 
@@ -85,6 +96,7 @@ export function InstituteCreateEditForm({ currentInstitute }) {
         instagram: currentInstitute?.socialNetworks?.instagram || 'https://instagram.com/institut_test',
         linkedin: currentInstitute?.socialNetworks?.linkedin || 'https://linkedin.com/company/institut-test',
       },
+      admin: { firstname: '', lastname: '', email: '' },
     }),
     [currentInstitute]
   );
@@ -97,6 +109,7 @@ export function InstituteCreateEditForm({ currentInstitute }) {
 
   const {
     watch,
+    setError,
     handleSubmit,
     formState: { isSubmitting },
   } = methods;
@@ -104,6 +117,24 @@ export function InstituteCreateEditForm({ currentInstitute }) {
   const watchCountry = watch('address.countryCode');
 
   const onSubmit = handleSubmit(async (data) => {
+    const admin = {
+      firstname: data.admin.firstname.trim(),
+      lastname: data.admin.lastname.trim(),
+      email: data.admin.email.trim(),
+    };
+    const inviteAdmin = !isEdit && hasAdmin(admin);
+
+    // Les trois champs de l'administrateur vont ensemble
+    if (inviteAdmin) {
+      const missing = ['firstname', 'lastname', 'email'].filter((key) => !admin[key]);
+      if (missing.length) {
+        missing.forEach((key) =>
+          setError(`admin.${key}`, { type: 'manual', message: t('admin_fields_required') })
+        );
+        return;
+      }
+    }
+
     try {
       const payload = {
         label: data.label,
@@ -136,8 +167,21 @@ export function InstituteCreateEditForm({ currentInstitute }) {
         });
         toast.success(t('edit_success'));
       } else {
-        await axios.post(endpoints.institute.list, payload);
+        const { data: created } = await axios.post(endpoints.institute.list, payload);
         toast.success(t('create_success'));
+
+        if (inviteAdmin && created?.id) {
+          try {
+            await inviteInstituteAdmin(created.id, admin);
+            toast.success(t('admin_invite_success', { email: admin.email, interpolation: { escapeValue: false } }));
+          } catch (inviteError) {
+            // L'institut est créé : on signale l'échec sans bloquer (invitation possible ensuite)
+            toast.error(t('admin_invite_error', {
+                message: getErrorMessage(inviteError),
+                interpolation: { escapeValue: false },
+              }));
+          }
+        }
       }
 
       await mutate(endpoints.institute.list, undefined, { revalidate: false });
@@ -317,10 +361,40 @@ export function InstituteCreateEditForm({ currentInstitute }) {
     </>
   );
 
+  const renderAdmin = () => (
+    <>
+      <Typography variant="subtitle1" sx={{ mb: 0.5, mt: 4 }}>
+        {t('section_admin')}
+      </Typography>
+      <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+        {t('section_admin_hint')}
+      </Typography>
+
+      <Box
+        sx={{
+          rowGap: 3,
+          columnGap: 2,
+          display: 'grid',
+          gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' },
+        }}
+      >
+        <Field.Text name="admin.firstname" label={t('label_admin_firstname')} />
+        <Field.Text name="admin.lastname" label={t('label_admin_lastname')} />
+        <Field.Text
+          name="admin.email"
+          type="email"
+          label={t('label_admin_email')}
+          sx={{ gridColumn: '1 / -1' }}
+        />
+      </Box>
+    </>
+  );
+
   return (
     <Form methods={methods} onSubmit={onSubmit}>
       <Card sx={{ p: 3 }}>
         {renderGeneralInfo()}
+        {!isEdit && renderAdmin()}
         {renderAddress()}
         {renderLegalInfo()}
         {renderSocialNetworks()}

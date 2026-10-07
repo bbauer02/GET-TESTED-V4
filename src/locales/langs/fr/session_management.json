@@ -155,5 +155,6 @@
   "form_end_after_start": "La fin doit être postérieure au début",
   "form_limit_before_start": "La date limite d'inscription doit précéder le début de la session",
   "form_places_only_increase": "Session ouverte : le nombre de places ne peut qu'augmenter (minimum {{count}})",
-  "form_open_restrictions": "Session ouverte aux inscriptions : les dates de début et de fin sont figées et le nombre de places ne peut qu'augmenter."
+  "form_open_restrictions": "Session ouverte aux inscriptions : les dates de début et de fin sont figées et le nombre de places ne peut qu'augmenter.",
+  "enrollment_cancelled": "Inscription annulée : elle est conservée pour l’historique (factures, avoirs)."
 }
