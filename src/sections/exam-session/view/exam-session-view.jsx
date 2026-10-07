@@ -440,14 +440,27 @@ export function ExamSessionView({ enrollmentExamId }) {
         {currentIndex + 1} / {totalQuestions}
       </Button>
 
-      <Button
-        variant="contained"
-        endIcon={<Iconify icon="solar:arrow-right-line-duotone" />}
-        onClick={handleNext}
-        disabled={currentIndex === totalQuestions - 1 || isSubmitting}
-      >
-        Suivant
-      </Button>
+      {/* Dernière question : « Terminer » ouvre la confirmation de fin d'épreuve */}
+      {currentIndex === totalQuestions - 1 ? (
+        <Button
+          variant="contained"
+          color="error"
+          endIcon={<Iconify icon="solar:check-circle-bold" />}
+          onClick={() => setShowFinishDialog(true)}
+          disabled={isSubmitting}
+        >
+          Terminer
+        </Button>
+      ) : (
+        <Button
+          variant="contained"
+          endIcon={<Iconify icon="solar:arrow-right-line-duotone" />}
+          onClick={handleNext}
+          disabled={isSubmitting}
+        >
+          Suivant
+        </Button>
+      )}
     </Box>
   );
 
