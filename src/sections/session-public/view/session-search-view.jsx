@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import Pagination from '@mui/material/Pagination';
@@ -11,6 +12,9 @@ import { paths } from 'src/routes/paths';
 
 import { useTranslate } from 'src/locales';
 import { useGetLevels, useGetAssessments, useGetPublicSessions } from 'src/actions/session-public';
+
+import { Iconify } from 'src/components/iconify';
+import { LoadErrorContent } from 'src/components/load-error';
 
 import { useAuthContext } from 'src/auth/hooks';
 
@@ -29,7 +33,8 @@ export function SessionSearchView() {
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({ assessment: '', level: '' });
 
-  const { sessions, sessionsLoading, sessionsEmpty } = useGetPublicSessions(filters);
+  const { sessions, sessionsTotal, sessionsLoading, sessionsEmpty, sessionsError, sessionsMutate } =
+    useGetPublicSessions(filters, { page, itemsPerPage: ITEMS_PER_PAGE });
   const { assessments, assessmentsLoading } = useGetAssessments();
   const { levels, levelsLoading } = useGetLevels();
 
@@ -40,12 +45,9 @@ export function SessionSearchView() {
     setPage(1);
   }, []);
 
-  const paginatedSessions = sessions.slice(
-    (page - 1) * ITEMS_PER_PAGE,
-    page * ITEMS_PER_PAGE
-  );
-
-  const totalPages = Math.ceil(sessions.length / ITEMS_PER_PAGE);
+  // Pagination côté serveur
+  const totalPages = Math.ceil(sessionsTotal / ITEMS_PER_PAGE);
+  const hasFilters = !!filters.assessment || !!filters.level;
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 4, md: 6 } }}>
@@ -91,6 +93,11 @@ export function SessionSearchView() {
         </Box>
       )}
 
+      {/* Error state */}
+      {sessionsError && !sessionsLoading && (
+        <LoadErrorContent error={sessionsError} onRetry={sessionsMutate} />
+      )}
+
       {/* Empty state */}
       {sessionsEmpty && !sessionsLoading && (
         <Box sx={{ textAlign: 'center', py: 8 }}>
@@ -100,11 +107,25 @@ export function SessionSearchView() {
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             {t('no_sessions_hint')}
           </Typography>
+          {hasFilters && (
+            <Button
+              variant="outlined"
+              color="inherit"
+              sx={{ mt: 3 }}
+              startIcon={<Iconify icon="solar:restart-bold" />}
+              onClick={() => {
+                setFilters({ assessment: '', level: '' });
+                setPage(1);
+              }}
+            >
+              {t('reset_filters')}
+            </Button>
+          )}
         </Box>
       )}
 
       {/* Grid */}
-      {!sessionsLoading && !sessionsEmpty && (
+      {!sessionsLoading && !sessionsEmpty && !sessionsError && (
         <>
           <Box
             sx={{
@@ -117,7 +138,7 @@ export function SessionSearchView() {
               },
             }}
           >
-            {paginatedSessions.map((session) => (
+            {sessions.map((session) => (
               <SessionCard key={session.id || session['@id']} session={session} basePath={basePath} />
             ))}
           </Box>
@@ -126,7 +147,10 @@ export function SessionSearchView() {
             <Pagination
               page={page}
               count={totalPages}
-              onChange={(e, v) => setPage(v)}
+              onChange={(e, v) => {
+                setPage(v);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
               sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}
             />
           )}

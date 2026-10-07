@@ -97,5 +97,6 @@
   "go_to_my_enrollments": "Voir mes inscriptions",
   "already_have_account": "Vous avez déjà un compte ?",
   "sign_in_to_continue": "Connectez-vous pour continuer",
-  "account_exists_sign_in": "Un compte existe déjà avec cet email. Connectez-vous pour poursuivre votre inscription."
+  "account_exists_sign_in": "Un compte existe déjà avec cet email. Connectez-vous pour poursuivre votre inscription.",
+  "reset_filters": "Réinitialiser les filtres"
 }

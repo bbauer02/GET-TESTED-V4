@@ -37,6 +37,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { EmptyContent } from 'src/components/empty-content';
+import { LoadErrorContent } from 'src/components/load-error';
 import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomPopover } from 'src/components/custom-popover';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -62,7 +63,8 @@ export function InstituteSessionsView() {
   const router = useRouter();
   const currentInstitute = useCurrentInstitute();
   const { user } = useAuthContext();
-  const { sessions: allSessions, sessionsLoading } = useGetInstituteSessions(currentInstitute?.id);
+  const { sessions: allSessions, sessionsLoading, sessionsError, sessionsMutate } =
+    useGetInstituteSessions(currentInstitute?.id);
 
   const STATUS_LABELS = {
     DRAFT: t('status_draft'),
@@ -184,6 +186,14 @@ export function InstituteSessionsView() {
     },
     [table]
   );
+
+  if (sessionsError) {
+    return (
+      <DashboardContent>
+        <LoadErrorContent error={sessionsError} onRetry={sessionsMutate} />
+      </DashboardContent>
+    );
+  }
 
   if (sessionsLoading) {
     return (

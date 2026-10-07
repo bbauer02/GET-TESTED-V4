@@ -1,7 +1,7 @@
 import useSWR from 'swr';
 import { useMemo } from 'react';
 
-import { fetcher, endpoints, normalizeExam, extractMembers } from 'src/lib/axios';
+import { fetcher, endpoints, normalizeExam, extractMembers, extractTotalItems } from 'src/lib/axios';
 
 // ----------------------------------------------------------------------
 
@@ -35,11 +35,23 @@ const swrOptions = {
 
 // ----------------------------------------------------------------------
 
-export function useGetPublicSessions(filters = {}) {
-  // API only supports status filter — assessment/level filtered client-side
-  const url = `${endpoints.session.list}?status=OPEN`;
+/**
+ * Sessions ouvertes, filtrées et paginées par l'API (test, niveau, ordre chronologique).
+ */
+export function useGetPublicSessions(filters = {}, { page = 1, itemsPerPage = 12 } = {}) {
+  const params = {
+    status: 'OPEN',
+    page,
+    itemsPerPage,
+    'order[start]': 'asc',
+    ...(filters.assessment && { assessment: `/api/assessments/${filters.assessment}` }),
+    ...(filters.level && { level: `/api/levels/${filters.level}` }),
+  };
 
-  const { data, isLoading, error, isValidating } = useSWR(url, fetcher, swrOptions);
+  const { data, isLoading, error, isValidating, mutate } = useSWR([endpoints.session.list, { params }], fetcher, {
+    ...swrOptions,
+    keepPreviousData: true,
+  });
 
   // Fetch all exams to get full data (option/written fields)
   const { data: examsData } = useSWR(endpoints.exam.list, fetcher, swrOptions);
@@ -51,33 +63,18 @@ export function useGetPublicSessions(filters = {}) {
       examsMap.set(e.id, normalizeExam(e));
     });
 
-    let sessions = extractMembers(data).map((s) => enrichSessionExams(s, examsMap));
-
-    // Client-side filtering by assessment
-    if (filters.assessment) {
-      sessions = sessions.filter((s) => {
-        const id = s.assessment?.id || s.assessment?.['@id'];
-        return id === filters.assessment;
-      });
-    }
-
-    // Client-side filtering by level
-    if (filters.level) {
-      sessions = sessions.filter((s) => {
-        const id = s.level?.id || s.level?.['@id'];
-        return id === filters.level;
-      });
-    }
+    const sessions = extractMembers(data).map((s) => enrichSessionExams(s, examsMap));
 
     return {
       sessions,
-      sessionsTotal: sessions.length,
+      sessionsTotal: extractTotalItems(data),
       sessionsLoading: isLoading,
       sessionsError: error,
       sessionsValidating: isValidating,
-      sessionsEmpty: !isLoading && !isValidating && !sessions.length,
+      sessionsEmpty: !isLoading && !error && !sessions.length,
+      sessionsMutate: mutate,
     };
-  }, [data, examsData, error, isLoading, isValidating, filters.assessment, filters.level]);
+  }, [data, examsData, error, isLoading, isValidating, mutate]);
 
   return memoizedValue;
 }

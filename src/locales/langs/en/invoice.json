@@ -47,5 +47,11 @@
   "total_ttc": "Total incl. tax",
   "legal_title": "LEGAL NOTICES",
   "question_label": "Questions?",
-  "seller_label": "Seller"
+  "seller_label": "Seller",
+  "filter_scope": "Invoice type",
+  "scope_enrollment": "Enrollment invoices",
+  "scope_credit_note": "Credit notes",
+  "scope_commission": "Platform commissions",
+  "scope_all": "All invoices",
+  "analytic_scope_hint": "Counters: enrollment invoices (excluding commissions and credit notes)"
 }

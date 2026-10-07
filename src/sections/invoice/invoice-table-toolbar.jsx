@@ -3,7 +3,11 @@
 import { useCallback } from 'react';
 
 import Box from '@mui/material/Box';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
+import InputLabel from '@mui/material/InputLabel';
+import FormControl from '@mui/material/FormControl';
 import InputAdornment from '@mui/material/InputAdornment';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { formHelperTextClasses } from '@mui/material/FormHelperText';
@@ -14,7 +18,7 @@ import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
-export function InvoiceTableToolbar({ filters, dateError, onResetPage }) {
+export function InvoiceTableToolbar({ filters, options, dateError, onResetPage }) {
   const { t } = useTranslate('invoice');
   const { state: currentFilters, setState: updateFilters } = filters;
 
@@ -22,6 +26,14 @@ export function InvoiceTableToolbar({ filters, dateError, onResetPage }) {
     (event) => {
       onResetPage();
       updateFilters({ name: event.target.value });
+    },
+    [onResetPage, updateFilters]
+  );
+
+  const handleFilterScope = useCallback(
+    (event) => {
+      onResetPage();
+      updateFilters({ scope: event.target.value });
     },
     [onResetPage, updateFilters]
   );
@@ -53,10 +65,29 @@ export function InvoiceTableToolbar({ filters, dateError, onResetPage }) {
         alignItems: { xs: 'flex-end', md: 'center' },
       }}
     >
+      {!!options?.scopes?.length && (
+        <FormControl sx={{ flexShrink: 0, width: { xs: 1, md: 220 } }}>
+          <InputLabel id="filter-scope-label">{t('filter_scope')}</InputLabel>
+          <Select
+            labelId="filter-scope-label"
+            value={currentFilters.scope}
+            onChange={handleFilterScope}
+            label={t('filter_scope')}
+          >
+            {options.scopes.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      )}
+
       <DatePicker
         label={t('filter_start_date')}
         value={currentFilters.startDate}
         onChange={handleFilterStartDate}
+        slotProps={{ field: { clearable: true } }}
         sx={{ maxWidth: { md: 180 } }}
       />
 
@@ -65,6 +96,7 @@ export function InvoiceTableToolbar({ filters, dateError, onResetPage }) {
         value={currentFilters.endDate}
         onChange={handleFilterEndDate}
         slotProps={{
+          field: { clearable: true },
           textField: {
             error: dateError,
             helperText: dateError ? t('filter_date_error') : null,

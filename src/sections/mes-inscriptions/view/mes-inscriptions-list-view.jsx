@@ -20,6 +20,7 @@ import { useGetMyEnrollments } from 'src/actions/mes-inscriptions';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { EmptyContent } from 'src/components/empty-content';
+import { LoadErrorContent } from 'src/components/load-error';
 import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -38,7 +39,8 @@ const STATUS_COLORS = {
 export function MesInscriptionsListView() {
   const { t } = useTranslate('inscriptions');
   const router = useRouter();
-  const { enrollments, enrollmentsLoading, enrollmentsEmpty } = useGetMyEnrollments();
+  const { enrollments, enrollmentsLoading, enrollmentsEmpty, enrollmentsError, enrollmentsMutate } =
+    useGetMyEnrollments();
 
   const STATUS_LABELS = {
     DRAFT: t('status_draft'),
@@ -47,6 +49,14 @@ export function MesInscriptionsListView() {
     VALIDATED: t('status_validated'),
     CANCELLED: t('status_cancelled'),
   };
+
+  if (enrollmentsError) {
+    return (
+      <DashboardContent>
+        <LoadErrorContent error={enrollmentsError} onRetry={enrollmentsMutate} />
+      </DashboardContent>
+    );
+  }
 
   if (enrollmentsLoading) {
     return (

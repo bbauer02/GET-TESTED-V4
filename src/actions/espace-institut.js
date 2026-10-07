@@ -85,7 +85,7 @@ export function useGetInstituteMembres(id) {
 export function useGetInstituteSessions(id) {
   const url = id ? endpoints.institute.sessions(id) : '';
 
-  const { data, isLoading, error, isValidating } = useSWR(url, fetcher, swrOptions);
+  const { data, isLoading, error, isValidating, mutate } = useSWR(url, fetcher, swrOptions);
 
   const sessions = extractMembers(data);
 
@@ -94,11 +94,12 @@ export function useGetInstituteSessions(id) {
       sessions,
       sessionsLoading: isLoading,
       sessionsError: error,
+      sessionsMutate: mutate,
       sessionsValidating: isValidating,
       sessionsEmpty: !isLoading && !isValidating && !sessions.length,
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data, error, isLoading, isValidating]
+    [data, error, isLoading, isValidating, mutate]
   );
 
   return memoizedValue;
@@ -160,7 +161,7 @@ export function useGetSession(sessionId) {
 // ----------------------------------------------------------------------
 
 export function useGetInstituteEnrollments(id) {
-  const { sessions, sessionsLoading, sessionsError, sessionsValidating } =
+  const { sessions, sessionsLoading, sessionsError, sessionsValidating, sessionsMutate } =
     useGetInstituteSessions(id);
 
   const enrollments = useMemo(() => {
@@ -178,10 +179,11 @@ export function useGetInstituteEnrollments(id) {
       enrollments,
       enrollmentsLoading: sessionsLoading,
       enrollmentsError: sessionsError,
+      enrollmentsMutate: sessionsMutate,
       enrollmentsValidating: sessionsValidating,
       enrollmentsEmpty: !sessionsLoading && !sessionsValidating && !enrollments.length,
     }),
-    [enrollments, sessionsLoading, sessionsError, sessionsValidating]
+    [enrollments, sessionsLoading, sessionsError, sessionsValidating, sessionsMutate]
   );
 
   return memoizedValue;

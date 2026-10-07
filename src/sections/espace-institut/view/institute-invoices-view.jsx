@@ -25,6 +25,7 @@ import { useGetInstituteInvoices } from 'src/actions/invoice';
 
 import { Label } from 'src/components/label';
 import { Scrollbar } from 'src/components/scrollbar';
+import { LoadErrorContent } from 'src/components/load-error';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   useTable,
@@ -76,7 +77,8 @@ export function InstituteInvoicesView() {
   const tableEmises = useTable({ defaultOrderBy: 'invoiceDate' });
   const tableRecues = useTable({ defaultOrderBy: 'invoiceDate' });
 
-  const { invoices, invoicesLoading } = useGetInstituteInvoices(currentInstitute?.id);
+  const { invoices, invoicesLoading, invoicesError, invoicesMutate } =
+    useGetInstituteInvoices(currentInstitute?.id);
 
   // Séparer factures émises (ENROLLMENT = CA) et reçues (COMMISSION = charges)
   const { emises, recues } = useMemo(() => {
@@ -162,6 +164,14 @@ export function InstituteInvoicesView() {
     },
     [updateFilters, currentTable]
   );
+
+  if (invoicesError) {
+    return (
+      <DashboardContent>
+        <LoadErrorContent error={invoicesError} onRetry={invoicesMutate} />
+      </DashboardContent>
+    );
+  }
 
   return (
     <DashboardContent>

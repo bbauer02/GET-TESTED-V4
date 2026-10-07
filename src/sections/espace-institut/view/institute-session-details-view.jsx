@@ -50,6 +50,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { EmptyContent } from 'src/components/empty-content';
+import { LoadErrorContent } from 'src/components/load-error';
 import { ConfirmDialog } from 'src/components/custom-dialog';
 import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomPopover } from 'src/components/custom-popover';
@@ -123,7 +124,7 @@ export function InstituteSessionDetailsView() {
     CANCELLED: t('status_cancelled'),
   };
 
-  const { session, sessionLoading, sessionMutate } = useGetSession(id);
+  const { session, sessionLoading, sessionError, sessionMutate } = useGetSession(id);
   const { membres } = useGetInstituteMembres(currentInstitute?.id);
   const { exams: assessmentExams } = useGetAssessmentExams(session?.assessment?.id);
 
@@ -307,6 +308,14 @@ export function InstituteSessionDetailsView() {
     return (
       <DashboardContent>
         <LoadingScreen />
+      </DashboardContent>
+    );
+  }
+
+  if (sessionError) {
+    return (
+      <DashboardContent>
+        <LoadErrorContent error={sessionError} onRetry={sessionMutate} />
       </DashboardContent>
     );
   }

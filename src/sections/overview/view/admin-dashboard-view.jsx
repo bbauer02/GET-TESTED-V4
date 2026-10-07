@@ -1,6 +1,5 @@
 'use client';
 
-import { useMemo } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -21,20 +20,21 @@ import TableContainer from '@mui/material/TableContainer';
 import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
 
+import { usePaginatedCollection } from 'src/hooks/use-paginated-collection';
+
 import { fDate } from 'src/utils/format-time';
 import { fCurrency } from 'src/utils/format-number';
 import { SESSION_STATUS_COLORS, INVOICE_STATUS_COLORS } from 'src/utils/status';
 
+import { endpoints } from 'src/lib/axios';
 import { useTranslate } from 'src/locales';
-import { useGetUsers } from 'src/actions/user';
-import { useGetInvoices } from 'src/actions/invoice';
+import { useGetAdminStats } from 'src/actions/admin';
 import { DashboardContent } from 'src/layouts/dashboard';
-import { useGetInstitutes } from 'src/actions/institute';
-import { useGetPublicSessions } from 'src/actions/session-public';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { LoadErrorContent } from 'src/components/load-error';
 import { LoadingScreen } from 'src/components/loading-screen';
 
 import { useAuthContext } from 'src/auth/hooks';
@@ -43,28 +43,39 @@ import { useAuthContext } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
+const OPEN_SESSIONS = { status: 'OPEN' };
+const ENROLLMENT_INVOICES = { businessType: 'ENROLLMENT', invoiceType: 'INVOICE' };
+
 export function AdminDashboardView() {
   const theme = useTheme();
   const { user } = useAuthContext();
   const { t } = useTranslate('dashboard');
   const { t: tc } = useTranslate('common');
 
-  const { users, usersLoading } = useGetUsers();
-  const { institutes, institutesLoading } = useGetInstitutes();
-  const { sessions, sessionsLoading } = useGetPublicSessions();
-  const { invoices, invoicesLoading } = useGetInvoices();
+  // Indicateurs calculés en base ; listes « récentes » limitées à 5 éléments côté serveur
+  const { stats, statsLoading, statsError, statsMutate } = useGetAdminStats();
+  const { items: recentSessions, loading: sessionsLoading } = usePaginatedCollection(endpoints.session.list, {
+    rowsPerPage: 5,
+    orderBy: 'start',
+    order: 'asc',
+    filters: OPEN_SESSIONS,
+  });
+  const { items: recentInvoices, loading: invoicesLoading } = usePaginatedCollection(endpoints.invoice.list, {
+    rowsPerPage: 5,
+    orderBy: 'invoiceDate',
+    order: 'desc',
+    filters: ENROLLMENT_INVOICES,
+  });
 
-  const isLoading = usersLoading || institutesLoading || sessionsLoading || invoicesLoading;
+  const isLoading = statsLoading || sessionsLoading || invoicesLoading;
 
-  const recentSessions = useMemo(
-    () => (sessions || []).slice(0, 5),
-    [sessions]
-  );
-
-  const recentInvoices = useMemo(
-    () => (invoices || []).slice(0, 5),
-    [invoices]
-  );
+  if (statsError) {
+    return (
+      <DashboardContent>
+        <LoadErrorContent error={statsError} onRetry={statsMutate} />
+      </DashboardContent>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -107,28 +118,28 @@ export function AdminDashboardView() {
       {[
         {
           title: t('users'),
-          value: (users || []).length,
+          value: stats?.users ?? 0,
           icon: 'solar:users-group-rounded-bold-duotone',
           color: 'primary',
           href: paths.dashboard.user.list,
         },
         {
           title: t('institutes'),
-          value: (institutes || []).length,
+          value: stats?.institutes ?? 0,
           icon: 'solar:buildings-bold-duotone',
           color: 'info',
           href: paths.dashboard.institute.root,
         },
         {
           title: t('sessions'),
-          value: (sessions || []).length,
+          value: stats?.sessions ?? 0,
           icon: 'solar:calendar-bold-duotone',
           color: 'success',
           href: null,
         },
         {
           title: t('invoices'),
-          value: (invoices || []).length,
+          value: stats?.invoices ?? 0,
           icon: 'solar:bill-list-bold-duotone',
           color: 'warning',
           href: paths.dashboard.invoice.root,

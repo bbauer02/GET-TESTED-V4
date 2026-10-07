@@ -1,18 +1,24 @@
 'use client';
 
 import { varAlpha } from 'minimal-shared/utils';
+import { useDebounce } from 'minimal-shared/hooks';
 import { useMemo, useState, useCallback } from 'react';
 import { parsePhoneNumber } from 'react-phone-number-input';
 
 import Tab from '@mui/material/Tab';
+import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
+import Table from '@mui/material/Table';
+import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import Select from '@mui/material/Select';
 import Tooltip from '@mui/material/Tooltip';
-import { DataGrid } from '@mui/x-data-grid';
 import MenuItem from '@mui/material/MenuItem';
+import TableRow from '@mui/material/TableRow';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import InputLabel from '@mui/material/InputLabel';
@@ -23,14 +29,19 @@ import InputAdornment from '@mui/material/InputAdornment';
 import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
 
+import { usePaginatedCollection } from 'src/hooks/use-paginated-collection';
+
+import { endpoints } from 'src/lib/axios';
 import { useTranslate } from 'src/locales';
-import { useGetUsers } from 'src/actions/user';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { FlagIcon } from 'src/components/flag-icon';
+import { Scrollbar } from 'src/components/scrollbar';
+import { LoadErrorContent } from 'src/components/load-error';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useTable, TableNoData, TableHeadCustom, TablePaginationCustom } from 'src/components/table';
 
 import { UserQuickEditForm } from '../user-quick-edit-form';
 
@@ -39,18 +50,36 @@ import { UserQuickEditForm } from '../user-quick-edit-form';
 const ROLE_COLOR_MAP = {
   admin: 'success',
   user: 'info',
-  manager: 'warning',
-  superadmin: 'error',
 };
 
-// TAB_OPTIONS moved inside component to use translations
+const ROLE_OPTIONS = ['USER', 'ADMIN'];
+
+// Colonnes triables côté serveur (OrderFilter de l'API) : id de colonne -> champ API
+const SORT_FIELDS = {
+  name: 'lastname',
+  platformRole: 'platformRole',
+};
+
+const COUNT_OPTIONS = { rowsPerPage: 1 };
+const VERIFIED_FILTER = { isVerified: 'true' };
+const ACTIVE_FILTER = { isActive: 'true' };
+
+function phoneCountry(user) {
+  if (!user.phoneCountryCode) return '';
+  try {
+    const fullNumber = user.phone?.startsWith('+') ? user.phone : `${user.phoneCountryCode}${user.phone || ''}`;
+    return parsePhoneNumber(fullNumber)?.country || '';
+  } catch {
+    return '';
+  }
+}
 
 // ----------------------------------------------------------------------
 
 export function UserListView() {
   const { t } = useTranslate('user');
 
-  const { users: rawUsers, usersLoading } = useGetUsers();
+  const table = useTable({ defaultOrderBy: 'name', defaultRowsPerPage: 10 });
 
   const [currentTab, setCurrentTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -59,13 +88,59 @@ export function UserListView() {
   const [quickEditOpen, setQuickEditOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
-  const users = useMemo(
-    () =>
-      rawUsers.map((user) => ({
-        ...user,
-        name: `${user.firstname ?? ''} ${user.lastname ?? ''}`.trim(),
-      })),
-    [rawUsers]
+  const TABLE_HEAD = [
+    { id: 'name', label: t('table_name') },
+    { id: 'phone', label: t('table_phone'), width: 200, sortable: false },
+    { id: 'platformRole', label: t('table_role'), width: 160 },
+    { id: '', width: 80, sortable: false },
+  ];
+
+  const TAB_OPTIONS = [
+    { value: 'all', label: t('tab_all'), color: 'default' },
+    { value: 'verified', label: t('tab_verified'), color: 'info' },
+    { value: 'active', label: t('tab_active'), color: 'success' },
+  ];
+
+  // Pagination, tri, recherche et filtres côté serveur (l'API pagine par 30)
+  const debouncedSearch = useDebounce(searchQuery, 400);
+  const filters = useMemo(
+    () => ({
+      q: debouncedSearch,
+      platformRole: roleFilter,
+      isVerified: currentTab === 'verified' ? 'true' : undefined,
+      isActive: currentTab === 'active' ? 'true' : undefined,
+    }),
+    [debouncedSearch, roleFilter, currentTab]
+  );
+
+  const { items: users, totalItems, loading, error, mutate } = usePaginatedCollection(endpoints.user.list, {
+    page: table.page,
+    rowsPerPage: table.rowsPerPage,
+    orderBy: SORT_FIELDS[table.orderBy],
+    order: table.order,
+    filters,
+  });
+
+  // Compteurs des onglets : une requête légère par onglet (totalItems seulement)
+  const { totalItems: countAll } = usePaginatedCollection(endpoints.user.list, COUNT_OPTIONS);
+  const { totalItems: countVerified } = usePaginatedCollection(endpoints.user.list, {
+    ...COUNT_OPTIONS,
+    filters: VERIFIED_FILTER,
+  });
+  const { totalItems: countActive } = usePaginatedCollection(endpoints.user.list, {
+    ...COUNT_OPTIONS,
+    filters: ACTIVE_FILTER,
+  });
+  const tabCounts = { all: countAll, verified: countVerified, active: countActive };
+
+  const { onResetPage } = table;
+
+  const handleSort = useCallback(
+    (id) => {
+      table.onSort(id);
+      onResetPage();
+    },
+    [table, onResetPage]
   );
 
   const handleEditRow = useCallback((user) => {
@@ -76,162 +151,94 @@ export function UserListView() {
   const handleCloseQuickEdit = useCallback(() => {
     setQuickEditOpen(false);
     setSelectedUser(null);
-  }, []);
+    mutate();
+  }, [mutate]);
 
-  const TAB_OPTIONS = useMemo(() => [
-    { value: 'all', label: t('tab_all') },
-    { value: 'verified', label: t('tab_verified') },
-    { value: 'active', label: t('tab_active') },
-  ], [t]);
-
-  const columns = useMemo(
-    () => [
-      {
-        field: 'name',
-        headerName: t('table_name'),
-        flex: 1,
-        minWidth: 200,
-        renderCell: (params) => (
-          <Stack direction="row" alignItems="center" spacing={2} sx={{ height: 1 }}>
-            <Stack
-              sx={{
-                width: 40,
-                height: 40,
-                flexShrink: 0,
-                borderRadius: '50%',
-                overflow: 'hidden',
-                bgcolor: 'background.neutral',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {params.row.avatar ? (
-                <img
-                  src={params.row.avatar}
-                  alt={params.row.name}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              ) : (
-                <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>
-                  {params.row.firstname?.charAt(0)?.toUpperCase()}
-                  {params.row.lastname?.charAt(0)?.toUpperCase()}
-                </Typography>
-              )}
-            </Stack>
-            <Stack sx={{ minWidth: 0 }}>
-              <Typography variant="subtitle2" noWrap>
-                {params.row.name}
-              </Typography>
-              <Typography variant="body2" sx={{ color: 'text.disabled' }} noWrap>
-                {params.row.email}
-              </Typography>
-            </Stack>
-          </Stack>
-        ),
-      },
-      {
-        field: 'email',
-        headerName: t('table_email'),
-        flex: 1,
-        minWidth: 200,
-      },
-      {
-        field: 'phone',
-        headerName: t('table_phone'),
-        width: 200,
-        renderCell: (params) => {
-          const { phoneCountryCode, phone } = params.row;
-          let country = '';
-          if (phoneCountryCode) {
-            try {
-              const fullNumber = phone?.startsWith('+') ? phone : `${phoneCountryCode}${phone || ''}`;
-              const parsed = parsePhoneNumber(fullNumber);
-              country = parsed?.country || '';
-            } catch (e) { /* ignore parse errors */ }
-          }
-          return (
-            <Stack direction="row" alignItems="center" spacing={1} sx={{ height: 1 }}>
-              {country && <FlagIcon code={country} />}
-              <Typography variant="body2">{params.value}</Typography>
-            </Stack>
-          );
-        },
-      },
-      {
-        field: 'platformRole',
-        headerName: t('table_role'),
-        width: 160,
-        renderCell: (params) => (
-          <Label
-            variant="soft"
-            color={ROLE_COLOR_MAP[params.value?.toLowerCase()] || 'default'}
-          >
-            {params.value}
-          </Label>
-        ),
-      },
-      {
-        field: 'actions',
-        headerName: '',
-        width: 80,
-        sortable: false,
-        filterable: false,
-        disableColumnMenu: true,
-        renderCell: (params) => (
-          <Tooltip title={t('quick_edit_tooltip')}>
-            <IconButton onClick={() => handleEditRow(params.row)}>
-              <Iconify icon="solar:pen-bold" />
-            </IconButton>
-          </Tooltip>
-        ),
-      },
-    ],
-    [handleEditRow, t]
-  );
-
-  // Extract unique roles from user data
-  const roleOptions = useMemo(
-    () => [...new Set(users.map((u) => u.platformRole).filter(Boolean))],
-    [users]
-  );
-
-  // Count users per tab
-  const tabCounts = useMemo(() => {
-    const all = users.length;
-    const verified = users.filter((u) => u.verified).length;
-    const active = users.filter((u) => u.active).length;
-    return { all, verified, active };
-  }, [users]);
-
-  // Filtered rows
-  const filteredUsers = useMemo(() => {
-    let result = users;
-
-    // Tab filter
-    if (currentTab === 'verified') {
-      result = result.filter((u) => u.verified);
-    } else if (currentTab === 'active') {
-      result = result.filter((u) => u.active);
+  const renderTable = () => {
+    if (error) {
+      return <LoadErrorContent error={error} onRetry={mutate} />;
     }
 
-    // Role filter
-    if (roleFilter !== 'all') {
-      result = result.filter((u) => u.platformRole === roleFilter);
-    }
+    return (
+      <>
+        <Box sx={{ position: 'relative' }}>
+          <Scrollbar>
+            <Table size="medium" sx={{ minWidth: 720 }}>
+              <TableHeadCustom
+                order={table.order}
+                orderBy={table.orderBy}
+                headCells={TABLE_HEAD}
+                onSort={handleSort}
+              />
 
-    // Search filter (firstname / lastname)
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        (u) =>
-          (u.firstname ?? '').toLowerCase().includes(q) ||
-          (u.lastname ?? '').toLowerCase().includes(q)
-      );
-    }
+              <TableBody>
+                {users.map((user) => {
+                  const name = `${user.firstname ?? ''} ${user.lastname ?? ''}`.trim();
+                  const country = phoneCountry(user);
+                  const role = user.platformRole?.toLowerCase();
 
-    return result;
-  }, [users, currentTab, roleFilter, searchQuery]);
+                  return (
+                    <TableRow key={user.id} hover>
+                      <TableCell>
+                        <Stack direction="row" alignItems="center" spacing={2}>
+                          <Avatar alt={name} src={user.avatar}>
+                            {user.firstname?.charAt(0)?.toUpperCase()}
+                            {user.lastname?.charAt(0)?.toUpperCase()}
+                          </Avatar>
+                          <Stack sx={{ minWidth: 0 }}>
+                            <Typography variant="subtitle2" noWrap>
+                              {name || '—'}
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: 'text.disabled' }} noWrap>
+                              {user.email}
+                            </Typography>
+                          </Stack>
+                        </Stack>
+                      </TableCell>
+
+                      <TableCell>
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          {country && <FlagIcon code={country} />}
+                          <Typography variant="body2">{user.phone || '—'}</Typography>
+                        </Stack>
+                      </TableCell>
+
+                      <TableCell>
+                        <Label variant="soft" color={ROLE_COLOR_MAP[role] || 'default'}>
+                          {t(`role_${role}`, { defaultValue: user.platformRole })}
+                        </Label>
+                      </TableCell>
+
+                      <TableCell align="right">
+                        <Tooltip title={t('quick_edit_tooltip')}>
+                          <IconButton onClick={() => handleEditRow(user)}>
+                            <Iconify icon="solar:pen-bold" />
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+
+                <TableNoData notFound={!loading && !users.length} />
+              </TableBody>
+            </Table>
+          </Scrollbar>
+        </Box>
+
+        <TablePaginationCustom
+          page={table.page}
+          dense={table.dense}
+          count={totalItems}
+          rowsPerPage={table.rowsPerPage}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+          onPageChange={table.onChangePage}
+          onChangeDense={table.onChangeDense}
+          onRowsPerPageChange={table.onChangeRowsPerPage}
+        />
+      </>
+    );
+  };
 
   return (
     <DashboardContent maxWidth="xl">
@@ -257,10 +264,12 @@ export function UserListView() {
       />
 
       <Card>
-        {/* ---- Tabs ---- */}
         <Tabs
           value={currentTab}
-          onChange={(_, value) => setCurrentTab(value)}
+          onChange={(_, value) => {
+            setCurrentTab(value);
+            onResetPage();
+          }}
           sx={{
             px: 2.5,
             boxShadow: (theme) =>
@@ -274,14 +283,7 @@ export function UserListView() {
               label={tab.label}
               iconPosition="end"
               icon={
-                <Label
-                  variant={currentTab === tab.value ? 'filled' : 'soft'}
-                  color={
-                    (tab.value === 'verified' && 'info') ||
-                    (tab.value === 'active' && 'success') ||
-                    'default'
-                  }
-                >
+                <Label variant={currentTab === tab.value ? 'filled' : 'soft'} color={tab.color}>
                   {tabCounts[tab.value]}
                 </Label>
               }
@@ -289,24 +291,21 @@ export function UserListView() {
           ))}
         </Tabs>
 
-        {/* ---- Toolbar: role filter + search ---- */}
-        <Stack
-          direction="row"
-          alignItems="center"
-          spacing={2}
-          sx={{ px: 2.5, py: 2 }}
-        >
+        <Stack direction="row" alignItems="center" spacing={2} sx={{ px: 2.5, py: 2 }}>
           <FormControl size="small" sx={{ minWidth: 160 }}>
             <InputLabel>{t('filter_role')}</InputLabel>
             <Select
               value={roleFilter}
               label={t('filter_role')}
-              onChange={(e) => setRoleFilter(e.target.value)}
+              onChange={(e) => {
+                setRoleFilter(e.target.value);
+                onResetPage();
+              }}
             >
               <MenuItem value="all">{t('filter_role_all')}</MenuItem>
-              {roleOptions.map((role) => (
+              {ROLE_OPTIONS.map((role) => (
                 <MenuItem key={role} value={role}>
-                  {role}
+                  {t(`role_${role.toLowerCase()}`)}
                 </MenuItem>
               ))}
             </Select>
@@ -315,7 +314,10 @@ export function UserListView() {
           <TextField
             size="small"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              onResetPage();
+            }}
             placeholder={t('search_placeholder')}
             slotProps={{
               input: {
@@ -330,35 +332,10 @@ export function UserListView() {
           />
         </Stack>
 
-        {/* ---- DataGrid ---- */}
-        <DataGrid
-          rows={filteredUsers}
-          columns={columns}
-          loading={usersLoading}
-          showToolbar={false}
-          pageSizeOptions={[5, 10, 25]}
-          initialState={{
-            pagination: { paginationModel: { pageSize: 10 } },
-          }}
-          disableRowSelectionOnClick
-          disableColumnMenu
-          disableColumnFilter
-          disableColumnSelector
-          getRowHeight={() => 72}
-          sx={{
-            borderTop: (theme) => `dashed 1px ${theme.vars.palette.divider}`,
-            '& .MuiDataGrid-row': {
-              cursor: 'pointer',
-            },
-          }}
-        />
+        {renderTable()}
       </Card>
 
-      <UserQuickEditForm
-        currentUser={selectedUser}
-        open={quickEditOpen}
-        onClose={handleCloseQuickEdit}
-      />
+      <UserQuickEditForm currentUser={selectedUser} open={quickEditOpen} onClose={handleCloseQuickEdit} />
     </DashboardContent>
   );
 }

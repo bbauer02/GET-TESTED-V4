@@ -43,6 +43,7 @@ import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { EmptyContent } from 'src/components/empty-content';
+import { LoadErrorContent } from 'src/components/load-error';
 import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -74,7 +75,7 @@ export function MesInscriptionsDetailsView() {
   const { t } = useTranslate('inscriptions');
   const { t: tm } = useTranslate('session_management');
   const { enrollmentId } = useParams();
-  const { enrollment, enrollmentLoading, enrollmentMutate } = useGetMyEnrollment(enrollmentId);
+  const { enrollment, enrollmentLoading, enrollmentError, enrollmentMutate } = useGetMyEnrollment(enrollmentId);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -190,6 +191,14 @@ export function MesInscriptionsDetailsView() {
     return (
       <DashboardContent>
         <LoadingScreen />
+      </DashboardContent>
+    );
+  }
+
+  if (enrollmentError) {
+    return (
+      <DashboardContent>
+        <LoadErrorContent error={enrollmentError} onRetry={enrollmentMutate} />
       </DashboardContent>
     );
   }

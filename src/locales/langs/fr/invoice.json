@@ -47,5 +47,11 @@
   "total_ttc": "Total TTC",
   "legal_title": "MENTIONS LÉGALES",
   "question_label": "Une question ?",
-  "seller_label": "Vendeur"
+  "seller_label": "Vendeur",
+  "filter_scope": "Type de facture",
+  "scope_enrollment": "Factures d'inscription",
+  "scope_credit_note": "Avoirs",
+  "scope_commission": "Commissions plateforme",
+  "scope_all": "Toutes les factures",
+  "analytic_scope_hint": "Compteurs : factures d'inscription (hors commissions et avoirs)"
 }

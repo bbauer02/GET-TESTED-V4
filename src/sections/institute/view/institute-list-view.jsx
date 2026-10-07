@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback } from 'react';
-import { useBoolean, useSetState } from 'minimal-shared/hooks';
+import { useMemo, useCallback } from 'react';
+import { useBoolean, useDebounce, useSetState } from 'minimal-shared/hooks';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -14,21 +14,23 @@ import IconButton from '@mui/material/IconButton';
 import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
 
+import { usePaginatedCollection } from 'src/hooks/use-paginated-collection';
+
+import { endpoints } from 'src/lib/axios';
 import { useTranslate } from 'src/locales';
+import { deleteInstitute } from 'src/actions/institute';
 import { DashboardContent } from 'src/layouts/dashboard';
-import { deleteInstitute, useGetInstitutes } from 'src/actions/institute';
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import { LoadErrorContent } from 'src/components/load-error';
 import { ConfirmDialog } from 'src/components/custom-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   useTable,
   emptyRows,
-  rowInPage,
   TableNoData,
-  getComparator,
   TableEmptyRows,
   TableHeadCustom,
   TableSelectedAction,
@@ -43,7 +45,11 @@ import { InstituteTableFiltersResult } from '../institute-table-filters-result';
 
 // ----------------------------------------------------------------------
 
-// TABLE_HEAD moved inside component for i18n
+// Colonnes triables côté serveur (OrderFilter de l'API) : id de colonne -> champ API
+const SORT_FIELDS = {
+  label: 'label',
+  city: 'address.city',
+};
 
 // ----------------------------------------------------------------------
 
@@ -53,45 +59,98 @@ export function InstituteListView() {
   const TABLE_HEAD = [
     { id: 'label', label: t('table_name') },
     { id: 'city', label: t('table_city'), width: 180 },
-    { id: 'siteweb', label: t('table_website'), width: 220 },
-    { id: 'siren', label: t('table_siren'), width: 140 },
-    { id: 'siret', label: t('table_siret'), width: 160 },
-    { id: 'stripe', label: t('table_stripe'), width: 120 },
-    { id: '', width: 88 },
+    { id: 'siteweb', label: t('table_website'), width: 220, sortable: false },
+    { id: 'siren', label: t('table_siren'), width: 140, sortable: false },
+    { id: 'siret', label: t('table_siret'), width: 160, sortable: false },
+    { id: 'stripe', label: t('table_stripe'), width: 120, sortable: false },
+    { id: '', width: 88, sortable: false },
   ];
 
-  const table = useTable();
+  const table = useTable({ defaultOrderBy: 'label', defaultRowsPerPage: 10 });
 
   const confirmDialog = useBoolean();
 
-  const { institutes, institutesLoading, institutesEmpty } = useGetInstitutes();
-
   const filters = useSetState({ name: '' });
-  const { state: currentFilters, setState: updateFilters } = filters;
+  const { state: currentFilters } = filters;
 
-  const dataFiltered = applyFilter({
-    inputData: institutes,
-    comparator: getComparator(table.order, table.orderBy),
-    filters: currentFilters,
+  // Pagination, tri et recherche côté serveur (l'API pagine par 30)
+  const debouncedSearch = useDebounce(currentFilters.name, 400);
+  const apiFilters = useMemo(() => ({ q: debouncedSearch }), [debouncedSearch]);
+
+  const {
+    items: institutes,
+    totalItems,
+    loading,
+    validating,
+    error,
+    mutate,
+  } = usePaginatedCollection(endpoints.institute.list, {
+    page: table.page,
+    rowsPerPage: table.rowsPerPage,
+    orderBy: SORT_FIELDS[table.orderBy],
+    order: table.order,
+    filters: apiFilters,
   });
-
-  const dataInPage = rowInPage(dataFiltered, table.page, table.rowsPerPage);
 
   const canReset = !!currentFilters.name;
 
-  const notFound = (!dataFiltered.length && canReset) || !dataFiltered.length;
+  const notFound = !loading && !institutes.length;
+
+  // La sélection ne porte que sur la page affichée : elle est vidée à chaque
+  // changement de page, de tri ou de filtre.
+  const { setSelected } = table;
+
+  const handleResetPage = useCallback(() => {
+    setSelected([]);
+    table.onResetPage();
+  }, [setSelected, table]);
+
+  const handleChangePage = useCallback(
+    (event, newPage) => {
+      setSelected([]);
+      table.onChangePage(event, newPage);
+    },
+    [setSelected, table]
+  );
+
+  const handleChangeRowsPerPage = useCallback(
+    (event) => {
+      setSelected([]);
+      table.onChangeRowsPerPage(event);
+    },
+    [setSelected, table]
+  );
+
+  const handleSort = useCallback(
+    (id) => {
+      setSelected([]);
+      table.onSort(id);
+      table.onResetPage();
+    },
+    [setSelected, table]
+  );
+
+  const handleSelectAllRows = useCallback(
+    (checked) =>
+      table.onSelectAllRows(
+        checked,
+        institutes.map((row) => row.id)
+      ),
+    [institutes, table]
+  );
 
   const handleDeleteRow = useCallback(
     async (id) => {
       try {
         await deleteInstitute(id);
         toast.success(t('delete_success'));
-        table.onUpdatePageDeleteRow(dataInPage.length);
-      } catch (error) {
-        toast.error(getErrorMessage(error));
+        table.onUpdatePageDeleteRow(institutes.length);
+        mutate();
+      } catch (deleteError) {
+        toast.error(getErrorMessage(deleteError));
       }
     },
-    [dataInPage.length, table, t]
+    [institutes.length, mutate, table, t]
   );
 
   const handleDeleteRows = useCallback(async () => {
@@ -101,10 +160,11 @@ export function InstituteListView() {
 
     if (deletedCount) {
       toast.success(t('delete_success'));
-      table.onUpdatePageDeleteRows(dataInPage.length, dataFiltered.length);
+      table.onUpdatePageDeleteRows(institutes.length, totalItems);
     }
     failures.forEach((failure) => toast.error(getErrorMessage(failure.reason)));
-  }, [dataFiltered.length, dataInPage.length, table, t]);
+    mutate();
+  }, [institutes.length, mutate, table, t, totalItems]);
 
   const renderConfirmDialog = () => (
     <ConfirmDialog
@@ -113,7 +173,8 @@ export function InstituteListView() {
       title={t('delete_title')}
       content={
         <>
-          {t('delete_confirm_multiple_prefix')} <strong> {table.selected.length} </strong> {t('delete_confirm_multiple_suffix')}
+          {t('delete_confirm_multiple_prefix')} <strong> {table.selected.length} </strong>{' '}
+          {t('delete_confirm_multiple_suffix')}
         </>
       }
       action={
@@ -129,6 +190,60 @@ export function InstituteListView() {
         </Button>
       }
     />
+  );
+
+  const renderTable = () => (
+    <Box sx={{ position: 'relative' }}>
+      <TableSelectedAction
+        dense={table.dense}
+        numSelected={table.selected.length}
+        rowCount={institutes.length}
+        onSelectAllRows={handleSelectAllRows}
+        action={
+          <Tooltip title={t('delete_button')}>
+            <IconButton color="primary" onClick={confirmDialog.onTrue}>
+              <Iconify icon="solar:trash-bin-trash-bold" />
+            </IconButton>
+          </Tooltip>
+        }
+      />
+
+      <Scrollbar>
+        <Table
+          size={table.dense ? 'small' : 'medium'}
+          sx={{ minWidth: 960, opacity: validating && !loading ? 0.6 : 1 }}
+        >
+          <TableHeadCustom
+            order={table.order}
+            orderBy={table.orderBy}
+            headCells={TABLE_HEAD}
+            rowCount={institutes.length}
+            numSelected={table.selected.length}
+            onSort={handleSort}
+            onSelectAllRows={handleSelectAllRows}
+          />
+
+          <TableBody>
+            {institutes.map((row) => (
+              <InstituteTableRow
+                key={row.id}
+                row={row}
+                selected={table.selected.includes(row.id)}
+                onSelectRow={() => table.onSelectRow(row.id)}
+                onDeleteRow={() => handleDeleteRow(row.id)}
+              />
+            ))}
+
+            <TableEmptyRows
+              height={table.dense ? 56 : 56 + 20}
+              emptyRows={emptyRows(table.page, table.rowsPerPage, totalItems)}
+            />
+
+            <TableNoData notFound={notFound} />
+          </TableBody>
+        </Table>
+      </Scrollbar>
+    </Box>
   );
 
   return (
@@ -155,92 +270,28 @@ export function InstituteListView() {
         />
 
         <Card>
-          <InstituteTableToolbar
-            filters={filters}
-            onResetPage={table.onResetPage}
-          />
+          <InstituteTableToolbar filters={filters} onResetPage={handleResetPage} />
 
           {canReset && (
             <InstituteTableFiltersResult
               filters={filters}
-              totalResults={dataFiltered.length}
-              onResetPage={table.onResetPage}
+              totalResults={totalItems}
+              onResetPage={handleResetPage}
               sx={{ p: 2.5, pt: 0 }}
             />
           )}
 
-          <Box sx={{ position: 'relative' }}>
-            <TableSelectedAction
-              dense={table.dense}
-              numSelected={table.selected.length}
-              rowCount={dataFiltered.length}
-              onSelectAllRows={(checked) =>
-                table.onSelectAllRows(
-                  checked,
-                  dataFiltered.map((row) => row.id)
-                )
-              }
-              action={
-                <Tooltip title={t('delete_button')}>
-                  <IconButton color="primary" onClick={confirmDialog.onTrue}>
-                    <Iconify icon="solar:trash-bin-trash-bold" />
-                  </IconButton>
-                </Tooltip>
-              }
-            />
-
-            <Scrollbar>
-              <Table size={table.dense ? 'small' : 'medium'} sx={{ minWidth: 960 }}>
-                <TableHeadCustom
-                  order={table.order}
-                  orderBy={table.orderBy}
-                  headCells={TABLE_HEAD}
-                  rowCount={dataFiltered.length}
-                  numSelected={table.selected.length}
-                  onSort={table.onSort}
-                  onSelectAllRows={(checked) =>
-                    table.onSelectAllRows(
-                      checked,
-                      dataFiltered.map((row) => row.id)
-                    )
-                  }
-                />
-
-                <TableBody>
-                  {dataFiltered
-                    .slice(
-                      table.page * table.rowsPerPage,
-                      table.page * table.rowsPerPage + table.rowsPerPage
-                    )
-                    .map((row) => (
-                      <InstituteTableRow
-                        key={row.id}
-                        row={row}
-                        selected={table.selected.includes(row.id)}
-                        onSelectRow={() => table.onSelectRow(row.id)}
-                        onDeleteRow={() => handleDeleteRow(row.id)}
-                      />
-                    ))}
-
-                  <TableEmptyRows
-                    height={table.dense ? 56 : 56 + 20}
-                    emptyRows={emptyRows(table.page, table.rowsPerPage, dataFiltered.length)}
-                  />
-
-                  <TableNoData notFound={notFound} />
-                </TableBody>
-              </Table>
-            </Scrollbar>
-          </Box>
+          {error ? <LoadErrorContent error={error} onRetry={mutate} /> : renderTable()}
 
           <TablePaginationCustom
             page={table.page}
             dense={table.dense}
-            count={dataFiltered.length}
+            count={totalItems}
             rowsPerPage={table.rowsPerPage}
-            onPageChange={table.onChangePage}
+            rowsPerPageOptions={[5, 10, 25, 50, 100]}
+            onPageChange={handleChangePage}
             onChangeDense={table.onChangeDense}
-            onRowsPerPageChange={table.onChangeRowsPerPage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
           />
         </Card>
       </DashboardContent>
@@ -248,32 +299,4 @@ export function InstituteListView() {
       {renderConfirmDialog()}
     </>
   );
-}
-
-// ----------------------------------------------------------------------
-
-function applyFilter({ inputData, comparator, filters }) {
-  const { name } = filters;
-
-  const stabilizedThis = inputData.map((el, index) => [el, index]);
-
-  stabilizedThis.sort((a, b) => {
-    const order = comparator(a[0], b[0]);
-    if (order !== 0) return order;
-    return a[1] - b[1];
-  });
-
-  inputData = stabilizedThis.map((el) => el[0]);
-
-  if (name) {
-    inputData = inputData.filter(
-      (institute) =>
-        institute.label?.toLowerCase().includes(name.toLowerCase()) ||
-        institute.address?.city?.toLowerCase().includes(name.toLowerCase()) ||
-        institute.siren?.toLowerCase().includes(name.toLowerCase()) ||
-        institute.siret?.toLowerCase().includes(name.toLowerCase())
-    );
-  }
-
-  return inputData;
 }

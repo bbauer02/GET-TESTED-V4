@@ -97,5 +97,6 @@
   "go_to_my_enrollments": "View my enrollments",
   "already_have_account": "Already have an account?",
   "sign_in_to_continue": "Sign in to continue",
-  "account_exists_sign_in": "An account already exists with this email. Sign in to continue your enrollment."
+  "account_exists_sign_in": "An account already exists with this email. Sign in to continue your enrollment.",
+  "reset_filters": "Reset filters"
 }

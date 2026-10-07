@@ -93,7 +93,12 @@ axiosInstance.interceptors.response.use(
       error?.message ||
       'Something went wrong!';
     console.error('Axios error:', message);
-    return Promise.reject(new Error(message));
+
+    // Erreur enrichie : code HTTP et erreurs de validation par champ (API Platform)
+    const enrichedError = new Error(message);
+    enrichedError.status = error?.response?.status;
+    enrichedError.violations = data?.violations || [];
+    return Promise.reject(enrichedError);
   }
 );
 
@@ -218,6 +223,9 @@ export const endpoints = {
     details: '/api/skills',
   },
   publicStats: '/api/public/stats',
+  admin: {
+    stats: '/api/admin/stats',
+  },
   session: {
     list: '/api/sessions',
     details: (id) => `/api/sessions/${id}`,

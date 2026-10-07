@@ -37,6 +37,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { EmptyContent } from 'src/components/empty-content';
+import { LoadErrorContent } from 'src/components/load-error';
 import { LoadingScreen } from 'src/components/loading-screen';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useTable, TableHeadCustom, TablePaginationCustom } from 'src/components/table';
@@ -76,7 +77,8 @@ export function InstituteCandidatsView() {
   const table = useTable({ defaultRowsPerPage: 10 });
   const currentInstitute = useCurrentInstitute();
 
-  const { enrollments, enrollmentsLoading } = useGetInstituteEnrollments(currentInstitute?.id);
+  const { enrollments, enrollmentsLoading, enrollmentsError, enrollmentsMutate } =
+    useGetInstituteEnrollments(currentInstitute?.id);
   const { sessions } = useGetInstituteSessions(currentInstitute?.id);
 
   const [search, setSearch] = useState('');
@@ -184,6 +186,14 @@ export function InstituteCandidatsView() {
     });
     return counts;
   }, [enrollments]);
+
+  if (enrollmentsError) {
+    return (
+      <DashboardContent>
+        <LoadErrorContent error={enrollmentsError} onRetry={enrollmentsMutate} />
+      </DashboardContent>
+    );
+  }
 
   if (enrollmentsLoading) {
     return (

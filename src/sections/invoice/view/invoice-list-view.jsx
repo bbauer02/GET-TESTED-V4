@@ -1,9 +1,9 @@
 'use client';
 
-import { sumBy } from 'es-toolkit';
-import { useCallback } from 'react';
+import dayjs from 'dayjs';
+import { useMemo, useCallback } from 'react';
 import { varAlpha } from 'minimal-shared/utils';
-import { useSetState } from 'minimal-shared/hooks';
+import { useDebounce, useSetState } from 'minimal-shared/hooks';
 
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
@@ -13,24 +13,27 @@ import Stack from '@mui/material/Stack';
 import Divider from '@mui/material/Divider';
 import TableBody from '@mui/material/TableBody';
 import { useTheme } from '@mui/material/styles';
+import Typography from '@mui/material/Typography';
 
 import { paths } from 'src/routes/paths';
 
-import { fIsAfter, fIsBetween } from 'src/utils/format-time';
+import { usePaginatedCollection } from 'src/hooks/use-paginated-collection';
 
+import { fIsAfter } from 'src/utils/format-time';
+
+import { endpoints } from 'src/lib/axios';
 import { useTranslate } from 'src/locales';
-import { useGetInvoices } from 'src/actions/invoice';
+import { useGetAdminStats } from 'src/actions/admin';
 import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Label } from 'src/components/label';
 import { Scrollbar } from 'src/components/scrollbar';
+import { LoadErrorContent } from 'src/components/load-error';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   useTable,
   emptyRows,
-  rowInPage,
   TableNoData,
-  getComparator,
   TableEmptyRows,
   TableHeadCustom,
   TablePaginationCustom,
@@ -43,7 +46,27 @@ import { InvoiceTableFiltersResult } from '../invoice-table-filters-result';
 
 // ----------------------------------------------------------------------
 
-// TABLE_HEAD moved inside component for i18n
+// Périmètres de la liste -> filtres API. Le périmètre « ENROLLMENT » correspond à celui des
+// compteurs de GET /api/admin/stats (factures d'inscription, hors commissions et avoirs).
+const SCOPE_FILTERS = {
+  ENROLLMENT: { businessType: 'ENROLLMENT', invoiceType: 'INVOICE' },
+  CREDIT_NOTE: { invoiceType: 'CREDIT_NOTE' },
+  PLATFORM_COMMISSION: { businessType: 'PLATFORM_COMMISSION' },
+  all: {},
+};
+
+const STATS_SCOPE = 'ENROLLMENT';
+
+// Colonnes triables côté serveur (OrderFilter de l'API)
+const SORTABLE_COLUMNS = ['invoiceDate', 'totalTTC', 'status'];
+
+// Date complète uniquement : pendant la saisie au clavier, le DatePicker émet des dates
+// invalides ou partielles (ex. année « 0202 ») qu'il ne faut pas envoyer à l'API.
+const toApiDate = (date, addDays = 0) => {
+  const value = date ? dayjs(date) : null;
+  if (!value?.isValid() || value.year() < 1900) return undefined;
+  return value.add(addDays, 'day').format('YYYY-MM-DD');
+};
 
 // ----------------------------------------------------------------------
 
@@ -58,15 +81,25 @@ export function InvoiceListView() {
     { id: 'status', label: t('table_status') },
     { id: 'businessType', label: t('table_type') },
     { id: '', width: 64 },
+  ].map((cell) => ({ ...cell, sortable: SORTABLE_COLUMNS.includes(cell.id) }));
+
+  const SCOPE_OPTIONS = [
+    { value: 'ENROLLMENT', label: t('scope_enrollment') },
+    { value: 'CREDIT_NOTE', label: t('scope_credit_note') },
+    { value: 'PLATFORM_COMMISSION', label: t('scope_commission') },
+    { value: 'all', label: t('scope_all') },
   ];
 
-  const table = useTable({ defaultOrderBy: 'invoiceDate' });
-
-  const { invoices, invoicesLoading } = useGetInvoices();
+  const table = useTable({
+    defaultOrderBy: 'invoiceDate',
+    defaultOrder: 'desc',
+    defaultRowsPerPage: 10,
+  });
 
   const filters = useSetState({
     name: '',
     status: 'all',
+    scope: STATS_SCOPE,
     startDate: null,
     endDate: null,
   });
@@ -74,40 +107,73 @@ export function InvoiceListView() {
 
   const dateError = fIsAfter(currentFilters.startDate, currentFilters.endDate);
 
-  const dataFiltered = applyFilter({
-    inputData: invoices,
-    comparator: getComparator(table.order, table.orderBy),
-    filters: currentFilters,
-    dateError,
+  // Pagination, tri, recherche et filtres côté serveur (l'API pagine par 30)
+  const debouncedSearch = useDebounce(currentFilters.name, 400);
+
+  const { status, scope, startDate, endDate } = currentFilters;
+
+  const apiFilters = useMemo(
+    () => ({
+      ...SCOPE_FILTERS[scope],
+      q: debouncedSearch,
+      status,
+      // DateFilter : « before » sur une date seule s'arrête à minuit ; on borne donc
+      // strictement avant le lendemain pour inclure toute la journée de fin.
+      'invoiceDate[after]': dateError ? undefined : toApiDate(startDate),
+      'invoiceDate[strictly_before]': dateError ? undefined : toApiDate(endDate, 1),
+    }),
+    [debouncedSearch, status, scope, startDate, endDate, dateError]
+  );
+
+  const {
+    items: invoices,
+    totalItems,
+    loading,
+    validating,
+    error,
+    mutate,
+  } = usePaginatedCollection(endpoints.invoice.list, {
+    page: table.page,
+    rowsPerPage: table.rowsPerPage,
+    orderBy: SORTABLE_COLUMNS.includes(table.orderBy) ? table.orderBy : undefined,
+    order: table.order,
+    filters: apiFilters,
   });
 
-  const dataInPage = rowInPage(dataFiltered, table.page, table.rowsPerPage);
+  // Compteurs et montants par statut : calculés en base par l'API
+  const { stats } = useGetAdminStats();
+
+  const statsTotal = stats?.invoices ?? 0;
+  const byStatus = stats?.invoicesByStatus ?? {};
+
+  const getInvoiceLength = (key) => byStatus[key]?.count ?? 0;
+  const getTotalAmount = (key) => byStatus[key]?.amount ?? 0;
+  const getPercentByStatus = (key) => (statsTotal ? (getInvoiceLength(key) / statsTotal) * 100 : 0);
+  const totalAmount = Object.values(byStatus).reduce((sum, item) => sum + (item?.amount ?? 0), 0);
+
+  // Les compteurs des onglets ne valent que pour le périmètre des statistiques
+  const showTabCounts = !!stats && scope === STATS_SCOPE;
+
+  const TABS = [
+    { value: 'all', label: t('tab_all'), color: 'default', count: statsTotal },
+    { value: 'PAID', label: t('tab_paid'), color: 'success', count: getInvoiceLength('PAID') },
+    { value: 'ISSUED', label: t('tab_issued'), color: 'warning', count: getInvoiceLength('ISSUED') },
+    { value: 'DRAFT', label: t('tab_draft'), color: 'default', count: getInvoiceLength('DRAFT') },
+    {
+      value: 'CANCELLED',
+      label: t('tab_cancelled'),
+      color: 'error',
+      count: getInvoiceLength('CANCELLED'),
+    },
+  ];
 
   const canReset =
     !!currentFilters.name ||
     currentFilters.status !== 'all' ||
-    (!!currentFilters.startDate && !!currentFilters.endDate);
+    !!currentFilters.startDate ||
+    !!currentFilters.endDate;
 
-  const notFound = (!dataFiltered.length && canReset) || !dataFiltered.length;
-
-  const getInvoiceLength = (status) => invoices.filter((item) => item.status === status).length;
-
-  const getTotalAmount = (status) =>
-    sumBy(
-      invoices.filter((item) => item.status === status),
-      (invoice) => invoice.totalTTC || 0
-    );
-
-  const getPercentByStatus = (status) =>
-    invoices.length ? (getInvoiceLength(status) / invoices.length) * 100 : 0;
-
-  const TABS = [
-    { value: 'all', label: t('tab_all'), color: 'default', count: invoices.length },
-    { value: 'PAID', label: t('tab_paid'), color: 'success', count: getInvoiceLength('PAID') },
-    { value: 'ISSUED', label: t('tab_issued'), color: 'warning', count: getInvoiceLength('ISSUED') },
-    { value: 'DRAFT', label: t('tab_draft'), color: 'default', count: getInvoiceLength('DRAFT') },
-    { value: 'CANCELLED', label: t('tab_cancelled'), color: 'error', count: getInvoiceLength('CANCELLED') },
-  ];
+  const notFound = !loading && !invoices.length;
 
   const handleFilterStatus = useCallback(
     (event, newValue) => {
@@ -115,6 +181,102 @@ export function InvoiceListView() {
       updateFilters({ status: newValue });
     },
     [updateFilters, table]
+  );
+
+  const handleSort = useCallback(
+    (id) => {
+      table.onSort(id);
+      table.onResetPage();
+    },
+    [table]
+  );
+
+  const renderAnalytics = () => (
+    <Card sx={{ mb: { xs: 3, md: 5 } }}>
+      <Scrollbar sx={{ minHeight: 108 }}>
+        <Stack
+          divider={<Divider orientation="vertical" flexItem sx={{ borderStyle: 'dashed' }} />}
+          sx={{ py: 2, flexDirection: 'row' }}
+        >
+          <InvoiceAnalytic
+            title={t('analytic_total')}
+            total={statsTotal}
+            percent={100}
+            price={totalAmount}
+            icon="solar:bill-list-bold-duotone"
+            color={theme.vars.palette.info.main}
+          />
+
+          <InvoiceAnalytic
+            title={t('analytic_paid')}
+            total={getInvoiceLength('PAID')}
+            percent={getPercentByStatus('PAID')}
+            price={getTotalAmount('PAID')}
+            icon="solar:file-check-bold-duotone"
+            color={theme.vars.palette.success.main}
+          />
+
+          <InvoiceAnalytic
+            title={t('analytic_issued')}
+            total={getInvoiceLength('ISSUED')}
+            percent={getPercentByStatus('ISSUED')}
+            price={getTotalAmount('ISSUED')}
+            icon="solar:sort-by-time-bold-duotone"
+            color={theme.vars.palette.warning.main}
+          />
+
+          <InvoiceAnalytic
+            title={t('analytic_cancelled')}
+            total={getInvoiceLength('CANCELLED')}
+            percent={getPercentByStatus('CANCELLED')}
+            price={getTotalAmount('CANCELLED')}
+            icon="solar:bell-bing-bold-duotone"
+            color={theme.vars.palette.error.main}
+          />
+        </Stack>
+      </Scrollbar>
+
+      <Typography
+        variant="caption"
+        component="p"
+        sx={{ px: 2.5, pb: 1.5, color: 'text.disabled' }}
+      >
+        {t('analytic_scope_hint')}
+      </Typography>
+    </Card>
+  );
+
+  const renderTable = () => (
+    <Scrollbar sx={{ minHeight: 444 }}>
+      <Table
+        size={table.dense ? 'small' : 'medium'}
+        sx={{ minWidth: 800, opacity: validating && !loading ? 0.6 : 1 }}
+      >
+        <TableHeadCustom
+          order={table.order}
+          orderBy={table.orderBy}
+          headCells={TABLE_HEAD}
+          onSort={handleSort}
+        />
+
+        <TableBody>
+          {invoices.map((row) => (
+            <InvoiceTableRow
+              key={row.id}
+              row={row}
+              detailsHref={paths.dashboard.invoice.details(row.id)}
+            />
+          ))}
+
+          <TableEmptyRows
+            height={table.dense ? 56 : 76}
+            emptyRows={emptyRows(table.page, table.rowsPerPage, totalItems)}
+          />
+
+          <TableNoData notFound={notFound} />
+        </TableBody>
+      </Table>
+    </Scrollbar>
   );
 
   return (
@@ -129,50 +291,7 @@ export function InvoiceListView() {
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
-      <Card sx={{ mb: { xs: 3, md: 5 } }}>
-        <Scrollbar sx={{ minHeight: 108 }}>
-          <Stack
-            divider={<Divider orientation="vertical" flexItem sx={{ borderStyle: 'dashed' }} />}
-            sx={{ py: 2, flexDirection: 'row' }}
-          >
-            <InvoiceAnalytic
-              title={t('analytic_total')}
-              total={invoices.length}
-              percent={100}
-              price={sumBy(invoices, (inv) => inv.totalTTC || 0)}
-              icon="solar:bill-list-bold-duotone"
-              color={theme.vars.palette.info.main}
-            />
-
-            <InvoiceAnalytic
-              title={t('analytic_paid')}
-              total={getInvoiceLength('PAID')}
-              percent={getPercentByStatus('PAID')}
-              price={getTotalAmount('PAID')}
-              icon="solar:file-check-bold-duotone"
-              color={theme.vars.palette.success.main}
-            />
-
-            <InvoiceAnalytic
-              title={t('analytic_issued')}
-              total={getInvoiceLength('ISSUED')}
-              percent={getPercentByStatus('ISSUED')}
-              price={getTotalAmount('ISSUED')}
-              icon="solar:sort-by-time-bold-duotone"
-              color={theme.vars.palette.warning.main}
-            />
-
-            <InvoiceAnalytic
-              title={t('analytic_cancelled')}
-              total={getInvoiceLength('CANCELLED')}
-              percent={getPercentByStatus('CANCELLED')}
-              price={getTotalAmount('CANCELLED')}
-              icon="solar:bell-bing-bold-duotone"
-              color={theme.vars.palette.error.main}
-            />
-          </Stack>
-        </Scrollbar>
-      </Card>
+      {renderAnalytics()}
 
       <Card>
         <Tabs
@@ -190,15 +309,18 @@ export function InvoiceListView() {
               label={tab.label}
               iconPosition="end"
               icon={
-                <Label
-                  variant={
-                    ((tab.value === 'all' || tab.value === currentFilters.status) && 'filled') ||
-                    'soft'
-                  }
-                  color={tab.color}
-                >
-                  {tab.count}
-                </Label>
+                showTabCounts ? (
+                  <Label
+                    variant={
+                      ((tab.value === 'all' || tab.value === currentFilters.status) &&
+                        'filled') ||
+                      'soft'
+                    }
+                    color={tab.color}
+                  >
+                    {tab.count}
+                  </Label>
+                ) : undefined
               }
             />
           ))}
@@ -206,6 +328,7 @@ export function InvoiceListView() {
 
         <InvoiceTableToolbar
           filters={filters}
+          options={{ scopes: SCOPE_OPTIONS }}
           dateError={dateError}
           onResetPage={table.onResetPage}
         />
@@ -214,49 +337,20 @@ export function InvoiceListView() {
           <InvoiceTableFiltersResult
             filters={filters}
             onResetPage={table.onResetPage}
-            totalResults={dataFiltered.length}
+            totalResults={totalItems}
+            allowPartialDates
             sx={{ p: 2.5, pt: 0 }}
           />
         )}
 
-        <Scrollbar sx={{ minHeight: 444 }}>
-          <Table size={table.dense ? 'small' : 'medium'} sx={{ minWidth: 800 }}>
-            <TableHeadCustom
-              order={table.order}
-              orderBy={table.orderBy}
-              headCells={TABLE_HEAD}
-              onSort={table.onSort}
-            />
-
-            <TableBody>
-              {dataFiltered
-                .slice(
-                  table.page * table.rowsPerPage,
-                  table.page * table.rowsPerPage + table.rowsPerPage
-                )
-                .map((row) => (
-                  <InvoiceTableRow
-                    key={row.id}
-                    row={row}
-                    detailsHref={paths.dashboard.invoice.details(row.id)}
-                  />
-                ))}
-
-              <TableEmptyRows
-                height={table.dense ? 56 : 76}
-                emptyRows={emptyRows(table.page, table.rowsPerPage, dataFiltered.length)}
-              />
-
-              <TableNoData notFound={notFound} />
-            </TableBody>
-          </Table>
-        </Scrollbar>
+        {error ? <LoadErrorContent error={error} onRetry={mutate} /> : renderTable()}
 
         <TablePaginationCustom
           page={table.page}
           dense={table.dense}
-          count={dataFiltered.length}
+          count={totalItems}
           rowsPerPage={table.rowsPerPage}
+          rowsPerPageOptions={[5, 10, 25, 50, 100]}
           onPageChange={table.onChangePage}
           onChangeDense={table.onChangeDense}
           onRowsPerPageChange={table.onChangeRowsPerPage}
@@ -264,40 +358,4 @@ export function InvoiceListView() {
       </Card>
     </DashboardContent>
   );
-}
-
-// ----------------------------------------------------------------------
-
-function applyFilter({ inputData, comparator, filters, dateError }) {
-  const { name, status, startDate, endDate } = filters;
-
-  const stabilizedThis = inputData.map((el, index) => [el, index]);
-
-  stabilizedThis.sort((a, b) => {
-    const order = comparator(a[0], b[0]);
-    if (order !== 0) return order;
-    return a[1] - b[1];
-  });
-
-  inputData = stabilizedThis.map((el) => el[0]);
-
-  if (name) {
-    inputData = inputData.filter((invoice) =>
-      [invoice.invoiceNumber, invoice.buyer?.name].some((field) =>
-        field?.toLowerCase().includes(name.toLowerCase())
-      )
-    );
-  }
-
-  if (status !== 'all') {
-    inputData = inputData.filter((invoice) => invoice.status === status);
-  }
-
-  if (!dateError && startDate && endDate) {
-    inputData = inputData.filter((invoice) =>
-      fIsBetween(invoice.invoiceDate, startDate, endDate)
-    );
-  }
-
-  return inputData;
 }
