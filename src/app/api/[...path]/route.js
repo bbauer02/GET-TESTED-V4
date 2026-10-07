@@ -57,10 +57,18 @@ async function proxyRequest(request, { params }) {
         const chunks = [];
         res.on('data', (chunk) => chunks.push(chunk));
         res.on('end', () => {
+          // Statuts sans corps (204 après un DELETE…) : un corps, même vide, fait planter Response
+          const hasBody = ![101, 204, 205, 304].includes(res.statusCode);
+
+          const headers = { 'content-type': res.headers['content-type'] || 'application/json' };
+          ['content-disposition', 'cache-control', 'location'].forEach((name) => {
+            if (res.headers[name]) headers[name] = res.headers[name];
+          });
+
           resolve(
-            new NextResponse(Buffer.concat(chunks), {
+            new NextResponse(hasBody ? Buffer.concat(chunks) : null, {
               status: res.statusCode,
-              headers: { 'content-type': res.headers['content-type'] || 'application/json' },
+              headers,
             })
           );
         });

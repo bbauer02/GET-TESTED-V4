@@ -58,5 +58,14 @@
   "online_exam_resume": "Resume the exam",
   "online_exam_results": "View result",
   "online_exam_opens_at": "Online on {{date}}",
-  "online_exam_closed": "Slot ended"
+  "online_exam_closed": "Slot ended",
+  "cancel_button": "Cancel my enrollment",
+  "cancel_title": "Cancel your enrollment?",
+  "cancel_description": "Your seat will be released and your exams cancelled. This cannot be undone.",
+  "cancel_refund_info": "You will be refunded {{amount}} to your payment method, usually within 5 to 10 business days.",
+  "cancel_no_payment": "No payment was made: nothing will be charged.",
+  "cancel_preview_unavailable": "The refund amount could not be calculated. Any payment made will be refunded.",
+  "cancel_deadline": "Cancellation possible until {{date}}.",
+  "cancel_confirm": "Confirm cancellation",
+  "cancel_success": "Your enrollment is cancelled. A confirmation email has been sent."
 }

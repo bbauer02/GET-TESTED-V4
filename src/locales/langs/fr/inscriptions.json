@@ -58,5 +58,14 @@
   "online_exam_resume": "Reprendre l'épreuve",
   "online_exam_results": "Voir le résultat",
   "online_exam_opens_at": "En ligne le {{date}}",
-  "online_exam_closed": "Créneau terminé"
+  "online_exam_closed": "Créneau terminé",
+  "cancel_button": "Annuler mon inscription",
+  "cancel_title": "Annuler votre inscription ?",
+  "cancel_description": "Votre place sera libérée et vos épreuves annulées. Cette action est définitive.",
+  "cancel_refund_info": "Vous serez remboursé(e) de {{amount}} sur votre moyen de paiement, généralement sous 5 à 10 jours ouvrés.",
+  "cancel_no_payment": "Aucun paiement n'a été effectué : rien ne vous sera débité.",
+  "cancel_preview_unavailable": "Le montant du remboursement n'a pas pu être calculé. Tout paiement effectué vous sera remboursé.",
+  "cancel_deadline": "Annulation possible jusqu'au {{date}}.",
+  "cancel_confirm": "Confirmer l'annulation",
+  "cancel_success": "Votre inscription est annulée. Un email de confirmation vous a été envoyé."
 }

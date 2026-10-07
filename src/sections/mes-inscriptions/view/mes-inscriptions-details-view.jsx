@@ -1,5 +1,6 @@
 'use client';
 
+import { mutate } from 'swr';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
@@ -30,6 +31,7 @@ import { fCurrency } from 'src/utils/format-number';
 import { fDate, fDateTime } from 'src/utils/format-time';
 import { PAYMENT_STATE_ICONS, getEnrollmentPayment, PAYMENT_STATE_COLORS } from 'src/utils/enrollment-payment';
 
+import { endpoints } from 'src/lib/axios';
 import { useTranslate } from 'src/locales';
 import { DashboardContent } from 'src/layouts/dashboard';
 import { useGetMyEnrollment } from 'src/actions/mes-inscriptions';
@@ -46,6 +48,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { getErrorMessage } from 'src/auth/utils';
 
+import { MesInscriptionsCancelDialog } from '../mes-inscriptions-cancel-dialog';
 import { MesInscriptionsDocumentDialog } from '../mes-inscriptions-document-dialog';
 
 // ----------------------------------------------------------------------
@@ -80,6 +83,9 @@ export function MesInscriptionsDetailsView() {
   const returnedInvoiceId = searchParams.get('invoice');
 
   const [payLoading, setPayLoading] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
+  // Heure figée au rendu initial pour l'éligibilité à l'annulation
+  const [nowMs] = useState(() => Date.now());
   const [paymentCheck, setPaymentCheck] = useState(null); // 'checking' | 'pending'
 
   // Retour de Stripe : confirmer le paiement auprès de l'API avant d'annoncer quoi que ce soit
@@ -203,6 +209,9 @@ export function MesInscriptionsDetailsView() {
   const { invoice: enrollmentInvoice, state: paymentState } = getEnrollmentPayment(enrollment);
   const canPay = paymentState === 'to_pay' && ['OPEN', 'LOCKED', 'VALIDATED'].includes(status);
   const examAccessAllowed = ['LOCKED', 'VALIDATED'].includes(status) && paymentState !== 'to_pay';
+  // Même règle que l'API : annulation possible tant que la session est ouverte et avant la date limite
+  const canCancel =
+    status === 'OPEN' && (!session.limitDateSubscribe || new Date(session.limitDateSubscribe).getTime() > nowMs);
 
   return (
     <DashboardContent>
@@ -288,6 +297,20 @@ export function MesInscriptionsDetailsView() {
                   </Stack>
                 )}
               </Box>
+
+              {canCancel && (
+                <Box sx={{ px: 3, pb: 3 }}>
+                  <Button
+                    fullWidth
+                    color="error"
+                    variant="soft"
+                    startIcon={<Iconify icon="solar:close-circle-bold" />}
+                    onClick={() => setCancelOpen(true)}
+                  >
+                    {t('cancel_button')}
+                  </Button>
+                </Box>
+              )}
             </Card>
 
             {/* ---- Documents ---- */}
@@ -442,6 +465,18 @@ export function MesInscriptionsDetailsView() {
           </Card>
         </Grid>
       </Grid>
+
+      {/* ---- Annulation par le candidat ---- */}
+      <MesInscriptionsCancelDialog
+        open={cancelOpen}
+        onClose={() => setCancelOpen(false)}
+        enrollment={enrollment}
+        onCancelled={() => {
+          setCancelOpen(false);
+          mutate(endpoints.enrollment.myEnrollments);
+          router.push(paths.dashboard.mesInscriptions.root);
+        }}
+      />
 
       {/* ---- Document preview dialog ---- */}
       <MesInscriptionsDocumentDialog
