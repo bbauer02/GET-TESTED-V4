@@ -4,6 +4,10 @@ import { NextResponse } from 'next/server';
 
 const API_SERVER_URL = process.env.API_SERVER_URL || 'https://localhost';
 
+// Certificat de l'API vérifié en production ; en dev l'API locale a un certificat auto-signé.
+// API_TLS_INSECURE=true permet de le désactiver explicitement (API interne sans CA reconnue).
+const REJECT_UNAUTHORIZED = process.env.NODE_ENV === 'production' && process.env.API_TLS_INSECURE !== 'true';
+
 export async function GET(request, { params }) {
   const { path } = await params;
 
@@ -26,7 +30,7 @@ export async function GET(request, { params }) {
           port: parsed.port || 443,
           path: parsed.pathname + parsed.search,
           method: 'GET',
-          rejectUnauthorized: false,
+          rejectUnauthorized: REJECT_UNAUTHORIZED,
         },
         (res) => {
           const chunks = [];

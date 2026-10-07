@@ -85,7 +85,14 @@ export function JwtSignInView() {
       console.error(error);
       // L'API renvoie « Invalid credentials. » pour un couple email / mot de passe inconnu
       const feedbackMessage = getErrorMessage(error);
-      setErrorMessage(/invalid credentials/i.test(feedbackMessage) ? t('sign_in_invalid_credentials') : feedbackMessage);
+      if (/invalid credentials/i.test(feedbackMessage)) {
+        setErrorMessage(t('sign_in_invalid_credentials'));
+      } else if (/too many failed login attempts/i.test(feedbackMessage)) {
+        // Blocage temporaire après 5 essais échoués (login_throttling côté API)
+        setErrorMessage(t('sign_in_too_many_attempts'));
+      } else {
+        setErrorMessage(feedbackMessage);
+      }
     }
   });
 
