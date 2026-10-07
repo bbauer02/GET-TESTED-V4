@@ -3,7 +3,6 @@
 import dayjs from 'dayjs';
 import { useState, useEffect } from 'react';
 
-import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
@@ -44,8 +43,6 @@ export function SessionTransitionDialog({ open, onClose, transition, session, lo
   if (!transition) return null;
 
   const enrollments = session?.enrollments || [];
-  const enrollmentExams = enrollments.flatMap((enrollment) => enrollment.enrollmentExams || []);
-  const missingScores = enrollmentExams.filter((ee) => ee.finalScore == null && ee.status !== 'ABSENT').length;
 
   const limitDateInvalid =
     isReopen && (!limitDate || !limitDate.isAfter(dayjs()) || (sessionStart && limitDate.isAfter(sessionStart)));
@@ -63,14 +60,7 @@ export function SessionTransitionDialog({ open, onClose, transition, session, lo
         );
 
       case 'validate':
-        return (
-          <Stack spacing={2}>
-            <Typography variant="body2">{tm('transition_validate_desc')}</Typography>
-            {missingScores > 0 && (
-              <Alert severity="warning">{tm('transition_validate_missing_scores', { count: missingScores })}</Alert>
-            )}
-          </Stack>
-        );
+        return <Typography variant="body2">{tm('transition_validate_desc')}</Typography>;
 
       case 'reopen_from_locked':
         return (
