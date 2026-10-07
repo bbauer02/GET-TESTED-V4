@@ -84,7 +84,9 @@ export function SessionEnrollmentTransferDialog({
 
   const renderSessionOption = (s) => {
     const places =
-      s.placesAvailable != null ? Math.max(0, s.placesAvailable - (s.enrollments?.length || 0)) : null;
+      s.placesAvailable != null
+        ? (s.placesRemaining ?? Math.max(0, s.placesAvailable - (s.enrollmentsCount ?? 0)))
+        : null;
     return (
       <Stack direction="row" alignItems="center" spacing={1} sx={{ width: 1 }}>
         <Box sx={{ flexGrow: 1, minWidth: 0 }}>

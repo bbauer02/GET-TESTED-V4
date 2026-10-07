@@ -161,30 +161,22 @@ export function useGetSession(sessionId) {
 // ----------------------------------------------------------------------
 
 export function useGetInstituteEnrollments(id) {
-  const { sessions, sessionsLoading, sessionsError, sessionsValidating, sessionsMutate } =
-    useGetInstituteSessions(id);
+  // Endpoint dédié : la liste des sessions n'embarque plus les inscrits (seulement leur nombre)
+  const url = id ? endpoints.enrollment.instituteEnrollments(id) : '';
 
-  const enrollments = useMemo(() => {
-    if (!sessions?.length) return [];
-    return sessions.flatMap((session) =>
-      (session.enrollments || []).map((enrollment) => ({
-        ...enrollment,
-        session,
-      }))
-    );
-  }, [sessions]);
+  const { data, isLoading, error, isValidating, mutate } = useSWR(url, fetcher, swrOptions);
 
-  const memoizedValue = useMemo(
-    () => ({
+  const memoizedValue = useMemo(() => {
+    const enrollments = extractMembers(data);
+    return {
       enrollments,
-      enrollmentsLoading: sessionsLoading,
-      enrollmentsError: sessionsError,
-      enrollmentsMutate: sessionsMutate,
-      enrollmentsValidating: sessionsValidating,
-      enrollmentsEmpty: !sessionsLoading && !sessionsValidating && !enrollments.length,
-    }),
-    [enrollments, sessionsLoading, sessionsError, sessionsValidating, sessionsMutate]
-  );
+      enrollmentsLoading: isLoading,
+      enrollmentsError: error,
+      enrollmentsMutate: mutate,
+      enrollmentsValidating: isValidating,
+      enrollmentsEmpty: !isLoading && !isValidating && !enrollments.length,
+    };
+  }, [data, error, isLoading, isValidating, mutate]);
 
   return memoizedValue;
 }

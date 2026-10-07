@@ -103,7 +103,7 @@ export function DocumentTemplateGenerateView() {
               {sessionsLoading && <MenuItem disabled>Chargement...</MenuItem>}
               {sessions.map((s) => (
                 <MenuItem key={s.id} value={s.id}>
-                  {s.assessment?.label || 'Session'} — {s.level?.label || ''} ({s.enrollments?.length || 0} inscrits)
+                  {s.assessment?.label || 'Session'} — {s.level?.label || ''} ({s.enrollmentsCount ?? s.enrollments?.length ?? 0} inscrits)
                 </MenuItem>
               ))}
             </Select>

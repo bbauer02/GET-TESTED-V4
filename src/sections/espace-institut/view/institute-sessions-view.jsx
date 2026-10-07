@@ -400,7 +400,7 @@ function SessionTableRow({ session, canEdit, statusLabels, t, onView, onEdit }) 
         <TableCell>{fDateTime(session.start)}</TableCell>
         <TableCell>{fDateTime(session.end)}</TableCell>
         <TableCell>
-          {session.enrollments?.length ?? 0}
+          {session.enrollmentsCount ?? session.enrollments?.length ?? 0}
           {session.placesAvailable ? ` / ${session.placesAvailable}` : ''}
         </TableCell>
         <TableCell>

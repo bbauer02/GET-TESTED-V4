@@ -28,6 +28,7 @@ import { fDate } from 'src/utils/format-time';
 import { fCurrency } from 'src/utils/format-number';
 
 import { useGetInstituteInvoices } from 'src/actions/invoice';
+import { useGetInstituteEnrollments } from 'src/actions/espace-institut';
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
@@ -107,6 +108,7 @@ export function InstituteFicheDashboard({ sessions, memberships, instituteId, sx
   const currentInstitute = useCurrentInstitute();
   const canEditFiche = currentInstitute?.membershipRole === 'ADMIN';
   const { invoices, invoicesLoading } = useGetInstituteInvoices(instituteId);
+  const { enrollments } = useGetInstituteEnrollments(instituteId);
 
   // Only count ENROLLMENT invoices as revenue (not PLATFORM_COMMISSION)
   const enrollmentInvoices = useMemo(
@@ -156,10 +158,8 @@ export function InstituteFicheDashboard({ sessions, memberships, instituteId, sx
 
   const recentEnrollments = useMemo(() => {
     const threshold = dayjs().subtract(7, 'day');
-    return (sessions || [])
-      .flatMap((session) =>
-        (session.enrollments || []).map((enrollment) => ({ ...enrollment, session }))
-      )
+    return (enrollments || [])
+      .filter((e) => e.status !== 'CANCELLED')
       .filter((e) => {
         const registered = e.registrationDate || e.createdAt;
         return registered && dayjs(registered).isAfter(threshold);
@@ -170,7 +170,7 @@ export function InstituteFicheDashboard({ sessions, memberships, instituteId, sx
           dayjs(a.registrationDate || a.createdAt).valueOf()
       )
       .slice(0, 5);
-  }, [sessions]);
+  }, [enrollments]);
 
   const renderKpis = () => (
     <Grid container spacing={3}>

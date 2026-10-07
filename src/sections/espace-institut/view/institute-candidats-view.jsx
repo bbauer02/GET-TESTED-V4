@@ -108,6 +108,7 @@ export function InstituteCandidatsView() {
   const handleEnrollmentChanged = useCallback(() => {
     if (currentInstitute?.id) {
       mutate(endpoints.institute.sessions(currentInstitute.id));
+      mutate(endpoints.enrollment.instituteEnrollments(currentInstitute.id));
     }
   }, [currentInstitute?.id]);
 
